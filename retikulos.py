@@ -447,7 +447,7 @@ def cleanup_deads(in_pop):
     if live_ones.size == tot_orgs:
         out_pop=in_pop
     elif live_ones.size != 0:
-        #print(f"{live_ones.size} organisms are dead. Sorry for your loss...")
+        print(f"{live_ones.size} organisms are dead. Sorry for your loss...")
         out_pop=in_pop[live_ones]
     elif live_ones.size == 0:
         print(f"Your population went extinct. Sorry for your loss.")
