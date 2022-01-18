@@ -423,6 +423,8 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
         print(f"The current organism will produce {num_offsp} offspring")
         for i in range(num_offsp):
             indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
+            if indiv[9] == 0:
+                indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
             out_pop[counter]=indiv
             print(f"Producing organism #{counter}")
             counter=counter+1
