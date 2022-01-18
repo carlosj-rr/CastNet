@@ -424,7 +424,7 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
         for i in range(num_offsp):
             indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
             out_pop[counter]=indiv
-            #print(f"Producing organism #{counter}")
+            print(f"Producing organism #{counter}")
             counter=counter+1
             #print(np.all(out_pop[counter == out_pop[(counter-1)]]))
     out_pop=cleanup_deads(out_pop) # removing any dead organisms.
