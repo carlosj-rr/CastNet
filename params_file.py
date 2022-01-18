@@ -1,6 +1,6 @@
 # CONSTRUCTION PARAMETERS
 num_genes = 5
-seq_length = 100
+seq_length = 100 # Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
 prop_unlinked = 0.7
 prop_no_threshold = 0.5
 thresh_boundaries = (0.1,2)
