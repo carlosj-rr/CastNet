@@ -481,8 +481,8 @@ def randsplit(in_pop,out_pop_size):
     inpopsize=in_pop.shape[0]
     idcs_lina=np.random.choice(range(inpopsize),int(inpopsize/2),replace=False)
     idcs_linb=np.array([ rand for rand in np.arange(inpopsize) if rand not in idcs_lina])
-    print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
-    print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
+    #print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
+    #print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
     lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
     linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
     return(lina,linb)
