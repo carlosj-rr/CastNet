@@ -1,6 +1,6 @@
 # CONSTRUCTION PARAMETERS
 num_genes = 5
-seq_length = 100 # Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
+seq_length = 500 # Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
 prop_unlinked = 0.7
 prop_no_threshold = 0.5
 thresh_boundaries = (0.1,2)
@@ -15,7 +15,7 @@ thresh_decay_mut_bounds = (-0.01,0.01)
 thresh_mutation_rate = 0 # It can also be 0.001, for example
 prob_thresh_change = 0
 decay_mutation_rate = 0
-seq_mutation_rate = 0.0001	# Mutation likelihood per base, per generation.  Ex:
+seq_mutation_rate = 0.01	# Mutation likelihood per base, per generation.  Ex:
 				# 1 mutation per 10,000 bases per generation: 1/10000 = 0.0001
 				# For now, JC model "hardcoded" (each base is equally likely to mutate into any other base).
 

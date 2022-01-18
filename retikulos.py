@@ -108,7 +108,7 @@ def mutate_genome(old_gnome,old_prome,mut_coords):
         selected_codon=gnome[selected_gene,selected_codon_from_gene]
         prev_aacid=translate_codon(selected_codon)
         mutated_codon=pointMutateCodon(selected_codon,selected_codpos)
-        print(f">>>>>>>>>>{selected_codon} 8===D** {mutated_codon}<<<<<<<<<<8===D") # BUG: THIS MAY BE SMTH ELSE - Mutated codons seem to end up being the same always
+        print(f"Gene: {selected_gene}, Codon: {selected_codon_from_gene}, Codon Position {selected_codpos}:\nMutating: {selected_codon} into: {mutated_codon}") # BUG: THIS MAY BE SMTH ELSE - Mutated codons seem to end up being the same always
         gnome[selected_gene,selected_codon_from_gene]=mutated_codon
         new_aacid=translate_codon(mutated_codon)
         if prev_aacid == new_aacid: #Synonymous mutations are plotted as '2'
@@ -148,7 +148,7 @@ def codPos(muts,num_genes,num_codons):
     
 
 def randomMutations(in_genome,mut_rateseq):
-    total_bases=in_genome.size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3
+    total_bases=in_genome.size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
     mutations=np.random.choice((0,1),total_bases,p=(1-mut_rateseq,mut_rateseq))
     m=np.array(np.where(mutations != 0)).flatten()
     if m.size:
@@ -173,6 +173,7 @@ def mutation_wrapper(orgarr,mut_rateseq):
     mutations=randomMutations(in_genome,mut_rateseq)
     #print(mutations)
     if np.any(mutations):
+        print(f"This round includes {mutations.size} point mutations")
         mut_coords=codPos(mutations,in_genome.shape[0],in_genome.shape[1])
         #print(mut_coords)
         out_genome,out_proteome,mutlocs=mutate_genome(in_genome,in_proteome,mut_coords)
