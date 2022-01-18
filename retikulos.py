@@ -480,30 +480,32 @@ def randsplit(in_pop,out_pop_size):
     inpopsize=in_pop.shape[0]
     idcs_lina=np.random.choice(range(inpopsize),int(inpopsize/2),replace=False)
     idcs_linb=np.array([ rand for rand in np.arange(inpopsize) if rand not in idcs_lina])
-    lina=grow_pop(in_pop,out_pop_size,'equal')
-    linb=grow_pop(in_pop,out_pop_size,'equal')
+    lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
+    linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
     return(lina,linb)
 
 def main():
     founder=founder_miner()
-    results_array=np.ndarray(7,dtype=object)
+    results_array=np.ndarray(9,dtype=object)
     founder_pop=grow_pop(founder,pf.pop_size,'equal')
     results_array[0]=cp.deepcopy(founder_pop)
     stem_lin1,stem_lin2=randsplit(founder_pop,pf.pop_size)
     stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
     results_array[1]=cp.deepcopy(stem_lin1)
     results_array[2]=cp.deepcopy(stem_lin2)
-    two_branches=np.array([stem_lin1,stem_lin2,stem_lin3,stem_lin4],dtype=object)
+    results_array[3]=cp.deepcopy(stem_lin3)
+    results_array[4]=cp.deepcopy(stem_lin4)
+    four_branches=np.array([stem_lin1,stem_lin2,stem_lin3,stem_lin4],dtype=object)
     n_genslist1=np.array([10,10,10,10])
 
     with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol,two_branches,n_genslist1)
+        result = pool.map(branch_evol,four_branches,n_genslist1)
         
     tip_lin1,tip_lin2,tip_lin3,tip_lin4=np.array(list(result),dtype=object)
-    results_array[3]=tip_lin1
-    results_array[4]=tip_lin2
-    results_array[5]=tip_lin3
-    results_array[6]=tip_lin4
+    results_array[5]=cp.deepcopy(tip_lin1)
+    results_array[6]=cp.deepcopy(tip_lin2)
+    results_array[7]=cp.deepcopy(tip_lin3)
+    results_array[8]=cp.deepcopy(tip_lin4)
     if False:
         stem_lin3,stem_lin4=randsplit(tip_lin1,pf.pop_size)
         results_array[5],results_array[6]=cp.deepcopy(stem_lin3),cp.deepcopy(stem_lin4)
