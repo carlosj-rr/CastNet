@@ -500,7 +500,7 @@ def main():
     results_array[3]=cp.deepcopy(stem_lin3)
     results_array[4]=cp.deepcopy(stem_lin4)
     four_branches=np.array([stem_lin1,stem_lin2,stem_lin3,stem_lin4],dtype=object)
-    n_genslist1=np.array([10,10,10,10])
+    n_genslist1=np.array([2,2,2,2])
 
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol,four_branches,n_genslist1)
