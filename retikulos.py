@@ -488,8 +488,8 @@ def randsplit(in_pop,out_pop_size):
     linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
     return(lina,linb)
 
-def main():
-    founder=founder_miner()
+def main(founder):
+    founder=cp.deepcopy(founder)
     results_array=np.ndarray(9,dtype=object)
     founder_pop=grow_pop(founder,pf.pop_size,'equal')
     results_array[0]=cp.deepcopy(founder_pop)
