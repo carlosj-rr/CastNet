@@ -20,6 +20,6 @@ def parse_rez(rez):
          chisq=sum(chisqvect)
          chivaltab[k]=chisq
          meandiffs=np.mean(outvect)
-         print(f"Population: {k}\nExpected avg differences: {expvals[k]}\nObserved avg differences: {meandiffs}\nChi-square p-value: {pval})
+         print(f"Population: {k}\nExpected avg differences: {expvals[k]}\nObserved avg differences: {meandiffs}\nChi-square p-value: {pval}")
      return
 parse_rez(rez)
