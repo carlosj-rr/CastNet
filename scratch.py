@@ -1,6 +1,7 @@
 import retikulos as rt
 import numpy as np
-rez=rt.main()
+founder=rt.founder_miner(0.75)
+rez=rt.main(founder)
 def parse_rez(rez):
      expvals=[2.49,4.98,4.98,4.98,4.98,9.96,9.96,9.96,9.96]
      for k in range(len(rez)):
@@ -9,7 +10,6 @@ def parse_rez(rez):
          exp=expvals[k]
          chisqvect=np.ndarray(pop.size,dtype=object)
          df=pop.size-1
-         print(f"Degrees of freedom: {df} for population {k}. Expected avg differences {exp}.")
          dftab=np.ndarray(len(rez),dtype=int)
          dftab[k]=df
          chivaltab=np.ndarray(len(rez))
@@ -20,6 +20,6 @@ def parse_rez(rez):
          chisq=sum(chisqvect)
          chivaltab[k]=chisq
          meandiffs=np.mean(outvect)
-         print(k,meandiffs,pval)
+         print(f"Population: {k}\nExpected avg differences: {expvals[k]}\nObserved avg differences: {meandiffs}\nChi-square p-value: {pval})
      return
 parse_rez(rez)
