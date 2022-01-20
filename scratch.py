@@ -1,9 +1,11 @@
 import retikulos as rt
 import numpy as np
+from scipy.stats.distributions import chi2
 founder=rt.founder_miner(0.75)
 rez=rt.main(founder)
 def parse_rez(rez):
      expvals=[2.49,4.98,4.98,4.98,4.98,9.96,9.96,9.96,9.96]
+     print(f"Population Expected avg differences Observed avg differences Chi-square p-value")
      for k in range(len(rez)):
          pop=rez[k]
          outvect=np.ndarray(pop.size,dtype=object)
@@ -21,6 +23,6 @@ def parse_rez(rez):
          chivaltab[k]=chisq
          pval=1-chi2.cdf(chisq,df)
          meandiffs=np.mean(outvect)
-         print(f"Population: {k}\nExpected avg differences: {expvals[k]}\nObserved avg differences: {meandiffs}\nChi-square p-value: {pval}")
+         print(f"{k} {expvals[k]} {meandiffs} {pval}")
      return
 parse_rez(rez)
