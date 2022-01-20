@@ -3,9 +3,11 @@ import numpy as np
 from scipy.stats.distributions import chi2
 founder=rt.founder_miner(0.75)
 rez=rt.main(founder)
+gens=100 #number of generations each tip has evolved from its stem.
+change_pergen=2.49
 def parse_rez(rez):
-     expvals=[2.49,4.98,4.98,4.98,4.98,9.96,9.96,9.96,9.96]
-     print(f"Population Expected avg differences Observed avg differences Chi-square p-value")
+     expvals=[1*change_pergen,2*change_pergen,2*change_pergen,2*change_pergen,2*change_pergen,(2+gens)*change_pergen,(2+gens)*change_pergen,(2+gens)*change_pergen,(2+gens)*change_pergen]
+     print(f"Population -- Expected avg differences -- Observed avg  -- Chi-square -- p-value")
      for k in range(len(rez)):
          pop=rez[k]
          outvect=np.ndarray(pop.size,dtype=object)
@@ -23,6 +25,6 @@ def parse_rez(rez):
          chivaltab[k]=chisq
          pval=1-chi2.cdf(chisq,df)
          meandiffs=np.mean(outvect)
-         print(f"{k} {expvals[k]} {meandiffs} {pval}")
+         print(f"{k} -- {expvals[k]} -- {meandiffs} -- {pval}")
      return
 parse_rez(rez)

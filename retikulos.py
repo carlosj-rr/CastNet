@@ -337,7 +337,7 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
 mut_kinds=np.array(["nonsense","non-synonymous","synonymous"])
 
 def develop(start_vect,grn,decays,thresholds,dev_steps):
-    start_vect = start_vect
+    start_vect = cp.deepcopy(start_vect)
 #    print(f"Starting with vector: {start_vect}\n and thresholds {thresholds}")
     geneExpressionProfile = np.ndarray(((pf.dev_steps+1),pf.num_genes))
     geneExpressionProfile[0] = np.array([start_vect])
@@ -375,7 +375,7 @@ def calcFitness(development):
     else:
         fitness_val = 0
     return(fitness_val)
-def lastGeneExpressed(development,min_reproducin):
+def lastGeneExpressed(development,min_reproducin): # is the last gene ever expressed above 'min_reproducin' level? AND is it expressed above 0 in the last developmental step?
     dev_steps,num_genes = development.shape
     last_col_bool = development[:,(num_genes - 1)] > min_reproducin
     last_val_last_col = development[dev_steps - 1, (num_genes - 1)]
