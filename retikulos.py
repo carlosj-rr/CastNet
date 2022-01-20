@@ -39,8 +39,8 @@ def founder_miner(min_fitness=0.6):
         thresh_boundaries=pf.thresh_boundaries # tuple of 2 values.
         decay_boundaries=pf.decay_boundaries # tuple of 2 values.
         grn=makeGRN(n_genes,prop_off)
-        thresholds=randomMaskedVector(n_genes,(1-prop_off),thresh_boundaries[0],thresh_boundaries[1])
-        decays=randomMaskedVector(n_genes,(1-prop_off),decay_boundaries[0],decay_boundaries[1])
+        thresholds=randomMaskedVector(n_genes,(1-prop_off),min(thresh_boundaries),max(thresh_boundaries))
+        decays=randomMaskedVector(n_genes,(1-prop_off),min(decay_boundaries),max(decay_boundaries))
         # Importing values for the developmental info
         dev_steps=pf.dev_steps
         start_vect=(lambda x: np.array([1]*1+[0]*(x-1)))(n_genes)
@@ -500,7 +500,7 @@ def main(founder):
     results_array[3]=cp.deepcopy(stem_lin3)
     results_array[4]=cp.deepcopy(stem_lin4)
     four_branches=np.array([stem_lin1,stem_lin2,stem_lin3,stem_lin4],dtype=object)
-    n_genslist1=np.array([2,2,2,2])
+    n_genslist1=np.array([100,100,100,100])
 
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol,four_branches,n_genslist1)
