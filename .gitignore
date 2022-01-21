@@ -128,5 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Pickled objects
+# Pickled objects. Must stick to the file extension
 *.pkl
