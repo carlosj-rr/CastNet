@@ -370,7 +370,7 @@ def calcFitness(development):
     if is_alive:
         genes_on = propGenesOn(development)
         exp_stab = expressionStability(development)
-        sim_to_exp = exponentialSimilarity(development)
+        sim_to_exp = 1-exponentialSimilarity(development) #added "1 -" as I realized that the R^2 value would approac 1 the more it assimilated an exponential function.
         fitness_val = np.mean([genes_on,exp_stab,sim_to_exp])
     else:
         fitness_val = 0
