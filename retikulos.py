@@ -27,7 +27,6 @@ trans_aas=np.array(['I', 'I', 'I', 'M', 'T', 'T', 'T', 'T', 'N', 'N', 'K', 'K', 
        'F', 'F', 'L', 'L', 'Y', 'Y', 'C', 'C', 'W','_','_','_'], dtype=object)
 
 class CodonError(Exception):
-    #print(f"Codon is not valid")
     pass
 
 def founder_miner(min_fitness=0.6):
