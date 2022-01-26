@@ -5,6 +5,7 @@ import random
 import params_file as pf
 from scipy import stats
 import math
+import sys
 import matplotlib.pyplot as plt
 import pickle
 from datetime import datetime,date
@@ -24,6 +25,10 @@ trans_aas=np.array(['I', 'I', 'I', 'M', 'T', 'T', 'T', 'T', 'N', 'N', 'K', 'K', 
        'Q', 'Q', 'R', 'R', 'R', 'R', 'V', 'V', 'V', 'V', 'A', 'A', 'A',
        'A', 'D', 'D', 'E', 'E', 'G', 'G', 'G', 'G', 'S', 'S', 'S', 'S',
        'F', 'F', 'L', 'L', 'Y', 'Y', 'C', 'C', 'W','_','_','_'], dtype=object)
+
+class CodonError(Exception):
+    #print(f"Codon is not valid")
+    pass
 
 def founder_miner(min_fitness=0.6):
     fitness=0
@@ -52,8 +57,11 @@ def founder_miner(min_fitness=0.6):
     return(out_arr)
 
 def translate_codon(codon):
-    idx=np.where(dna_codons == codon)[0][0]
-    aminoac=trans_aas[idx]
+    if np.where(dna_codons == codon)[0].size != 0:
+        idx=np.where(dna_codons == codon)[0][0]
+        aminoac=trans_aas[idx]
+    else:
+        raise CodonError(f"<{codon}> is NOT a valid codon sequence. Please make sure it is one of the following:\n{dna_codons}")
     return(aminoac)
 
 def makeGRN(numGenes,prop_unlinked):
