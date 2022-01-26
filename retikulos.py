@@ -26,9 +26,6 @@ trans_aas=np.array(['I', 'I', 'I', 'M', 'T', 'T', 'T', 'T', 'N', 'N', 'K', 'K', 
        'A', 'D', 'D', 'E', 'E', 'G', 'G', 'G', 'G', 'S', 'S', 'S', 'S',
        'F', 'F', 'L', 'L', 'Y', 'Y', 'C', 'C', 'W','_','_','_'], dtype=object)
 
-class CodonError(Exception):
-    pass
-
 def founder_miner(min_fitness=0.6):
     fitness=0
     while fitness < min_fitness:
@@ -55,19 +52,6 @@ def founder_miner(min_fitness=0.6):
         out_arr=np.array([np.array((n_generation,genome,proteome,grn,thresholds,decays,start_vect,development,genes_on,fitness),dtype=object)])
     return(out_arr)
 
-def translate_codon(codon):
-    if np.where(dna_codons == codon)[0].size != 0:
-        idx=np.where(dna_codons == codon)[0][0]
-        aminoac=trans_aas[idx]
-    else:
-        raise CodonError(f"<{codon}> is NOT a valid codon sequence. Please make sure it is one of the following:\n{dna_codons}")
-    return(aminoac)
-
-def makeGRN(numGenes,prop_unlinked):
-    grn = randomMaskedVector(numGenes ** 2,prop_unlinked,pf.new_link_bounds[0],pf.new_link_bounds[1])
-    grn = grn.reshape(numGenes,numGenes)
-    return(grn)
-
 def makeGenomeandProteome(seq_length,num_genes,dna_codons=dna_codons,trans_aas=trans_aas):
     if seq_length % 3:
 #        print("Sequence length",seq_length,"is not a multiple of 3.")
@@ -86,6 +70,11 @@ def makeGenomeandProteome(seq_length,num_genes,dna_codons=dna_codons,trans_aas=t
         proteome_arr[i]=np.array(trans_aas[rand_codon_idx])
     return(genome_arr,proteome_arr)
 
+def makeGRN(numGenes,prop_unlinked):
+    grn = randomMaskedVector(numGenes ** 2,prop_unlinked,pf.new_link_bounds[0],pf.new_link_bounds[1])
+    grn = grn.reshape(numGenes,numGenes)
+    return(grn)
+
 # Function that creates a vector of a given amount of values (within a given range), in which a certain proportion of the values are masked.
 def randomMaskedVector(num_vals,prop_zero=0,min_val=0,max_val=1):
     if min_val > max_val:
@@ -100,69 +89,81 @@ def randomMaskedVector(num_vals,prop_zero=0,min_val=0,max_val=1):
         rpv = (rpv * mask) + 0
     return(rpv)
 
-def mutate_genome(old_gnome,old_prome,mut_coords):
-    gnome=cp.deepcopy(old_gnome)
-    prome=cp.deepcopy(old_prome)
-    mut_num=mut_coords.shape[0] #get the number of rows in the mutation coordinate array, this is the number of mutations
-    muttype_vect=np.ndarray((mut_num,2),dtype=object)
-    for i in range(mut_num):
-        coordinates=mut_coords[i,:]
-        #print(coordinates)
-        selected_gene=coordinates[0]
-        selected_codon_from_gene=coordinates[1]
-        selected_codpos=coordinates[2]
-        #print((selected_gene,selected_codon_from_gene),selected_codpos)
-        selected_codon=gnome[selected_gene,selected_codon_from_gene]
-        prev_aacid=translate_codon(selected_codon)
-        mutated_codon=pointMutateCodon(selected_codon,selected_codpos)
-        print(f"Gene: {selected_gene}, Codon: {selected_codon_from_gene}, Codon Position {selected_codpos}:\nMutating: {selected_codon} into: {mutated_codon}") # BUG: THIS MAY BE SMTH ELSE - Mutated codons seem to end up being the same always
-        gnome[selected_gene,selected_codon_from_gene]=mutated_codon
-        new_aacid=translate_codon(mutated_codon)
-        if prev_aacid == new_aacid: #Synonymous mutations are plotted as '2'
-            muttype=2
-        elif new_aacid == "_": # Nonsense mutations are plotted as '0'
-            muttype=0
-        else: # Nonsynonymous mutations are plotted as '1'
-            muttype=1
-        prome[selected_gene,selected_codpos]=new_aacid
-        muttype_vect[i]=(selected_gene,muttype)
-#    out_genome=gnome
-#    out_proteome=prome
-    return(gnome,prome,muttype_vect)
+#mut_kinds=np.array(["nonsense","non-synonymous","synonymous"])
 
-def codPos(muts,num_genes,num_codons):
-    #base1=num+1
-    out_array=np.ndarray((muts.size,3),dtype=object)
-    gene_bps=num_codons*3
-    genome_bps=gene_bps*num_genes
-    genenum_array=np.ndarray((num_genes,gene_bps),dtype=object)
-    for i in range(num_genes):
-        genenum_array[i,:]=i
-    genenum_array=genenum_array.flatten()
-    #print("genenum_array:",genenum_array)
-    codpos_array=np.tile([0,1,2],num_codons*num_genes)
-    #print("codpos_array:",codpos_array)
-    codnum_array=np.ndarray((num_genes,gene_bps),dtype=object)
-    for i in range(num_genes):
-        codnum_array[i,:]=np.repeat(range(num_codons),3)
-    codnum_array=codnum_array.flatten()
-    #print("codnum_array:",codnum_array)
-    for i in range(muts.size):
-        basenum=muts[i]
-        mut_val=np.array([genenum_array[basenum],codnum_array[basenum],codpos_array[basenum]])
-        out_array[i,:]=mut_val
-    return(out_array)
-    
+def develop(start_vect,grn,decays,thresholds,dev_steps):
+    start_vect = cp.deepcopy(start_vect)
+#    print(f"Starting with vector: {start_vect}\n and thresholds {thresholds}")
+    geneExpressionProfile = np.ndarray(((pf.dev_steps+1),pf.num_genes))
+    geneExpressionProfile[0] = np.array([start_vect])
+    #Running the organism's development, and outputting the results
+    #in an array called geneExpressionProfile
+    invect = start_vect
+    counter=1
+    for i in range(dev_steps):
+#      print(f"Development step {counter}")
+        decayed_invect = (lambda x, l: x*np.exp(-l))(invect,decays) # apply decay to all gene qties. previously: exponentialDecay(invect,decays)
+#        print(f"Shapes of objects to be fed to matmul:\n{grn.shape}\t{decayed_invect.shape}")
+        exp_change = np.matmul(grn,decayed_invect) #calculate the regulatory effect of the decayed values.
+#        exp_change = myDotProd(grn,decayed_invect) #check my bootleg dot product function
+#        print(f"Output of dot product:\n{exp_change}")
+        pre_thresholds = exp_change + decayed_invect # add the decayed amounts to the regulatory effects
+#        print(f"Result when added:\n{pre_thresholds}")
+        thresholder = (pre_thresholds > thresholds).astype(int) # a vector to rectify the resulting values to their thresholds.
+#        print(f"Threshold rectifier vector:\n{thresholder}")
+        currV = pre_thresholds * thresholder # rectify with the thresholder vect. This step resulted in the deletion of the 'rectify()' function
+ #       print(f"Rectifying with the thresholds gives:\n{currV}")
+ #      currV = currV
+        geneExpressionProfile[(i+1)] = currV
+        invect = currV
+        counter=counter+1
+    return(geneExpressionProfile)
 
-def randomMutations(in_genome,mut_rateseq):
-    total_bases=in_genome.size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
-    mutations=np.random.choice((0,1),total_bases,p=(1-mut_rateseq,mut_rateseq))
-    m=np.array(np.where(mutations != 0)).flatten()
-    if m.size:
-        output=m
+def calcFitness(development):
+    min_reproducin = pf.min_reproducin
+    is_alive = lastGeneExpressed(development,min_reproducin)
+    if is_alive:
+        genes_on = propGenesOn(development)
+        exp_stab = expressionStability(development)
+        sim_to_exp = 1-exponentialSimilarity(development) #added "1 -" as I realized that the R^2 value would approac 1 the more it assimilated an exponential function.
+        fitness_val = np.mean([genes_on,exp_stab,sim_to_exp])
     else:
-        output=False
-    return(output)
+        fitness_val = 0
+    return(fitness_val)
+def lastGeneExpressed(development,min_reproducin): # is the last gene ever expressed above 'min_reproducin' level? AND is it expressed above 0 in the last developmental step?
+    dev_steps,num_genes = development.shape
+    last_col_bool = development[:,(num_genes - 1)] > min_reproducin
+    last_val_last_col = development[dev_steps - 1, (num_genes - 1)]
+    if last_col_bool.any() and last_val_last_col > 0:
+        return_val = True
+    else:
+        return_val = False
+    return(return_val)
+def propGenesOn(development):
+    genes_on = development.sum(axis=0) > 0
+    return(genes_on.mean())
+def expressionStability(development):  # I haven't thought deeply about this.
+    row_sums = development.sum(axis=1)# What proportion of the data range is
+    stab_val = row_sums.std() / (row_sums.max() - row_sums.min()) # the stdev? Less = better
+    return(stab_val)
+def exponentialSimilarity(development):
+    dev_steps,num_genes = development.shape
+    row_means = development.mean(axis=1)
+    tot_dev_steps = dev_steps
+    fitted_line = scipy.stats.linregress(range(tot_dev_steps),np.log(row_means))
+    r_squared = fitted_line.rvalue ** 2
+    return(r_squared)
+
+class CodonError(Exception):
+    pass
+
+def translate_codon(codon):
+    if np.where(dna_codons == codon)[0].size != 0:
+        idx=np.where(dna_codons == codon)[0][0]
+        aminoac=trans_aas[idx]
+    else:
+        raise CodonError(f"<{codon}> is NOT a valid codon sequence. Please make sure it is one of the following:\n{dna_codons}")
+    return(aminoac)
 
 # Input is an organism array, as produced by the founder_miner() function, and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
 def mutation_wrapper(orgarr,mut_rateseq):
@@ -201,6 +202,69 @@ def mutation_wrapper(orgarr,mut_rateseq):
     out_org=np.array([[out_gen_num,out_genome,out_proteome,out_grn,out_thresh,out_decs,start_vect,out_dev,out_genes_on,out_fitness]],dtype=object)
     return(out_org)
 
+def randomMutations(in_genome,mut_rateseq):
+    total_bases=in_genome.size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
+    mutations=np.random.choice((0,1),total_bases,p=(1-mut_rateseq,mut_rateseq))
+    m=np.array(np.where(mutations != 0)).flatten()
+    if m.size:
+        output=m
+    else:
+        output=False
+    return(output)
+
+def codPos(muts,num_genes,num_codons):
+    #base1=num+1
+    out_array=np.ndarray((muts.size,3),dtype=object)
+    gene_bps=num_codons*3
+    genome_bps=gene_bps*num_genes
+    genenum_array=np.ndarray((num_genes,gene_bps),dtype=object)
+    for i in range(num_genes):
+        genenum_array[i,:]=i
+    genenum_array=genenum_array.flatten()
+    #print("genenum_array:",genenum_array)
+    codpos_array=np.tile([0,1,2],num_codons*num_genes)
+    #print("codpos_array:",codpos_array)
+    codnum_array=np.ndarray((num_genes,gene_bps),dtype=object)
+    for i in range(num_genes):
+        codnum_array[i,:]=np.repeat(range(num_codons),3)
+    codnum_array=codnum_array.flatten()
+    #print("codnum_array:",codnum_array)
+    for i in range(muts.size):
+        basenum=muts[i]
+        mut_val=np.array([genenum_array[basenum],codnum_array[basenum],codpos_array[basenum]])
+        out_array[i,:]=mut_val
+    return(out_array)
+
+def mutate_genome(old_gnome,old_prome,mut_coords):
+    gnome=cp.deepcopy(old_gnome)
+    prome=cp.deepcopy(old_prome)
+    mut_num=mut_coords.shape[0] #get the number of rows in the mutation coordinate array, this is the number of mutations
+    muttype_vect=np.ndarray((mut_num,2),dtype=object)
+    for i in range(mut_num):
+        coordinates=mut_coords[i,:]
+        #print(coordinates)
+        selected_gene=coordinates[0]
+        selected_codon_from_gene=coordinates[1]
+        selected_codpos=coordinates[2]
+        #print((selected_gene,selected_codon_from_gene),selected_codpos)
+        selected_codon=gnome[selected_gene,selected_codon_from_gene]
+        prev_aacid=translate_codon(selected_codon)
+        mutated_codon=pointMutateCodon(selected_codon,selected_codpos)
+        print(f"Gene: {selected_gene}, Codon: {selected_codon_from_gene}, Codon Position {selected_codpos}:\nMutating: {selected_codon} into: {mutated_codon}") # BUG: THIS MAY BE SMTH ELSE - Mutated codons seem to end up being the same always
+        gnome[selected_gene,selected_codon_from_gene]=mutated_codon
+        new_aacid=translate_codon(mutated_codon)
+        if prev_aacid == new_aacid: #Synonymous mutations are plotted as '2'
+            muttype=2
+        elif new_aacid == "_": # Nonsense mutations are plotted as '0'
+            muttype=0
+        else: # Nonsynonymous mutations are plotted as '1'
+            muttype=1
+        prome[selected_gene,selected_codpos]=new_aacid
+        muttype_vect[i]=(selected_gene,muttype)
+#    out_genome=gnome
+#    out_proteome=prome
+    return(gnome,prome,muttype_vect)
+
 def pointMutateCodon(codon,pos_to_mutate):
     bases=("T","C","A","G")
     base=codon[pos_to_mutate]
@@ -210,36 +274,6 @@ def pointMutateCodon(codon,pos_to_mutate):
     split_codon[pos_to_mutate]=new_base
     new_codon="".join(split_codon)
     return(new_codon)
-
-def weight_mut(value,scaler=0.01):
-    val=abs(value) #Make sure value is positive
-    if val == 0:
-        '''For values at zero, simply get 1, and then modify it by the scale
-        This is for activating thresholds that are 0.'''
-        val=scaler/scaler
-    scaled_val=val*scaler #scale the value
-    newVal=value+np.random.uniform(-scaled_val,scaled_val) #add the scaled portion to the total value to get the final result.
-    return(newVal)
-
-def threshs_and_decs_mutator(in_thresh,in_dec,mutarr):
-    #print(f"Input thresholds were: {in_thresh}")
-    #print(f"Input decays were: {in_dec}")
-    #print(f"Input mutarr was:\n{mutarr}")
-    the_tuple=(in_thresh,in_dec) # make a tuple in which the threshold array is the first value, and the decays the second.
-    # This will allow me to easily choose among them at the time of mutating, see within the for loop.
-    num_genes=len(in_thresh) #get the number of genes from the amount of values in the thresholds array
-    genes=mutarr[:,0] # get the genes to be mutated from the mutarray's 1st column
-    #print(f"The array of genes to be mutated is:\n{genes}")
-    for i in np.arange(len(genes)): #go through each gene, and decide randomly whether to make a threshold or a decay mutation in the gene.'''
-        tuple_idx=np.random.choice((0,1))
-        #print(f"Thresholds = 0, Decays = 1, Random choice was = {tuple_idx}")
-        gene_num=genes[i] # extract specific gene number that has to be mutated. This maps to the thresh and dec arrays.
-        #print(f"This means that gene {gene_num} will be mutated:\nValue {the_tuple[tuple_idx][gene_num]}")
-        new_value=abs(weight_mut(the_tuple[tuple_idx][gene_num]))
-        the_tuple[tuple_idx][gene_num]=new_value
-        #print(f"...is now {new_value}")
-    out_thresh,out_decs=(the_tuple[0],the_tuple[1])
-    return(out_thresh,out_decs)
 
 def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     curr_grn=cp.deepcopy(in_grn)
@@ -341,70 +375,45 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     #out_fitness=calcFitness(out_dev)
     return(out_grn,out_threshs,out_decs)
 
-mut_kinds=np.array(["nonsense","non-synonymous","synonymous"])
+def threshs_and_decs_mutator(in_thresh,in_dec,mutarr):
+    #print(f"Input thresholds were: {in_thresh}")
+    #print(f"Input decays were: {in_dec}")
+    #print(f"Input mutarr was:\n{mutarr}")
+    the_tuple=(in_thresh,in_dec) # make a tuple in which the threshold array is the first value, and the decays the second.
+    # This will allow me to easily choose among them at the time of mutating, see within the for loop.
+    num_genes=len(in_thresh) #get the number of genes from the amount of values in the thresholds array
+    genes=mutarr[:,0] # get the genes to be mutated from the mutarray's 1st column
+    #print(f"The array of genes to be mutated is:\n{genes}")
+    for i in np.arange(len(genes)): #go through each gene, and decide randomly whether to make a threshold or a decay mutation in the gene.'''
+        tuple_idx=np.random.choice((0,1))
+        #print(f"Thresholds = 0, Decays = 1, Random choice was = {tuple_idx}")
+        gene_num=genes[i] # extract specific gene number that has to be mutated. This maps to the thresh and dec arrays.
+        #print(f"This means that gene {gene_num} will be mutated:\nValue {the_tuple[tuple_idx][gene_num]}")
+        new_value=abs(weight_mut(the_tuple[tuple_idx][gene_num]))
+        the_tuple[tuple_idx][gene_num]=new_value
+        #print(f"...is now {new_value}")
+    out_thresh,out_decs=(the_tuple[0],the_tuple[1])
+    return(out_thresh,out_decs)
 
-def develop(start_vect,grn,decays,thresholds,dev_steps):
-    start_vect = cp.deepcopy(start_vect)
-#    print(f"Starting with vector: {start_vect}\n and thresholds {thresholds}")
-    geneExpressionProfile = np.ndarray(((pf.dev_steps+1),pf.num_genes))
-    geneExpressionProfile[0] = np.array([start_vect])
-    #Running the organism's development, and outputting the results
-    #in an array called geneExpressionProfile
-    invect = start_vect
-    counter=1
-    for i in range(dev_steps):
-#      print(f"Development step {counter}")
-        decayed_invect = (lambda x, l: x*np.exp(-l))(invect,decays) # apply decay to all gene qties. previously: exponentialDecay(invect,decays)
-#        print(f"Shapes of objects to be fed to matmul:\n{grn.shape}\t{decayed_invect.shape}")
-        exp_change = np.matmul(grn,decayed_invect) #calculate the regulatory effect of the decayed values.
-#        exp_change = myDotProd(grn,decayed_invect) #check my bootleg dot product function
-#        print(f"Output of dot product:\n{exp_change}")
-        pre_thresholds = exp_change + decayed_invect # add the decayed amounts to the regulatory effects
-#        print(f"Result when added:\n{pre_thresholds}")
-        thresholder = (pre_thresholds > thresholds).astype(int) # a vector to rectify the resulting values to their thresholds.
-#        print(f"Threshold rectifier vector:\n{thresholder}")
-        currV = pre_thresholds * thresholder # rectify with the thresholder vect. This step resulted in the deletion of the 'rectify()' function
- #       print(f"Rectifying with the thresholds gives:\n{currV}")
- #      currV = currV
-        geneExpressionProfile[(i+1)] = currV
-        invect = currV
-        counter=counter+1
-    return(geneExpressionProfile)
+def randomMutations(in_genome,mut_rateseq):
+    total_bases=in_genome.size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
+    mutations=np.random.choice((0,1),total_bases,p=(1-mut_rateseq,mut_rateseq))
+    m=np.array(np.where(mutations != 0)).flatten()
+    if m.size:
+        output=m
+    else:
+        output=False
+    return(output)
 
-def calcFitness(development):
-    min_reproducin = pf.min_reproducin
-    is_alive = lastGeneExpressed(development,min_reproducin)
-    if is_alive:
-        genes_on = propGenesOn(development)
-        exp_stab = expressionStability(development)
-        sim_to_exp = 1-exponentialSimilarity(development) #added "1 -" as I realized that the R^2 value would approac 1 the more it assimilated an exponential function.
-        fitness_val = np.mean([genes_on,exp_stab,sim_to_exp])
-    else:
-        fitness_val = 0
-    return(fitness_val)
-def lastGeneExpressed(development,min_reproducin): # is the last gene ever expressed above 'min_reproducin' level? AND is it expressed above 0 in the last developmental step?
-    dev_steps,num_genes = development.shape
-    last_col_bool = development[:,(num_genes - 1)] > min_reproducin
-    last_val_last_col = development[dev_steps - 1, (num_genes - 1)]
-    if last_col_bool.any() and last_val_last_col > 0:
-        return_val = True
-    else:
-        return_val = False
-    return(return_val)
-def propGenesOn(development):
-    genes_on = development.sum(axis=0) > 0
-    return(genes_on.mean())
-def expressionStability(development):  # I haven't thought deeply about this.
-    row_sums = development.sum(axis=1)# What proportion of the data range is
-    stab_val = row_sums.std() / (row_sums.max() - row_sums.min()) # the stdev? Less = better
-    return(stab_val)
-def exponentialSimilarity(development):
-    dev_steps,num_genes = development.shape
-    row_means = development.mean(axis=1)
-    tot_dev_steps = dev_steps
-    fitted_line = scipy.stats.linregress(range(tot_dev_steps),np.log(row_means))
-    r_squared = fitted_line.rvalue ** 2
-    return(r_squared)
+def weight_mut(value,scaler=0.01):
+    val=abs(value) #Make sure value is positive
+    if val == 0:
+        '''For values at zero, simply get 1, and then modify it by the scale
+        This is for activating thresholds that are 0.'''
+        val=scaler/scaler
+    scaled_val=val*scaler #scale the value
+    newVal=value+np.random.uniform(-scaled_val,scaled_val) #add the scaled portion to the total value to get the final result.
+    return(newVal)
 
 # Assumes input is a population (i.e. an array of organism arrays), it should crash if it doesn't find 2 dimensions.
 def grow_pop(in_orgs,out_pop_size,strategy='equal'):
