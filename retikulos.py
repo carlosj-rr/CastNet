@@ -181,9 +181,11 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
         print("Reproduction is fitness bound.")
         pass
     else:
-        raise ValueError(f"Reproductive strategy {strategy} not recognized")
+        raise ValueError(f"Reproductive strategy: <{strategy}> not recognized")
+        # Stress tested up until here. All good.
     counter=0
     out_pop=np.ndarray((corr_pop_size[0],),dtype=object)
+    #return(print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }"))
     for k in range(num_in_orgs): # taking each input organism and adding the requested offspring to the output population.
         num_offsp=orgs_per_org[k]
         print(f"The current organism will produce {num_offsp} offspring")
