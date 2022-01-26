@@ -165,6 +165,37 @@ def translate_codon(codon):
         raise CodonError(f"<{codon}> is NOT a valid codon sequence. Please make sure it is one of the following:\n{dna_codons}")
     return(aminoac)
 
+# Assumes input is a population (i.e. an array of organism arrays), it should crash if it doesn't find 2 dimensions.
+def grow_pop(in_orgs,out_pop_size,strategy='equal'):
+    in_orgs=cp.deepcopy(in_orgs)
+    num_in_orgs=in_orgs.shape[0]
+    orgs_per_org=np.array([np.floor_divide(out_pop_size,num_in_orgs)])
+    #print(f"Orgs per org is {orgs_per_org}.")
+    corr_pop_size=orgs_per_org*num_in_orgs
+    #in_orgs=cp.deepcopy(in_orgs)
+    #print(f"Making a population out of the {num_in_orgs} organisms given, reproductive strategy is {strategy}.\nEach organism will have {orgs_per_org[0]} offspring, for a total of {corr_pop_size[0]}.")
+    if strategy == 'equal':
+        orgs_per_org=np.repeat(orgs_per_org,num_in_orgs)
+        #print(f"Offspring/organism array:\n{orgs_per_org}")
+    elif strategy == 'fitness_linked':
+        print("Reproduction is fitness bound.")
+        pass
+    else:
+        raise ValueError(f"Reproductive strategy {strategy} not recognized")
+    counter=0
+    out_pop=np.ndarray((corr_pop_size[0],),dtype=object)
+    for k in range(num_in_orgs): # taking each input organism and adding the requested offspring to the output population.
+        num_offsp=orgs_per_org[k]
+        print(f"The current organism will produce {num_offsp} offspring")
+        for i in range(num_offsp):
+            indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
+            out_pop[counter]=indiv
+            print(f"Producing organism #{counter}")
+            counter=counter+1
+            #print(np.all(out_pop[counter == out_pop[(counter-1)]]))
+    out_pop=cleanup_deads(out_pop) # removing any dead organisms.
+    return(out_pop)
+
 # Input is an organism array, as produced by the founder_miner() function, and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
 def mutation_wrapper(orgarr,mut_rateseq):
     orgarrcp=cp.deepcopy(orgarr[0])
@@ -414,38 +445,6 @@ def weight_mut(value,scaler=0.01):
     scaled_val=val*scaler #scale the value
     newVal=value+np.random.uniform(-scaled_val,scaled_val) #add the scaled portion to the total value to get the final result.
     return(newVal)
-
-# Assumes input is a population (i.e. an array of organism arrays), it should crash if it doesn't find 2 dimensions.
-def grow_pop(in_orgs,out_pop_size,strategy='equal'):
-    in_orgs=cp.deepcopy(in_orgs)
-    num_in_orgs=in_orgs.shape[0]
-    orgs_per_org=np.array([np.floor_divide(out_pop_size,num_in_orgs)])
-    #print(f"Orgs per org is {orgs_per_org}.")
-    corr_pop_size=orgs_per_org*num_in_orgs
-    #in_orgs=cp.deepcopy(in_orgs)
-    #print(f"Making a population out of the {num_in_orgs} organisms given, reproductive strategy is {strategy}.\nEach organism will have {orgs_per_org[0]} offspring, for a total of {corr_pop_size[0]}.")
-    if strategy == 'equal':
-        orgs_per_org=np.repeat(orgs_per_org,num_in_orgs)
-        #print(f"Offspring/organism array:\n{orgs_per_org}")
-    elif strategy == 'fitness_linked':
-        print("Reproduction is fitness bound.")
-        pass
-    else:
-        print(f"Reproductive strategy {strategy} not recognized")
-        raise ValueError("Invalid reproductive strategy")
-    counter=0
-    out_pop=np.ndarray((corr_pop_size[0],),dtype=object)
-    for k in range(num_in_orgs): # taking each input organism and adding the requested offspring to the output population.
-        num_offsp=orgs_per_org[k]
-        print(f"The current organism will produce {num_offsp} offspring")
-        for i in range(num_offsp):
-            indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
-            out_pop[counter]=indiv
-            print(f"Producing organism #{counter}")
-            counter=counter+1
-            #print(np.all(out_pop[counter == out_pop[(counter-1)]]))
-    out_pop=cleanup_deads(out_pop) # removing any dead organisms.
-    return(out_pop)
 
 def store(thing):
     now=datetime.now()
