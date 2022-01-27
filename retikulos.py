@@ -169,7 +169,7 @@ def translate_codon(codon):
 def grow_pop(in_orgs,out_pop_size,strategy='equal'):
     in_orgs=cp.deepcopy(in_orgs)
     num_in_orgs=in_orgs.shape[0]
-    orgs_per_org=np.array([np.floor_divide(out_pop_size,num_in_orgs)])
+    orgs_per_org=np.array([np.round(out_pop_size/num_in_orgs).astype(int)])
     #print(f"Orgs per org is {orgs_per_org}.")
     corr_pop_size=orgs_per_org*num_in_orgs
     #in_orgs=cp.deepcopy(in_orgs)
@@ -185,7 +185,7 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
         # Stress tested up until here. All good.
     counter=0
     out_pop=np.ndarray((corr_pop_size[0],),dtype=object)
-    #return(print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }"))
+    return(print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }"))
     for k in range(num_in_orgs): # taking each input organism and adding the requested offspring to the output population.
         num_offsp=orgs_per_org[k]
         print(f"The current organism will produce {num_offsp} offspring")
