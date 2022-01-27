@@ -185,7 +185,7 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
         # Stress tested up until here. All good.
     counter=0
     out_pop=np.ndarray((corr_pop_size[0],),dtype=object)
-    return(print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }"))
+    print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }")
     for k in range(num_in_orgs): # taking each input organism and adding the requested offspring to the output population.
         num_offsp=orgs_per_org[k]
         print(f"The current organism will produce {num_offsp} offspring")
@@ -194,7 +194,7 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
             out_pop[counter]=indiv
             print(f"Producing organism #{counter}")
             counter=counter+1
-            #print(np.all(out_pop[counter == out_pop[(counter-1)]]))
+            print(np.all(out_pop[counter == out_pop[(counter-1)]]))
     out_pop=cleanup_deads(out_pop) # removing any dead organisms.
     return(out_pop)
 
