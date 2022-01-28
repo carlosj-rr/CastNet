@@ -211,18 +211,20 @@ def mutation_wrapper(orgarr,mut_rateseq):
     in_dev=orgarrcp[7]
     in_genes_on=(in_dev.sum(axis=0) != 0).astype(int)
     in_fitness=orgarrcp[9]
-    mutations=randomMutations(in_genome,mut_rateseq)
+    mutations=randomMutations(in_genome.size,mut_rateseq)
     #print(mutations)
     if np.any(mutations):
-        print(f"This round includes {mutations.size} point mutations")
+        print(f"This round includes {mutations.size} point mutations in the following bases: {mutations}")
         mut_coords=codPos(mutations,in_genome.shape[0],in_genome.shape[1])
-        #print(mut_coords)
-        out_genome,out_proteome,mutlocs=mutate_genome(in_genome,in_proteome,mut_coords)
-        out_grn,out_thresh,out_decs=regulator_mutator(in_grn,in_genes_on,in_decs,in_thresh,mutlocs)
-        out_dev=develop(start_vect,out_grn,out_decs,out_thresh,pf.dev_steps)
-        out_genes_on=(out_dev.sum(axis=0) != 0).astype(int)
-        out_fitness=calcFitness(out_dev)
+        print(mut_coords)
+        if False:
+         out_genome,out_proteome,mutlocs=mutate_genome(in_genome,in_proteome,mut_coords)
+         out_grn,out_thresh,out_decs=regulator_mutator(in_grn,in_genes_on,in_decs,in_thresh,mutlocs)
+         out_dev=develop(start_vect,out_grn,out_decs,out_thresh,pf.dev_steps)
+         out_genes_on=(out_dev.sum(axis=0) != 0).astype(int)
+         out_fitness=calcFitness(out_dev)
     else:
+        print("No mutations this time.")
         out_genome=in_genome
         out_proteome=in_proteome
         out_grn=in_grn
@@ -231,12 +233,12 @@ def mutation_wrapper(orgarr,mut_rateseq):
         out_dev=in_dev
         out_genes_on=(out_dev.sum(axis=0) != 0).astype(int)
         out_fitness=in_fitness
-    out_gen_num=in_gen_num+1
-    out_org=np.array([[out_gen_num,out_genome,out_proteome,out_grn,out_thresh,out_decs,start_vect,out_dev,out_genes_on,out_fitness]],dtype=object)
-    return(out_org)
+    #out_gen_num=in_gen_num+1
+    #out_org=np.array([[out_gen_num,out_genome,out_proteome,out_grn,out_thresh,out_decs,start_vect,out_dev,out_genes_on,out_fitness]],dtype=object)
+    return#return(out_org)
 
-def randomMutations(in_genome,mut_rateseq):
-    total_bases=in_genome.size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
+def randomMutations(genome_size,mut_rateseq):
+    total_bases=genome_size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
     mutations=np.random.choice((0,1),total_bases,p=(1-mut_rateseq,mut_rateseq))
     m=np.array(np.where(mutations != 0)).flatten()
     if m.size:
@@ -427,16 +429,6 @@ def threshs_and_decs_mutator(in_thresh,in_dec,mutarr):
         #print(f"...is now {new_value}")
     out_thresh,out_decs=(the_tuple[0],the_tuple[1])
     return(out_thresh,out_decs)
-
-def randomMutations(in_genome,mut_rateseq):
-    total_bases=in_genome.size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
-    mutations=np.random.choice((0,1),total_bases,p=(1-mut_rateseq,mut_rateseq))
-    m=np.array(np.where(mutations != 0)).flatten()
-    if m.size:
-        output=m
-    else:
-        output=False
-    return(output)
 
 def weight_mut(value,scaler=0.01):
     val=abs(value) #Make sure value is positive
