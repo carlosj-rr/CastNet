@@ -198,6 +198,9 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
     out_pop=cleanup_deads(out_pop) # removing any dead organisms.
     return(out_pop)
 
+class NegativeIndex(Exception):
+    pass
+
 # Input is an organism array, as produced by the founder_miner() function, and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
 def mutation_wrapper(orgarr,mut_rateseq):
     orgarrcp=cp.deepcopy(orgarr[0])
@@ -215,7 +218,7 @@ def mutation_wrapper(orgarr,mut_rateseq):
     #print(mutations)
     if np.any(mutations):
         print(f"This round includes {mutations.size} point mutations in the following bases: {mutations}")
-        mut_coords=codPos(mutations,in_genome.shape[0],in_genome.shape[1])
+        mut_coords=codPos(mutations,in_genome.shape)
         print(mut_coords)
         if False:
          out_genome,out_proteome,mutlocs=mutate_genome(in_genome,in_proteome,mut_coords)
@@ -235,7 +238,7 @@ def mutation_wrapper(orgarr,mut_rateseq):
         out_fitness=in_fitness
     #out_gen_num=in_gen_num+1
     #out_org=np.array([[out_gen_num,out_genome,out_proteome,out_grn,out_thresh,out_decs,start_vect,out_dev,out_genes_on,out_fitness]],dtype=object)
-    return#return(out_org)
+    return(mut_coords)#return(out_org)
 
 def randomMutations(genome_size,mut_rateseq):
     total_bases=genome_size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
@@ -247,8 +250,12 @@ def randomMutations(genome_size,mut_rateseq):
         output=False
     return(output)
 
-def codPos(muts,num_genes,num_codons):
+def codPos(muts,gnome_shape):
     #base1=num+1
+    num_genes=gnome_shape[0]
+    num_codons=gnome_shape[1]
+    if (np.any(muts < 0)):
+        raise NegativeIndex(f"There are negative index values in your mutation indices:\n{muts}.\n This will result in untractable mutations.\nConsder double-checking the result of randomMutations()")
     out_array=np.ndarray((muts.size,3),dtype=object)
     gene_bps=num_codons*3
     genome_bps=gene_bps*num_genes
@@ -275,6 +282,8 @@ def mutate_genome(old_gnome,old_prome,mut_coords):
     prome=cp.deepcopy(old_prome)
     mut_num=mut_coords.shape[0] #get the number of rows in the mutation coordinate array, this is the number of mutations
     muttype_vect=np.ndarray((mut_num,2),dtype=object)
+    if (np.any(mut_coords < 0)):
+        raise NegativeIndex(f"Some indices in the mutation coordinates are negative:\n{mut_coords}\nThis may result in untractable mutations.\nConsider examining the output of codPos().")
     for i in range(mut_num):
         coordinates=mut_coords[i,:]
         #print(coordinates)
