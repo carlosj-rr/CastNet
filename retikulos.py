@@ -342,17 +342,16 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     else:
         print("No mutations will be sent to decays/thresholds")
         out_threshs,out_decs=curr_thr,curr_dec
-    return
     if curr_muttype_vect.size > 0:
         for i in curr_muttype_vect:
             gene=i[0]
             mtype=i[1]
             #print(f"Gene {gene} has mutation type {mut_kinds[mtype]}")
             if mtype != 0: # For all non-KO mutations (i.e. synonymous, and non-synonymous)...
-                # Check this block all the way down to the "<>" below
                 if curr_genes_on[gene]: # If the gene is ON...
                     active_links=np.array(list(zip(np.nonzero(curr_grn)[0],np.nonzero(curr_grn)[1])))
-                    #print(f"Gene {gene} is ON ({curr_genes_on[gene]}).")
+                    print(f"Gene {gene} is ON ({curr_genes_on[gene]}).")
+                    return
                     actives_in_gene=np.concatenate((active_links[active_links[:,1] == gene,:],active_links[active_links[:,0] == gene,:]),axis=0) # get the gene's active links
                     #print(f"Gene {gene}'s active links are:\n{actives_in_gene}, and the gene's cells show:\n {curr_grn[:,gene]} \n and {curr_grn[gene,:]}")
                     #print(f"GRN is:\n{in_grn}")
@@ -377,7 +376,8 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
                         None
                 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<888>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                 else: # If the gene is OFF...
-                    #print(f"Gene {gene} is OFF ({curr_genes_on[gene]}).")
+                    print(f"Gene {gene} is OFF ({curr_genes_on[gene]}).")
+                    return
                     if mtype == 1: # And the mutation is non-synonymous
                         #print(f"And gene{gene}'s mutation is NS")
                         inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
