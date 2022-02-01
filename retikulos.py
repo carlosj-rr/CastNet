@@ -240,7 +240,7 @@ def mutation_wrapper(orgarr,mut_rateseq):
     out_org=np.array([[out_gen_num,out_genome,out_proteome,out_grn,out_thresh,out_decs,start_vect,out_dev,out_genes_on,out_fitness]],dtype=object)
     return(out_org)
 
-def randomMutations(genome_size,mut_rateseq):
+def randomMutations(genome_size,mut_rateseq): # genome_size is in CODONS
     total_bases=genome_size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
     mutations=np.random.choice((0,1),total_bases,p=(1-mut_rateseq,mut_rateseq))
     m=np.array(np.where(mutations != 0)).flatten()
@@ -305,9 +305,9 @@ def mutate_genome(old_gnome,old_prome,mut_coords):
             muttype=1
         prome[selected_gene,selected_codpos]=new_aacid
         muttype_vect[i]=(selected_gene,muttype)
-#    out_genome=gnome
-#    out_proteome=prome
-    return(gnome,prome,muttype_vect)
+    out_genome=gnome
+    out_proteome=prome
+    return(out_genome,out_proteome,muttype_vect)
 
 def pointMutateCodon(codon,pos_to_mutate):
     if pos_to_mutate < 0:
@@ -328,19 +328,21 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     curr_dec=cp.deepcopy(in_dec)
     curr_muttype_vect=cp.deepcopy(muttype_vect)
     inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
-    num_genes=pf.num_genes
+    num_genes=curr_genes_on.size
     '''I'm adding here a section that decides if any of the mutations will go to the thresholds or the decays.
     If there are any changes that have to happen in the decays and/or thresholds, we can call their mutation
     function. Otherwise we can keep on going.'''
-    prop=2/(2+num_genes**2) #proportion of mutable sites that are thresholds OR decays
+    prop=(lambda x: 2/(2+x))(num_genes) #proportion of total regulatory interactions that are thresholds OR decays (simplified from "2N/(2N+N^2)", where N is the total number of genes.)
     hits=np.nonzero(np.random.choice((0,1),len(muttype_vect),p=(1-prop,prop)))[0]
     if hits.size > 0:
         mutsarr=curr_muttype_vect[hits]
-        #print(f"Sending mutations:\n{mutsarr} to decays/thresholds")
+        print(f"Sending mutations:\n{mutsarr} to decays/thresholds")
         out_threshs,out_decs=threshs_and_decs_mutator(in_thresh,in_dec,mutsarr)
         curr_muttype_vect=np.delete(curr_muttype_vect,hits,axis=0)
     else:
+        print("No mutations will be sent to decays/thresholds")
         out_threshs,out_decs=curr_thr,curr_dec
+    return
     if curr_muttype_vect.size > 0:
         for i in curr_muttype_vect:
             gene=i[0]

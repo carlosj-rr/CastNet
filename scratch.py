@@ -1,7 +1,8 @@
 import retikulos as rt
-np=rt.np
-cp=rt.cp
+#np=rt.np
+#cp=rt.cp
 founder=rt.founder_miner(0.75)
-founder4x=np.ndarray((4,),dtype=object)
-for i in range(4):
-    founder4x[i]=cp.deepcopy(founder[0])
+randmuts=rt.randomMutations(founder[0][1].size,0.9)
+high_change=rt.codPos(randmuts,founder[0][1].shape)
+a,b,c=rt.mutate_genome(founder[0][1],founder[0][2],high_change)
+grn,threshs,decs,genes_on=founder[0][3],founder[0][4],founder[0][5],founder[0][8]
