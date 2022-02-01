@@ -220,12 +220,12 @@ def mutation_wrapper(orgarr,mut_rateseq):
         print(f"This round includes {mutations.size} point mutations in the following bases: {mutations}")
         mut_coords=codPos(mutations,in_genome.shape)
         print(mut_coords)
-        if False:
-         out_genome,out_proteome,mutlocs=mutate_genome(in_genome,in_proteome,mut_coords)
-         out_grn,out_thresh,out_decs=regulator_mutator(in_grn,in_genes_on,in_decs,in_thresh,mutlocs)
-         out_dev=develop(start_vect,out_grn,out_decs,out_thresh,pf.dev_steps)
-         out_genes_on=(out_dev.sum(axis=0) != 0).astype(int)
-         out_fitness=calcFitness(out_dev)
+        
+        out_genome,out_proteome,mutlocs=mutate_genome(in_genome,in_proteome,mut_coords)
+        out_grn,out_thresh,out_decs=regulator_mutator(in_grn,in_genes_on,in_decs,in_thresh,mutlocs)
+        out_dev=develop(start_vect,out_grn,out_decs,out_thresh,pf.dev_steps)
+        out_genes_on=(out_dev.sum(axis=0) != 0).astype(int)
+        out_fitness=calcFitness(out_dev)
     else:
         print("No mutations this time.")
         out_genome=in_genome
@@ -236,9 +236,9 @@ def mutation_wrapper(orgarr,mut_rateseq):
         out_dev=in_dev
         out_genes_on=(out_dev.sum(axis=0) != 0).astype(int)
         out_fitness=in_fitness
-    #out_gen_num=in_gen_num+1
-    #out_org=np.array([[out_gen_num,out_genome,out_proteome,out_grn,out_thresh,out_decs,start_vect,out_dev,out_genes_on,out_fitness]],dtype=object)
-    return(mut_coords)#return(out_org)
+    out_gen_num=in_gen_num+1
+    out_org=np.array([[out_gen_num,out_genome,out_proteome,out_grn,out_thresh,out_decs,start_vect,out_dev,out_genes_on,out_fitness]],dtype=object)
+    return(out_org)
 
 def randomMutations(genome_size,mut_rateseq):
     total_bases=genome_size*3 #Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
@@ -310,6 +310,8 @@ def mutate_genome(old_gnome,old_prome,mut_coords):
     return(gnome,prome,muttype_vect)
 
 def pointMutateCodon(codon,pos_to_mutate):
+    if pos_to_mutate < 0:
+        raise NegativeIndex(f"Codon position {pos_to_mutate} is negative\nThis can cause intractable mutations\nConsider verifying the output of codPos()")
     bases=("T","C","A","G")
     base=codon[pos_to_mutate]
     change = [x for x in bases if x != base]
