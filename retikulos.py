@@ -321,19 +321,21 @@ def pointMutateCodon(codon,pos_to_mutate):
     new_codon="".join(split_codon)
     return(new_codon)
 
+
+class MutationTypeError(Exception):
+    pass
+
 def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     curr_grn=cp.deepcopy(in_grn)
     curr_thr=cp.deepcopy(in_thresh)
     curr_genes_on=cp.deepcopy(genes_on)
     curr_dec=cp.deepcopy(in_dec)
     curr_muttype_vect=cp.deepcopy(muttype_vect)
-    if np.any(curr_muttype_vect > 0):
+    if np.any(curr_muttype_vect < 0):
         raise NegativeIndex(f"There is a number in the mutations array that is negative:\n\n{curr_muttype_vect}\n\nThis may result in untractable mutations, consider inspecting the output of codPos()")
     inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
     num_genes=curr_genes_on.size
-    '''I'm adding here a section that decides if any of the mutations will go to the thresholds or the decays.
-    If there are any changes that have to happen in the decays and/or thresholds, we can call their mutation
-    function. Otherwise we can keep on going.'''
+    # Choosing mutations for the thresholds or decays...
     prop=(lambda x: 2/(2+x))(num_genes) #proportion of total regulatory interactions that are thresholds OR decays (simplified from "2N/(2N+N^2)", where N is the total number of genes.)
     hits=np.nonzero(np.random.choice((0,1),len(muttype_vect),p=(1-prop,prop)))[0]
     if hits.size > 0:
@@ -342,87 +344,56 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
         out_threshs,out_decs=threshs_and_decs_mutator(in_thresh,in_dec,mutsarr)
         curr_muttype_vect=np.delete(curr_muttype_vect,hits,axis=0)
     else:
-        print("No mutations will be sent to decays/thresholds")
         out_threshs,out_decs=curr_thr,curr_dec
     if curr_muttype_vect.size > 0:
         for i in curr_muttype_vect:
             gene=i[0]
             mtype=i[1]
-            #print(f"Gene {gene} has mutation type {mut_kinds[mtype]}")
-            if mtype != 0: # For all non-KO mutations (i.e. synonymous, and non-synonymous)...
+            if mtype in [1,2]: # For all non-KO mutations (i.e. synonymous, and non-synonymous)...
                 if curr_genes_on[gene]: # If the gene is ON...
                     active_links=np.array(list(zip(np.nonzero(curr_grn)[0],np.nonzero(curr_grn)[1])))
-                    print(f"Gene {gene} is ON ({curr_genes_on[gene]}).")
-                    return
-                    actives_in_gene=np.concatenate((active_links[active_links[:,1] == gene,:],active_links[active_links[:,0] == gene,:]),axis=0) # get the gene's active links
-                    #print(f"Gene {gene}'s active links are:\n{actives_in_gene}, and the gene's cells show:\n {curr_grn[:,gene]} \n and {curr_grn[gene,:]}")
-                    #print(f"GRN is:\n{in_grn}")
+                    actives_in_gene=active_links[active_links[:,0] == gene] # get the gene's active links
                     if mtype == 1: # And the mutation is non-synonymous...
-                        #print(f"Mutation {mtype} is NS")
-                        #print(f"range to be used is range({len(actives_in_gene)})")
                         rand_idx=np.random.choice(np.arange(len(actives_in_gene))) # FIXED # get a random index number for mutating a link
                         coordinates=tuple(actives_in_gene[rand_idx,:]) # get the random link's specific coordinates
                         val=curr_grn[coordinates] # Extract the value that will be mutated.
                         curr_grn[coordinates]=weight_mut(val,0.5) # mutate the value.
-                        #print(f"Mutating coordinate {coordinates} of the GRN, currently showing the value {val} to {in_grn[coordinates]}")
                     elif mtype == 2: # If gene is ON, and the mutation is synonymous...
-                        #print(f"Mutation {mtype} is S")
-                        #print(f"range to be used is range({len(actives_in_gene)})")
-                        rand_idx=np.random.choice(np.arange(len(actives_in_gene))) # FIXED # Same as above
-                        coordinates=tuple(actives_in_gene[rand_idx,:]) # Same as above
+                        rand_idx=np.random.choice(np.arange(len(actives_in_gene)))
+                        coordinates=tuple(actives_in_gene[rand_idx,:])
                         val=curr_grn[coordinates] # Same as above
-                        curr_grn[coordinates]=weight_mut(val,0.001) # mutate the value by a very small amount.
-                        #print(f"Mutating coordinate {coordinates} of the GRN a tiny little only, from {val} to {in_grn[coordinates]}")
+                        curr_grn[coordinates]=weight_mut(val,0.001) # mutate the value by a very small proportion.
                     else:
-                        #print(f"Gene {gene} is neither on nor off, its state is {curr_genes_on[gene]}")
-                        None
-                #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<888>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                        raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
                 else: # If the gene is OFF...
-                    print(f"Gene {gene} is OFF ({curr_genes_on[gene]}).")
-                    return
                     if mtype == 1: # And the mutation is non-synonymous
-                        #print(f"And gene{gene}'s mutation is NS")
                         inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
-                        inactives_in_gene=np.concatenate((inactive_links[inactive_links[:,1] == gene,:],inactive_links[inactive_links[:,0] == gene,:]),axis=0)
-                        rand_idx=np.random.choice(np.arange(len(inactives_in_gene))) # FIXED # Same as above, but with inactives instead
-                        coordinates=tuple(inactives_in_gene[rand_idx,:]) # Same as above above             
+                        inactives_in_gene=inactive_links[inactive_links[:,0] == gene]
+                        rand_idx=np.random.choice(np.arange(len(inactives_in_gene)))
+                        coordinates=tuple(inactives_in_gene[rand_idx])
                         mean_exp_val=np.mean(np.abs(curr_grn[np.nonzero(curr_grn)])) # Mean expression amount
                         sign=np.random.choice((-1,1)) # Randomly choose between negative or positive
                         new_val=mean_exp_val*sign
-                        #print(f"Flipping inactive value at coordinate {coordinates} on at level {new_val}")
-                        in_grn[coordinates]=new_val
+                        curr_grn[coordinates]=new_val
                     elif mtype == 2: # If gene is OFF, and the mutation is synonymous...
-                        # check for all active links of the gene
-                        active_links=np.array(list(zip(np.nonzero(curr_grn)[0],np.nonzero(curr_grn)[1])))
-                        if active_links.size == 0: #If no links are active (such as in a gene that just got KO'd)...
-                            all_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1]))) # Use the inactives to mutate
-                        else: # Otherwise mutate any link from that gene (since it's off, all changes are synonymous)
-                            inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
-                            all_links=np.concatenate((active_links,inactive_links),axis=0)
-                        #all_links=np.concatenate((inactive_links,active_links),axis=0)
-                        actives_in_gene=np.concatenate((all_links[all_links[:,1] == gene,:],all_links[all_links[:,0] == gene,:]),axis=0) # get the gene's active links
-                        #print(f"range to be used is range({len(actives_in_gene)})")
-                        rand_idx=np.random.choice(np.arange(len(actives_in_gene))) # FIXED # get a random index number for mutating a link
-                        coordinates=tuple(actives_in_gene[rand_idx,:]) # get the random link's specific coordinates
+                        # check for all 'active' links of the gene (i.e. with a non-zero value)
+                        all_links=list(zip(np.repeat(gene,num_genes),range(num_genes)))
+                        rand_idx=np.random.choice(np.arange(len(all_links)))
+                        coordinates=tuple(all_links[rand_idx]) # get the random link's specific coordinates
                         val=curr_grn[coordinates] # Extract the value that will be mutated.
-                        #print(f"Mutating coordinate {coordinates} of the GRN, currently showing the value {val}")
                         curr_grn[coordinates]=weight_mut(val,0.5) # mutate the value.
                     else:
-                        None            
-            else: # If mutation is KO
+                        raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
+            elif mtype == 0: # If mutation is KO
                 curr_grn[gene,:]=0
                 curr_grn[:,gene]=0
                 out_grn=curr_grn
                 curr_genes_on[gene]=0 # Important change to avoid THE bug.
-                #print(f"Knocking out gene{gene}: {curr_genes_on[gene]}.")
+            else:
+                raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
     else:
         pass
-        #print("No mutations in this round")
     out_grn=cp.deepcopy(curr_grn)
-    #print("Copying the input GRN deeply")
-    #out_dev=develop(in_start_vect, out_grn,out_decs,out_threshs,pf.dev_steps)
-    #out_genes_on=(out_dev.sum(axis=0) != 0).astype(int)
-    #out_fitness=calcFitness(out_dev)
     return(out_grn,out_threshs,out_decs)
 
 def threshs_and_decs_mutator(in_thresh,in_dec,mutarr):
