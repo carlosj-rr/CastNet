@@ -327,6 +327,8 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     curr_genes_on=cp.deepcopy(genes_on)
     curr_dec=cp.deepcopy(in_dec)
     curr_muttype_vect=cp.deepcopy(muttype_vect)
+    if np.any(curr_muttype_vect > 0):
+        raise NegativeIndex(f"There is a number in the mutations array that is negative:\n\n{curr_muttype_vect}\n\nThis may result in untractable mutations, consider inspecting the output of codPos()")
     inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
     num_genes=curr_genes_on.size
     '''I'm adding here a section that decides if any of the mutations will go to the thresholds or the decays.
@@ -424,22 +426,20 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     return(out_grn,out_threshs,out_decs)
 
 def threshs_and_decs_mutator(in_thresh,in_dec,mutarr):
-    #print(f"Input thresholds were: {in_thresh}")
-    #print(f"Input decays were: {in_dec}")
-    #print(f"Input mutarr was:\n{mutarr}")
+    in_thresh=cp.deepcopy(in_thresh)
+    in_dec=cp.deepcopy(in_dec)
     the_tuple=(in_thresh,in_dec) # make a tuple in which the threshold array is the first value, and the decays the second.
     # This will allow me to easily choose among them at the time of mutating, see within the for loop.
-    num_genes=len(in_thresh) #get the number of genes from the amount of values in the thresholds array
     genes=mutarr[:,0] # get the genes to be mutated from the mutarray's 1st column
-    #print(f"The array of genes to be mutated is:\n{genes}")
-    for i in np.arange(len(genes)): #go through each gene, and decide randomly whether to make a threshold or a decay mutation in the gene.'''
+    for i in np.arange(len(genes)): #go through each gene, and decide randomly whether to make a threshold or a decay mutation in the gene.
         tuple_idx=np.random.choice((0,1))
-        #print(f"Thresholds = 0, Decays = 1, Random choice was = {tuple_idx}")
         gene_num=genes[i] # extract specific gene number that has to be mutated. This maps to the thresh and dec arrays.
-        #print(f"This means that gene {gene_num} will be mutated:\nValue {the_tuple[tuple_idx][gene_num]}")
-        new_value=abs(weight_mut(the_tuple[tuple_idx][gene_num]))
+        isit_ko=mutarr[i,1] == 0
+        if isit_ko:
+            new_value=0
+        else:
+            new_value=abs(weight_mut(the_tuple[tuple_idx][gene_num]))
         the_tuple[tuple_idx][gene_num]=new_value
-        #print(f"...is now {new_value}")
     out_thresh,out_decs=(the_tuple[0],the_tuple[1])
     return(out_thresh,out_decs)
 
