@@ -34,7 +34,6 @@ def founder_miner(min_fitness=0.6):
         n_genes=pf.num_genes
         seq_len=pf.seq_length
         genome,proteome=makeGenomeandProteome(seq_len,n_genes,dna_codons,trans_aas)
-        #print(genome)
         # Importing the values for producing all the regulatory information.
         prop_off=pf.prop_unlinked # thresholds and decays will have the converse of this probability as 0s. See blow.
         thresh_boundaries=pf.thresh_boundaries # tuple of 2 values.
@@ -47,17 +46,14 @@ def founder_miner(min_fitness=0.6):
         start_vect=(lambda x: np.array([1]*1+[0]*(x-1)))(n_genes)
         development=develop(start_vect,grn,decays,thresholds,dev_steps)
         genes_on=(development.sum(axis=0) != 0).astype(int)
-        #print(f"Current fitness {fitness} is lower than minimum {min_fitness}")
         fitness=calcFitness(development)
         out_arr=np.array([np.array((n_generation,genome,proteome,grn,thresholds,decays,start_vect,development,genes_on,fitness),dtype=object)])
     return(out_arr)
 
 def makeGenomeandProteome(seq_length,num_genes,dna_codons=dna_codons,trans_aas=trans_aas):
     if seq_length % 3:
-#        print("Sequence length",seq_length,"is not a multiple of 3.")
         seq_length = seq_length - (seq_length % 3)
         num_codons = int(seq_length/3)
-#        print("Rounding to", seq_length,"for",num_codons,"codons")
     else:
         num_codons=int(seq_length/3)
     idx_vect=np.array(range(0,len(dna_codons)-3))
@@ -78,8 +74,7 @@ def makeGRN(numGenes,prop_unlinked):
 # Function that creates a vector of a given amount of values (within a given range), in which a certain proportion of the values are masked.
 def randomMaskedVector(num_vals,prop_zero=0,min_val=0,max_val=1):
     if min_val > max_val:
-        print("Error: minimum value greater than maximum value")
-        return
+        raise ValueError(f"Minimum value {min_val} is larger than the maximum value {max_val}.\nConsider revising the function call to randomMaskedVector()")
     range_size = max_val - min_val
     if prop_zero == 0:
         rpv = np.array(range_size * np.random.random(num_vals) + min_val)
@@ -93,7 +88,6 @@ def randomMaskedVector(num_vals,prop_zero=0,min_val=0,max_val=1):
 
 def develop(start_vect,grn,decays,thresholds,dev_steps):
     start_vect = cp.deepcopy(start_vect)
-#    print(f"Starting with vector: {start_vect}\n and thresholds {thresholds}")
     geneExpressionProfile = np.ndarray(((pf.dev_steps+1),pf.num_genes))
     geneExpressionProfile[0] = np.array([start_vect])
     #Running the organism's development, and outputting the results
@@ -101,19 +95,11 @@ def develop(start_vect,grn,decays,thresholds,dev_steps):
     invect = start_vect
     counter=1
     for i in range(dev_steps):
-#      print(f"Development step {counter}")
         decayed_invect = (lambda x, l: x*np.exp(-l))(invect,decays) # apply decay to all gene qties. previously: exponentialDecay(invect,decays)
-#        print(f"Shapes of objects to be fed to matmul:\n{grn.shape}\t{decayed_invect.shape}")
         exp_change = np.matmul(grn,decayed_invect) #calculate the regulatory effect of the decayed values.
-#        exp_change = myDotProd(grn,decayed_invect) #check my bootleg dot product function
-#        print(f"Output of dot product:\n{exp_change}")
         pre_thresholds = exp_change + decayed_invect # add the decayed amounts to the regulatory effects
-#        print(f"Result when added:\n{pre_thresholds}")
         thresholder = (pre_thresholds > thresholds).astype(int) # a vector to rectify the resulting values to their thresholds.
-#        print(f"Threshold rectifier vector:\n{thresholder}")
         currV = pre_thresholds * thresholder # rectify with the thresholder vect. This step resulted in the deletion of the 'rectify()' function
- #       print(f"Rectifying with the thresholds gives:\n{currV}")
- #      currV = currV
         geneExpressionProfile[(i+1)] = currV
         invect = currV
         counter=counter+1
@@ -170,31 +156,26 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
     in_orgs=cp.deepcopy(in_orgs)
     num_in_orgs=in_orgs.shape[0]
     orgs_per_org=np.array([np.round(out_pop_size/num_in_orgs).astype(int)])
-    #print(f"Orgs per org is {orgs_per_org}.")
-    corr_pop_size=orgs_per_org*num_in_orgs
-    #in_orgs=cp.deepcopy(in_orgs)
-    #print(f"Making a population out of the {num_in_orgs} organisms given, reproductive strategy is {strategy}.\nEach organism will have {orgs_per_org[0]} offspring, for a total of {corr_pop_size[0]}.")
+    curr_pop_size=orgs_per_org*num_in_orgs
     if strategy == 'equal':
         orgs_per_org=np.repeat(orgs_per_org,num_in_orgs)
-        #print(f"Offspring/organism array:\n{orgs_per_org}")
     elif strategy == 'fitness_linked':
         print("Reproduction is fitness bound.")
         pass
     else:
         raise ValueError(f"Reproductive strategy: <{strategy}> not recognized")
-        # Stress tested up until here. All good.
     counter=0
-    out_pop=np.ndarray((corr_pop_size[0],),dtype=object)
-    print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }")
+    out_pop=np.ndarray((curr_pop_size[0],),dtype=object)
+    #print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }")
     for k in range(num_in_orgs): # taking each input organism and adding the requested offspring to the output population.
         num_offsp=orgs_per_org[k]
-        print(f"The current organism will produce {num_offsp} offspring")
+        #print(f"The current organism will produce {num_offsp} offspring")
         for i in range(num_offsp):
             indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
             out_pop[counter]=indiv
-            print(f"Producing organism #{counter}")
+            print(f"Produced organism #{counter}")
             counter=counter+1
-            print(np.all(out_pop[counter == out_pop[(counter-1)]]))
+            #print(np.all(out_pop[counter == out_pop[(counter-1)]]))
     out_pop=cleanup_deads(out_pop) # removing any dead organisms.
     return(out_pop)
 
@@ -215,12 +196,8 @@ def mutation_wrapper(orgarr,mut_rateseq):
     in_genes_on=(in_dev.sum(axis=0) != 0).astype(int)
     in_fitness=orgarrcp[9]
     mutations=randomMutations(in_genome.size,mut_rateseq)
-    #print(mutations)
     if np.any(mutations):
-        print(f"This round includes {mutations.size} point mutations in the following bases: {mutations}")
         mut_coords=codPos(mutations,in_genome.shape)
-        print(mut_coords)
-        
         out_genome,out_proteome,mutlocs=mutate_genome(in_genome,in_proteome,mut_coords)
         out_grn,out_thresh,out_decs=regulator_mutator(in_grn,in_genes_on,in_decs,in_thresh,mutlocs)
         out_dev=develop(start_vect,out_grn,out_decs,out_thresh,pf.dev_steps)
@@ -258,19 +235,15 @@ def codPos(muts,gnome_shape):
         raise NegativeIndex(f"There are negative index values in your mutation indices:\n{muts}.\n This will result in untractable mutations.\nConsder double-checking the result of randomMutations()")
     out_array=np.ndarray((muts.size,3),dtype=object)
     gene_bps=num_codons*3
-    genome_bps=gene_bps*num_genes
     genenum_array=np.ndarray((num_genes,gene_bps),dtype=object)
     for i in range(num_genes):
         genenum_array[i,:]=i
     genenum_array=genenum_array.flatten()
-    #print("genenum_array:",genenum_array)
     codpos_array=np.tile([0,1,2],num_codons*num_genes)
-    #print("codpos_array:",codpos_array)
     codnum_array=np.ndarray((num_genes,gene_bps),dtype=object)
     for i in range(num_genes):
         codnum_array[i,:]=np.repeat(range(num_codons),3)
     codnum_array=codnum_array.flatten()
-    #print("codnum_array:",codnum_array)
     for i in range(muts.size):
         basenum=muts[i]
         mut_val=np.array([genenum_array[basenum],codnum_array[basenum],codpos_array[basenum]])
@@ -286,15 +259,12 @@ def mutate_genome(old_gnome,old_prome,mut_coords):
         raise NegativeIndex(f"Some indices in the mutation coordinates are negative:\n{mut_coords}\nThis may result in untractable mutations.\nConsider examining the output of codPos().")
     for i in range(mut_num):
         coordinates=mut_coords[i,:]
-        #print(coordinates)
         selected_gene=coordinates[0]
         selected_codon_from_gene=coordinates[1]
         selected_codpos=coordinates[2]
-        #print((selected_gene,selected_codon_from_gene),selected_codpos)
         selected_codon=gnome[selected_gene,selected_codon_from_gene]
         prev_aacid=translate_codon(selected_codon)
         mutated_codon=pointMutateCodon(selected_codon,selected_codpos)
-        print(f"Gene: {selected_gene}, Codon: {selected_codon_from_gene}, Codon Position {selected_codpos}:\nMutating: {selected_codon} into: {mutated_codon}") # BUG: THIS MAY BE SMTH ELSE - Mutated codons seem to end up being the same always
         gnome[selected_gene,selected_codon_from_gene]=mutated_codon
         new_aacid=translate_codon(mutated_codon)
         if prev_aacid == new_aacid: #Synonymous mutations are plotted as '2'
@@ -321,7 +291,6 @@ def pointMutateCodon(codon,pos_to_mutate):
     new_codon="".join(split_codon)
     return(new_codon)
 
-
 class MutationTypeError(Exception):
     pass
 
@@ -340,7 +309,6 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     hits=np.nonzero(np.random.choice((0,1),len(muttype_vect),p=(1-prop,prop)))[0]
     if hits.size > 0:
         mutsarr=curr_muttype_vect[hits]
-        print(f"Sending mutations:\n{mutsarr} to decays/thresholds")
         out_threshs,out_decs=threshs_and_decs_mutator(in_thresh,in_dec,mutsarr)
         curr_muttype_vect=np.delete(curr_muttype_vect,hits,axis=0)
     else:
@@ -417,8 +385,8 @@ def threshs_and_decs_mutator(in_thresh,in_dec,mutarr):
 def weight_mut(value,scaler=0.01):
     val=abs(value) #Make sure value is positive
     if val == 0:
-        '''For values at zero, simply get 1, and then modify it by the scale
-        This is for activating thresholds that are 0.'''
+        '''For 0, simply get 1, and then modify it by the scale
+        This is for activating values that are off.'''
         val=scaler/scaler
     scaled_val=val*scaler #scale the value
     newVal=value+np.random.uniform(-scaled_val,scaled_val) #add the scaled portion to the total value to get the final result.
@@ -437,11 +405,10 @@ def cleanup_deads(in_pop):
     tot_orgs=in_pop.shape[0]
     fitnesses=np.array([ x[9] for x in in_pop[:] ])
     live_ones=np.nonzero(fitnesses)[0]
-    #print(f"current population has {live_ones.size} organisms alive")
     if live_ones.size == tot_orgs:
         out_pop=in_pop
     elif live_ones.size != 0:
-        print(f"{tot_orgs - live_ones.size} organisms are dead. Sorry for your loss...")
+        #print(f"{tot_orgs - live_ones.size} organisms are dead. Sorry for your loss...")
         out_pop=in_pop[live_ones]
     elif live_ones.size == 0:
         print(f"Your population went extinct. Sorry for your loss.")
@@ -465,11 +432,9 @@ def select(in_pop,p=0.1,strategy='high pressure'):
         out_idcs=np.random.choice(range(pop_size),num_survivors,replace=False)
     elif strategy == "totally relaxed":
         out_idcs=np.random.choice(range(pop_size),num_survivors,replace=False)
-    #print(f"Out population will have indices {out_idcs}")
     out_pop=in_pop[out_idcs]
     return(out_pop)
     
-
 def randsplit(in_pop,out_pop_size):
     in_pop=cp.deepcopy(in_pop)
     inpopsize=in_pop.shape[0]
