@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import numpy as np
 import copy as cp
 import scipy, os, time
@@ -421,6 +422,8 @@ def select(in_pop,p=0.1,strategy='high pressure'):
     pop_size=in_pop.shape[0]
     num_survivors=int(pop_size*p)
     fitnesses=np.array([ x[9] for x in in_pop[:] ])
+    if num_survivors == 0:
+        raise ValueError(f"A proportion of {p} results in 0 survivors, you've selected your population into extinction.")
     print(f"Proportion of survivors will be {p}, which will be {num_survivors}, out of a total of {pop_size}") # DEBUG
     if strategy == "high pressure":
         out_idcs=np.argpartition(fitnesses,-num_survivors)[-num_survivors:] # returns the **indices** for the top 'num_survivors' fitnesses.
@@ -438,12 +441,12 @@ def select(in_pop,p=0.1,strategy='high pressure'):
     return(out_pop)
     
 def randsplit(in_pop,out_pop_size):
-    in_pop=cp.deepcopy(in_pop)
+    #in_pop=cp.deepcopy(in_pop)
     inpopsize=in_pop.shape[0]
     idcs_lina=np.random.choice(range(inpopsize),int(inpopsize/2),replace=False)
     idcs_linb=np.array([ rand for rand in np.arange(inpopsize) if rand not in idcs_lina])
-    #print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
-    #print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
+    print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
+    print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
     lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
     linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
     return(lina,linb)
