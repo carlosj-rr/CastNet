@@ -401,38 +401,40 @@ def store(thing):
     print(f"Your session results were saved in {filename}.")
 
 def cleanup_deads(in_pop):
-    in_pop=cp.deepcopy(in_pop)
+    #in_pop=cp.deepcopy(in_pop)
     tot_orgs=in_pop.shape[0]
     fitnesses=np.array([ x[9] for x in in_pop[:] ])
     live_ones=np.nonzero(fitnesses)[0]
     if live_ones.size == tot_orgs:
-        out_pop=in_pop
+        out_pop=cp.deepcopy(in_pop)
     elif live_ones.size != 0:
         #print(f"{tot_orgs - live_ones.size} organisms are dead. Sorry for your loss...")
-        out_pop=in_pop[live_ones]
+        out_pop=cp.deepcopy(in_pop[live_ones])
     elif live_ones.size == 0:
         print(f"Your population went extinct. Sorry for your loss.")
         out_pop=np.array([])
     return(out_pop)
+class UnknownSelectiveStrategy(Exception):
+    pass
 
 def select(in_pop,p=0.1,strategy='high pressure'):
-    in_pop=cp.deepcopy(in_pop)
     pop_size=in_pop.shape[0]
     num_survivors=int(pop_size*p)
+    fitnesses=np.array([ x[9] for x in in_pop[:] ])
+    print(f"Proportion of survivors will be {p}, which will be {num_survivors}, out of a total of {pop_size}") # DEBUG
     if strategy == "high pressure":
-        fitnesses=np.array([ x[9] for x in in_pop[:] ])
         out_idcs=np.argpartition(fitnesses,-num_survivors)[-num_survivors:] # returns the **indices** for the top 'num_survivors' fitnesses.
     elif strategy == "low pressure" and p < 0.5:
-        fitnesses=np.array([ x[9] for x in in_pop[:] ])
-        half=np.floor_divide(pop_size,2)
+        half=int(pop_size/2)
         top_half=np.argpartition(fitnesses,-half)[-half:]
         out_idcs=np.random.choice(top_half,num_survivors,replace=False)
     elif strategy == "low pressure" and p >= 0.5:
-        print(f"Low pressure strategy is not recommended for offspring populations\nresulting from more than half the parental population\nDefaulting to total relaxation of selection...")
         out_idcs=np.random.choice(range(pop_size),num_survivors,replace=False)
     elif strategy == "totally relaxed":
         out_idcs=np.random.choice(range(pop_size),num_survivors,replace=False)
-    out_pop=in_pop[out_idcs]
+    else:
+        raise UnknownSelectiveStrategy(f"Selective strategy {strategy} is not recognized\nThis value should be any of \"high pressure\", \"low pressure\", or \"totally relaxed\".\n Please double-check your input.")
+    out_pop=cp.deepcopy(in_pop[out_idcs])
     return(out_pop)
     
 def randsplit(in_pop,out_pop_size):
