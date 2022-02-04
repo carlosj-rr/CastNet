@@ -318,18 +318,18 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
         for i in curr_muttype_vect:
             gene=i[0]
             mtype=i[1]
+            print(f"Gene {gene} is {curr_genes_on[gene]}.")
             if mtype in [1,2]: # For all non-KO mutations (i.e. synonymous, and non-synonymous)...
                 if curr_genes_on[gene]: # If the gene is ON...
-                    active_links=np.array(list(zip(np.nonzero(curr_grn)[0],np.nonzero(curr_grn)[1])))
-                    actives_in_gene=active_links[active_links[:,0] == gene] # get the gene's active links
+                    all_links_forgene=list(zip(np.repeat(gene,num_genes),range(num_genes)))
                     if mtype == 1: # And the mutation is non-synonymous...
-                        rand_idx=np.random.choice(np.arange(len(actives_in_gene))) # FIXED # get a random index number for mutating a link
-                        coordinates=tuple(actives_in_gene[rand_idx,:]) # get the random link's specific coordinates
+                        rand_idx=np.random.choice(np.arange(len(all_links_forgene))) # FIXED # get a random index number for mutating a link
+                        coordinates=tuple(all_links_forgene[rand_idx]) # get the random link's specific coordinates
                         val=curr_grn[coordinates] # Extract the value that will be mutated.
-                        curr_grn[coordinates]=weight_mut(val,0.5) # mutate the value.
+                        curr_grn[coordinates]=weight_mut(val,0.5) # mutate the value by a good amount
                     elif mtype == 2: # If gene is ON, and the mutation is synonymous...
-                        rand_idx=np.random.choice(np.arange(len(actives_in_gene)))
-                        coordinates=tuple(actives_in_gene[rand_idx,:])
+                        rand_idx=np.random.choice(np.arange(len(all_links_forgene)))
+                        coordinates=tuple(all_links_forgene[rand_idx])
                         val=curr_grn[coordinates] # Same as above
                         curr_grn[coordinates]=weight_mut(val,0.001) # mutate the value by a very small proportion.
                     else:
@@ -338,17 +338,27 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
                     if mtype == 1: # And the mutation is non-synonymous
                         inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
                         inactives_in_gene=inactive_links[inactive_links[:,0] == gene]
-                        rand_idx=np.random.choice(np.arange(len(inactives_in_gene)))
-                        coordinates=tuple(inactives_in_gene[rand_idx])
-                        mean_exp_val=np.mean(np.abs(curr_grn[np.nonzero(curr_grn)])) # Mean expression amount
-                        sign=np.random.choice((-1,1)) # Randomly choose between negative or positive
-                        new_val=mean_exp_val*sign
+                        print(f"Number of inactive genes is {len(inactives_in_gene)}.")
+                        if len(inactives_in_gene > 0):
+                            rand_idx=np.random.choice(np.arange(len(inactives_in_gene)))
+                            coordinates=tuple(inactives_in_gene[rand_idx])
+                            print(f"Activating link in {coordinates}, which now has {curr_grn[coordinates]}. Make sure it's zero.")
+                            mean_exp_val=np.mean(np.abs(curr_grn[np.nonzero(curr_grn)])) # Mean expression amount
+                            sign=np.random.choice((-1,1)) # Randomly choose between negative or positive
+                            new_val=mean_exp_val*sign
+                        else:
+                            # This block turns off a non-zero link.
+                            active_links=np.array(list(zip(np.nonzero(curr_grn)[0],np.nonzero(curr_grn)[1])))
+                            actives_in_gene=active_links[active_links[:,0] == gene]
+                            rand_idx=np.random.choice(range(len(actives_in_gene)))
+                            coordinates=tuple(actives_in_gene[rand_idx])
+                            print(f"Activating link in {coordinates}, which now has {curr_grn[coordinates]}. Make sure it's NOT zero.")
+                            new_val=0
                         curr_grn[coordinates]=new_val
                     elif mtype == 2: # If gene is OFF, and the mutation is synonymous...
-                        # check for all 'active' links of the gene (i.e. with a non-zero value)
-                        all_links=list(zip(np.repeat(gene,num_genes),range(num_genes)))
-                        rand_idx=np.random.choice(np.arange(len(all_links)))
-                        coordinates=tuple(all_links[rand_idx]) # get the random link's specific coordinates
+                        all_links_forgene=list(zip(np.repeat(gene,num_genes),range(num_genes)))
+                        rand_idx=np.random.choice(np.arange(len(all_links_forgene)))
+                        coordinates=tuple(all_links_forgene[rand_idx]) # get the random link's specific coordinates
                         val=curr_grn[coordinates] # Extract the value that will be mutated.
                         curr_grn[coordinates]=weight_mut(val,0.5) # mutate the value.
                     else:
@@ -447,8 +457,9 @@ def randsplit(in_pop,out_pop_size):
     idcs_linb=np.array([ rand for rand in np.arange(inpopsize) if rand not in idcs_lina])
     print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
     print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
-    lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
-    linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
+    print(f"Output populations should be of {out_pop_size} individuals.")
+    #lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
+    #linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
     return(lina,linb)
 
 def main(founder):
