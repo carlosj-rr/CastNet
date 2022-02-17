@@ -295,7 +295,7 @@ def pointMutateCodon(codon,pos_to_mutate):
 class MutationTypeError(Exception):
     pass
 
-def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
+def old_regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     curr_grn=cp.deepcopy(in_grn)
     curr_thr=cp.deepcopy(in_thresh)
     curr_genes_on=cp.deepcopy(genes_on)
