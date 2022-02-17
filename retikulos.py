@@ -295,86 +295,6 @@ def pointMutateCodon(codon,pos_to_mutate):
 class MutationTypeError(Exception):
     pass
 
-def old_regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
-    curr_grn=cp.deepcopy(in_grn)
-    curr_thr=cp.deepcopy(in_thresh)
-    curr_genes_on=cp.deepcopy(genes_on)
-    curr_dec=cp.deepcopy(in_dec)
-    curr_muttype_vect=cp.deepcopy(muttype_vect)
-    if np.any(curr_muttype_vect < 0):
-        raise NegativeIndex(f"There is a number in the mutations array that is negative:\n\n{curr_muttype_vect}\n\nThis may result in untractable mutations, consider inspecting the output of codPos()")
-    inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
-    num_genes=curr_genes_on.size
-    # Choosing mutations for the thresholds or decays...
-    prop=(lambda x: 2/(2+x))(num_genes) #proportion of total regulatory interactions that are thresholds OR decays (simplified from "2N/(2N+N^2)", where N is the total number of genes.)
-    hits=np.nonzero(np.random.choice((0,1),len(muttype_vect),p=(1-prop,prop)))[0]
-    if hits.size > 0:
-        mutsarr=curr_muttype_vect[hits]
-        out_threshs,out_decs=threshs_and_decs_mutator(in_thresh,in_dec,mutsarr)
-        curr_muttype_vect=np.delete(curr_muttype_vect,hits,axis=0)
-    else:
-        out_threshs,out_decs=curr_thr,curr_dec
-    if curr_muttype_vect.size > 0:
-        for i in curr_muttype_vect:
-            gene=i[0]
-            mtype=i[1]
-            print(f"Gene {gene} is {curr_genes_on[gene]}.")
-            if mtype in [1,2]: # For all non-KO mutations (i.e. synonymous, and non-synonymous)...
-                if curr_genes_on[gene]: # If the gene is ON...
-                    all_links_forgene=list(zip(np.repeat(gene,num_genes),range(num_genes)))
-                    if mtype == 1: # And the mutation is non-synonymous...
-                        rand_idx=np.random.choice(np.arange(len(all_links_forgene))) # FIXED # get a random index number for mutating a link
-                        coordinates=tuple(all_links_forgene[rand_idx]) # get the random link's specific coordinates
-                        val=curr_grn[coordinates] # Extract the value that will be mutated.
-                        curr_grn[coordinates]=weight_mut(val,0.5) # mutate the value by a good amount
-                    elif mtype == 2: # If gene is ON, and the mutation is synonymous...
-                        rand_idx=np.random.choice(np.arange(len(all_links_forgene)))
-                        coordinates=tuple(all_links_forgene[rand_idx])
-                        val=curr_grn[coordinates] # Same as above
-                        curr_grn[coordinates]=weight_mut(val,0.001) # mutate the value by a very small proportion.
-                    else:
-                        raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
-                else: # If the gene is OFF...
-                    if mtype == 1: # And the mutation is non-synonymous
-                        inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
-                        inactives_in_gene=inactive_links[inactive_links[:,0] == gene]
-                        print(f"Number of inactive genes is {len(inactives_in_gene)}.")
-                        if len(inactives_in_gene > 0):
-                            rand_idx=np.random.choice(np.arange(len(inactives_in_gene)))
-                            coordinates=tuple(inactives_in_gene[rand_idx])
-                            print(f"Activating link in {coordinates}, which now has {curr_grn[coordinates]}. Make sure it's zero.")
-                            mean_exp_val=np.mean(np.abs(curr_grn[np.nonzero(curr_grn)])) # Mean expression amount
-                            sign=np.random.choice((-1,1)) # Randomly choose between negative or positive
-                            new_val=mean_exp_val*sign
-                        else:
-                            # This block turns off a non-zero link.
-                            active_links=np.array(list(zip(np.nonzero(curr_grn)[0],np.nonzero(curr_grn)[1])))
-                            actives_in_gene=active_links[active_links[:,0] == gene]
-                            rand_idx=np.random.choice(range(len(actives_in_gene)))
-                            coordinates=tuple(actives_in_gene[rand_idx])
-                            print(f"Activating link in {coordinates}, which now has {curr_grn[coordinates]}. Make sure it's NOT zero.")
-                            new_val=0
-                        curr_grn[coordinates]=new_val
-                    elif mtype == 2: # If gene is OFF, and the mutation is synonymous...
-                        all_links_forgene=list(zip(np.repeat(gene,num_genes),range(num_genes)))
-                        rand_idx=np.random.choice(np.arange(len(all_links_forgene)))
-                        coordinates=tuple(all_links_forgene[rand_idx]) # get the random link's specific coordinates
-                        val=curr_grn[coordinates] # Extract the value that will be mutated.
-                        curr_grn[coordinates]=weight_mut(val,0.5) # mutate the value.
-                    else:
-                        raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
-            elif mtype == 0: # If mutation is KO
-                curr_grn[gene,:]=0
-                curr_grn[:,gene]=0
-                out_grn=curr_grn
-                curr_genes_on[gene]=0 # Important change to avoid THE bug.
-            else:
-                raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
-    else:
-        pass
-    out_grn=cp.deepcopy(curr_grn)
-    return(out_grn,out_threshs,out_decs)
-
 def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     curr_grn=cp.deepcopy(in_grn)
     curr_thr=cp.deepcopy(in_thresh)
@@ -397,49 +317,67 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     if curr_muttype_vect.size > 0:
         refmat=np.repeat(1,curr_grn.size).reshape(curr_grn.shape)
         refmat[:]=curr_genes_on
+        print(refmat)
         for i in curr_muttype_vect:
             gene=i[0]
+            if gene not in range(num_genes):
+                raise IndexError(f"Gene number {gene} is not within the number of genes in the system (integers between 0 and {num_genes-1})")
             mtype=i[1]
             exprstate=curr_genes_on[gene]
-            print(f"Gene {gene} is {curr_genes_on[gene]}.")
+            print(f"Gene {gene}'s expression state is {exprstate}.")
             if mtype in [1,2]:
-                active_sites=np.array(list(zip(np.where(refmat == 1)[0],np.where(refmat == 1)[1])))  # For all non-KO mutations (i.e. synonymous, and non-synonymous)...
-                if curr_genes_on[gene]: # If the gene is ON...
-                    all_links_forgene=list(zip(np.repeat(gene,num_genes),range(num_genes)))
-                    if exprstate == 0 and mtype == 1:
-                        mutable_sites=active_sites[np.where(active_sites[:,0] == gene)]
-                        site_to_mutate=mutable_sites[np.random.choice(range(mutable_sites.shape[0]))]
+                if exprstate == 0 and mtype == 1: # Gene OFF, Non-Synonymous mutation
+                    active_sites=np.array(list(zip(np.where(refmat == 1)[0],np.where(refmat == 1)[1])))  # non-silent sites for non-synonymous mutations
+                    print(f"Gene {gene} is OFF (exprstate={exprstate}), AND the mutation type is NS (Mtype={mtype})")
+                    mutable_sites=active_sites[np.where(active_sites[:,0] == gene)]
+                    site_to_mutate=tuple(mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
+                    curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
+                    print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
+                if exprstate == 0 and mtype == 2: #Gene OFF, Synonymous mutation
+                    print("Using the inactives site matrix...")
+                    inactive_sites=np.array(list(zip(np.where(refmat == 0)[0],np.where(refmat == 0)[1]))) #silent sites for synonymous mutations
+                    print(f"Gene {gene} is OFF (exprstate={exprstate}), AND the mutation type is S (Mtype={mtype})")
+                    mutable_sites=inactive_sites[np.where(inactive_sites[:,1] == gene)]
+                    print(mutable_sites,mutable_sites.size)
+                    if mutable_sites.size == 0:
+                        site_to_mutate=(gene,gene)
+                        print(f"Gene {gene} is OFF ({exprstate}), and is the only one, so the site to mutate should be ({gene,gene}), confirm: {site_to_mutate}.")
+                    else:
+                        print("Gene is OFF, and there are enough places to mutate:\n{mutable_sites}")
+                        site_to_mutate=tuple(mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
+                    curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
+                    print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
+                if exprstate == 1 and mtype == 1: #Gene ON, Non-Synonymous mutation
+                    active_sites=np.array(list(zip(np.where(refmat == 1)[0],np.where(refmat == 1)[1])))  # non-silent sites for non-synonymous mutations
+                    print(f"Gene {gene} is ON (exprstate={exprstate}, AND the mutation typs is NS (Mtype={mtype})")
+                    mutable_sites=active_sites[np.where(active_sites[:,1] == gene)]
+                    site_to_mutate=tuple(mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
+                    print(site_to_mutate)
+                    print(in_grn[site_to_mutate])
+                    curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
+                    print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
+                if exprstate == 1 and mtype == 2:#Gene OFF, Synonymous mutation
+                    print("Using the inactives site matrix...")
+                    inactive_sites=np.array(list(zip(np.where(refmat == 0)[0],np.where(refmat == 0)[1]))) #silent sites for synonymous mutations
+                    print(f"Gene {gene} is ON (exprstate={exprstate}, AND the mutation typs is S (Mtype={mtype}")
+                    mutable_sites=inactive_sites[np.where(inactive_sites[:,1] == gene)]
+                    if mutable_sites.size != 0: # The more common case, where some genes are off
+                        site_to_mutate=tuple(site_to_mutate=mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
                         curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
-                    if exprstate == 0 and mtype == 2:
-                        mutable_sites=active_sites[np.where(active_sites[:,1] == gene)]
-                        if mutable_sites.size == 0:
-                            site_to_mutate=(gene,gene)
-                        else:
-                            site_to_mutate=mutable_sites[np.random.choice(range(mutable_sites.shape[0]))]
-                        curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
-                    if exprstate == 1 and mtype == 1:
-                        mutable_sites=active_sites[np.where(active_sites[:,1] == gene)]
-                        site_to_mutate=mutable_sites[np.random.choice(range(mutable_sites.shape[0]))]
-                        curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
-                    if exprstate == 1 and mtype == 2:
-                        changer_sites=np.array(list(zip(np.where(refmat == 0)[0],np.where(refmat == 0)[1])))
-                        mutable_sites=changer_sites[np.where(changer_sites[:,1] == gene)]
-                        if mutable_sites.size != 0:
-                            site_to_mutate=site_to_mutate=mutable_sites[np.random.choice(range(mutable_sites.shape[0]))]
-                            curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
-                        else:
-                            mutable_sites=list(zip(np.repeat(gene,num_genes),range(num_genes)))
+                    else: # This is in case there are NO genes OFF.
+                        mutable_sites=np.array(list(zip(np.repeat(gene,num_genes),range(num_genes))))
+                        site_to_mutate=tuple(mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
                         curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.001)
+                    print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
             elif mtype == 0: # If mutation is KO
+                print(f"Gene {gene} will be knocked out (Mtype={mtype})")
                 curr_grn[gene,:]=0
                 curr_grn[:,gene]=0
                 out_grn=curr_grn
                 curr_genes_on[gene]=0 # Important change to avoid THE bug.
             else:
                 raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
-    else:
-        pass
-    out_grn=cp.deepcopy(curr_grn)
+    out_grn=curr_grn
     return(out_grn,out_threshs,out_decs)
 
 
