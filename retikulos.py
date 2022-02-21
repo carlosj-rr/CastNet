@@ -159,12 +159,13 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
     orgs_per_org=np.array([np.round(out_pop_size/num_in_orgs).astype(int)])
     curr_pop_size=orgs_per_org*num_in_orgs
     if strategy == 'equal':
+        print("equal reproduction strategy selected...")
         orgs_per_org=np.repeat(orgs_per_org,num_in_orgs)
     elif strategy == 'fitness_linked':
         print("Reproduction is fitness bound.")
-        pass
+        raise NotImplementedError("Fitness linked reproductive strategy is not yet implemented. Sorry!")
     else:
-        raise ValueError(f"Reproductive strategy: <{strategy}> not recognized")
+        raise ValueError(f"Reproductive strategy \"{strategy}\" not recognized.\nStrategy must be either \'equal\' or \'fitness_linked\'.")
     counter=0
     out_pop=np.ndarray((curr_pop_size[0],),dtype=object)
     #print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }")
@@ -317,7 +318,7 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     if curr_muttype_vect.size > 0:
         refmat=np.repeat(1,curr_grn.size).reshape(curr_grn.shape)
         refmat[:]=curr_genes_on
-        print(refmat)
+        #print(refmat)
         for i in curr_muttype_vect:
             gene=i[0]
             if gene not in range(num_genes):
@@ -442,6 +443,7 @@ def cleanup_deads(in_pop):
         print(f"Your population went extinct. Sorry for your loss.")
         out_pop=np.array([])
     return(out_pop)
+
 class UnknownSelectiveStrategy(Exception):
     pass
 
@@ -472,11 +474,11 @@ def randsplit(in_pop,out_pop_size):
     inpopsize=in_pop.shape[0]
     idcs_lina=np.random.choice(range(inpopsize),int(inpopsize/2),replace=False)
     idcs_linb=np.array([ rand for rand in np.arange(inpopsize) if rand not in idcs_lina])
-    print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
-    print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
-    print(f"Output populations should be of {out_pop_size} individuals.")
-    #lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
-    #linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
+    #print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
+    #print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
+    #print(f"Output populations should be of {out_pop_size} individuals.")
+    lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
+    linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
     return(lina,linb)
 
 def main(founder):

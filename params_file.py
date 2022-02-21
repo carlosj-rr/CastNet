@@ -6,7 +6,7 @@ prop_unlinked = 0.7
 thresh_boundaries = (0.1,2)
 decay_boundaries = (0,2)
 dev_steps = 15 # For the moment no more than 999 is possible
-pop_size = 1000 # For the moment, Multiple of 10
+pop_size = 100 # For the moment, Multiple of 10
 
 # MUTATION PARAMETERS
 #thresh_decay_mut_bounds = (-0.01,0.01)
