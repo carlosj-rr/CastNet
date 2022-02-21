@@ -179,6 +179,7 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
             counter=counter+1
             #print(np.all(out_pop[counter == out_pop[(counter-1)]]))
     out_pop=cleanup_deads(out_pop) # removing any dead organisms.
+    print(f"{out_pop.size} organisms survived")
     return(out_pop)
 
 class NegativeIndex(Exception):
@@ -453,7 +454,7 @@ def select(in_pop,p=0.1,strategy='high pressure'):
     fitnesses=np.array([ x[9] for x in in_pop[:] ])
     if num_survivors == 0:
         raise ValueError(f"A proportion of {p} results in 0 survivors, you've selected your population into extinction.")
-    print(f"Proportion of survivors will be {p}, which will be {num_survivors}, out of a total of {pop_size}") # DEBUG
+    #print(f"Proportion of survivors will be {p}, which will be {num_survivors}, out of a total of {pop_size}") # DEBUG
     if strategy == "high pressure":
         out_idcs=np.argpartition(fitnesses,-num_survivors)[-num_survivors:] # returns the **indices** for the top 'num_survivors' fitnesses.
     elif strategy == "low pressure" and p < 0.5:
@@ -470,6 +471,33 @@ def select(in_pop,p=0.1,strategy='high pressure'):
     return(out_pop)
     
 def randsplit(in_pop,out_pop_size):
+    #in_pop=cp.deepcopy(in_pop)
+    inpopsize=in_pop.shape[0]
+    if inpopsize > 2:
+        idcs_lina=np.random.choice(range(inpopsize),int(inpopsize/2),replace=False)
+        idcs_linb=np.array([ rand for rand in np.arange(inpopsize) if rand not in idcs_lina])
+        lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
+        linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
+    elif inpopsize == 2:
+        l=[1,0]
+        idx_lina=np.random.choice((0,1),1)[0]
+        idx_linb=l[idcs_lina]
+        lina=grow_pop(in_pop[idx_lina],out_pop_size,'equal')
+        linb=grow_pop(in_pop[idx_linb],out_pop_size,'equal')
+    elif inpopsize == 1:
+        print("Input population has single individual only")
+        stem_lina=in_pop
+        stem_linb=in_pop
+        lina=grow_pop(stem_lina,out_pop_size,'equal')
+        linb=grow_pop(stem_linb,out_pop_size,'equal')
+    elif inpopsize < 1:
+        raise ValueError(f"Input population doesn't have enough individuals: {inpopsize}.")
+    #print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
+    #print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
+    #print(f"Output populations should be of {out_pop_size} individuals.")
+    return(lina,linb)
+
+def old_randsplit(in_pop,out_pop_size):
     #in_pop=cp.deepcopy(in_pop)
     inpopsize=in_pop.shape[0]
     idcs_lina=np.random.choice(range(inpopsize),int(inpopsize/2),replace=False)
