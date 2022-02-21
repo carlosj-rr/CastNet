@@ -481,15 +481,13 @@ def randsplit(in_pop,out_pop_size):
     elif inpopsize == 2:
         l=[1,0]
         idx_lina=np.random.choice((0,1),1)[0]
-        idx_linb=l[idcs_lina]
+        idx_linb=l[idx_lina]
         lina=grow_pop(in_pop[idx_lina],out_pop_size,'equal')
         linb=grow_pop(in_pop[idx_linb],out_pop_size,'equal')
     elif inpopsize == 1:
         print("Input population has single individual only")
-        stem_lina=in_pop
-        stem_linb=in_pop
-        lina=grow_pop(stem_lina,out_pop_size,'equal')
-        linb=grow_pop(stem_linb,out_pop_size,'equal')
+        lina=grow_pop(in_pop,out_pop_size,'equal')
+        linb=grow_pop(in_pop,out_pop_size,'equal')
     elif inpopsize < 1:
         raise ValueError(f"Input population doesn't have enough individuals: {inpopsize}.")
     #print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
@@ -555,8 +553,6 @@ def branch_evol(in_pop,ngens):
             survivors=select(in_pop,pf.prop_survivors,pf.select_strategy)
             next_pop=grow_pop(survivors,pf.pop_size,pf.reproductive_strategy)
             in_pop=next_pop
-    else:
-        pass
     return(in_pop)
 
 def unpickle(filename):
