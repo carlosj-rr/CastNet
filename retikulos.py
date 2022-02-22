@@ -507,8 +507,8 @@ def old_randsplit(in_pop,out_pop_size):
     linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
     return(lina,linb)
 
-def main(founder):
-    founder=cp.deepcopy(founder)
+def main():
+    founder=founder_miner(0.3)
     results_array=np.ndarray(9,dtype=object)
     founder_pop=grow_pop(founder,pf.pop_size,'equal')
     results_array[0]=cp.deepcopy(founder_pop)
@@ -519,7 +519,7 @@ def main(founder):
     results_array[3]=cp.deepcopy(stem_lin3)
     results_array[4]=cp.deepcopy(stem_lin4)
     four_branches=np.array([stem_lin1,stem_lin2,stem_lin3,stem_lin4],dtype=object)
-    n_genslist1=np.array([100,100,100,100])
+    n_genslist1=np.array([10,100,1000,10000])
 
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol,four_branches,n_genslist1)
