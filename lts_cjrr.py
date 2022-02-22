@@ -32,6 +32,7 @@ def gradient_descent(W_guess, inputs, targets):
 
 def find_linear_transform(inputs, targets):
     assert inputs.shape == targets.shape, "Inputs and targets have missmatching shapes"
+    assert len(inputs.shape) == 2, "Your input vectors are wrong dimensions, Carlos!"
     W_shape = (inputs.shape[1], inputs.shape[1])
     key = random.PRNGKey(0)
     W_guess = random.normal(key, W_shape)  # <--- This is my initial incorrect guess about what the true W is.
