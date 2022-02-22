@@ -40,7 +40,7 @@ def find_linear_transform(inputs, targets):
     # loss/mismatch.
     W_guess = gradient_descent(W_guess, inputs, targets)
 
-    print(f"Final loss {loss(inputs, W, targets)}")
+    print(f"Final loss {loss(inputs, W_guess, targets)}")
     return W_guess
 
 
