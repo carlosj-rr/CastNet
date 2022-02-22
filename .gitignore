@@ -130,3 +130,6 @@ dmypy.json
 
 # Pickled objects. Must stick to the file extension
 *.pkl
+
+# Any FASTA files.
+*.fas
