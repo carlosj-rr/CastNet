@@ -565,3 +565,17 @@ if __name__ == "__main__":
 #print(result.shape)
 #store(result)
 
+def export_randalignments(organism_array,outfile_prefix="outfile"):
+	num_orgs = organism_array.size
+	rand_seqs=np.random.choice(num_orgs,10)
+	num_genes = organism_array[0][1].shape[0]
+	sequences_array = np.array([ x[1] for x in organism_array ])
+	for i in range(num_genes):
+		filename = outfile_prefix + "_gene" + str(i) + ".fas"
+		with open(filename,"w") as gene_file:
+			for j in range(rand_seqs.size):
+				seq_name = ">"+outfile_prefix+"_"+str(i) + "_org" + str(j)
+				sequence = ''.join(organism_array[j][1][i])
+				print(seq_name, file=gene_file)
+				print(sequence, file=gene_file)
+		print("Gene",str(i),"done")
