@@ -80,7 +80,7 @@ dev=np.array([[ 1.        ,  0.        ,  0.        ,  0.        ,  0.        ],
 
 # Equation to get the vector v1 from v0:
 v0=dev[0] # take the starting vector as v0, this is identical always, and user defined (as I mentioned above).
-decayed_v0=(lambda x, l: x*np.exp(-l))(vn,decay_lambdas) # Decay the initial amount by one step
+decayed_v0=(lambda x, l: x*np.exp(-l))(v0,decay_lambdas) # Decay the initial amount by one step
 exp_change = np.matmul(grn,decayed_v0) # Calculate the regulatory effects of the decayed quantities
 pre_thresholds = exp_change + decayed_v0 # add the decayed amounts to the regulatory effects
 thresh_rectifier = (pre_thresholds > exp_thre).astype(int) # a vector to rectify the resulting values to their thresholds
