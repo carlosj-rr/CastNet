@@ -88,6 +88,7 @@ v1 = pre_thresholds * thresh_rectifier #rectifying for the thresholds
 
 X=dev[0:15]
 y=dev[1:16]
+true_W=grn
 
 if __name__ == "__main__":
     X = np.array([  # These are my input vectors arranged in a matrix
