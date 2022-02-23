@@ -128,8 +128,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Pickled objects. Must stick to the file extension
+# Pickled/saved objects.
+*.npy
 *.pkl
 
-# Any FASTA files.
-*.fas
+# Any Alignment files.
+*.fas*
+*.phy*
