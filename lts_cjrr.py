@@ -77,7 +77,6 @@ dev=np.array([[ 1.        ,  0.        ,  0.        ,  0.        ,  0.        ],
        [ 0.        ,  0.079295  ,  0.        ,  0.        ,  0.18941079],
        [ 0.        ,  0.06643063,  0.        ,  0.        ,  0.15868185]]) # The development of the GRN through 15 steps, with the inital one being a standardized, user-defined seed.
 
-
 # Equation to get the vector v1 from v0:
 v0=dev[0] # take the starting vector as v0, this is identical always, and user defined (as I mentioned above).
 decayed_v0=(lambda x, l: x*np.exp(-l))(v0,decay_lambdas) # Decay the initial amount by one step
