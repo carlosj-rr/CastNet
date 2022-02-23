@@ -175,7 +175,7 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
         for i in range(num_offsp):
             indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
             out_pop[counter]=indiv
-            print(f"Produced organism #{counter}")
+            #print(f"Produced organism #{counter}")
             counter=counter+1
             #print(np.all(out_pop[counter == out_pop[(counter-1)]]))
     out_pop=cleanup_deads(out_pop) # removing any dead organisms.
@@ -509,40 +509,40 @@ def old_randsplit(in_pop,out_pop_size):
 
 def main():
     founder=founder_miner(0.3)
-    results_array=np.ndarray(9,dtype=object)
+    results_array=np.ndarray(13,dtype=object)
     founder_pop=grow_pop(founder,pf.pop_size,'equal')
     results_array[0]=cp.deepcopy(founder_pop)
-    stem_lin1,stem_lin2=randsplit(founder_pop,pf.pop_size)
-    stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    results_array[1]=cp.deepcopy(stem_lin1)
-    results_array[2]=cp.deepcopy(stem_lin2)
-    results_array[3]=cp.deepcopy(stem_lin3)
-    results_array[4]=cp.deepcopy(stem_lin4)
-    four_branches=np.array([stem_lin1,stem_lin2,stem_lin3,stem_lin4],dtype=object)
-    n_genslist1=np.array([10,100,1000,10000])
+    stem_anc1,stem_anc2=randsplit(founder_pop,pf.pop_size)
+    #stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
+    results_array[1]=cp.deepcopy(stem_anc1)
+    results_array[2]=cp.deepcopy(stem_anc2)
+    #results_array[3]=cp.deepcopy(stem_lin3)
+    #results_array[4]=cp.deepcopy(stem_lin4)
+    anc_branches=np.array([stem_anc1,stem_anc2],dtype=object)
+    n_genslist1=np.array([10000,10000])
 
     with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol,four_branches,n_genslist1)
+        result = pool.map(branch_evol,anc_branches,n_genslist1)
         
-    tip_lin1,tip_lin2,tip_lin3,tip_lin4=np.array(list(result),dtype=object)
-    results_array[5]=cp.deepcopy(tip_lin1)
-    results_array[6]=cp.deepcopy(tip_lin2)
-    results_array[7]=cp.deepcopy(tip_lin3)
-    results_array[8]=cp.deepcopy(tip_lin4)
-    if False:
-        stem_lin3,stem_lin4=randsplit(tip_lin1,pf.pop_size)
-        results_array[5],results_array[6]=cp.deepcopy(stem_lin3),cp.deepcopy(stem_lin4)
-        stem_lin5,stem_lin6=randsplit(tip_lin2,pf.pop_size)
-        results_array[7],results_array[8]=cp.deepcopy(stem_lin5),cp.deepcopy(stem_lin6)
+    tip_anc1,tip_anc2=np.array(list(result),dtype=object)
+    results_array[3]=cp.deepcopy(tip_anc1)
+    results_array[4]=cp.deepcopy(tip_anc2)
+
+    #results_array[7]=cp.deepcopy(tip_lin3)
+    #results_array[8]=cp.deepcopy(tip_lin4)
+    stem_leafa,stem_leafb=randsplit(tip_anc1,pf.pop_size)
+    results_array[5],results_array[6]=cp.deepcopy(stem_leafa),cp.deepcopy(stem_leafb)
+    stem_leafc,stem_leafd=randsplit(tip_anc2,pf.pop_size)
+    results_array[7],results_array[8]=cp.deepcopy(stem_leafc),cp.deepcopy(stem_leafd)
         
-        four_branches=np.array([stem_lin3,stem_lin4, stem_lin5, stem_lin6],dtype=object)
-        n_genslist2=np.array([10,10,10,10])
+    four_leaves=np.array([stem_leafa,stem_leafb, stem_leafc, stem_leafd],dtype=object)
+    n_genslist2=np.array([10000,10000,10000,10000])
         
-        with ProcessPoolExecutor() as pool:
-            result = pool.map(branch_evol,four_branches,n_genslist2)
+    with ProcessPoolExecutor() as pool:
+        result = pool.map(branch_evol,four_leaves,n_genslist2)
             
-        tip_lin3,tip_lin4,tip_lin5,tip_lin6=np.array(list(result),dtype=object)
-        results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(tip_lin3),cp.deepcopy(tip_lin4),cp.deepcopy(tip_lin5),cp.deepcopy(tip_lin6)
+    tip_leafa,tip_leafb,tip_leafc,tip_leafd=np.array(list(result),dtype=object)
+    results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(tip_leafa),cp.deepcopy(tip_leafb),cp.deepcopy(tip_leafc),cp.deepcopy(tip_leafd)
     return(results_array)
 
 def branch_evol(in_pop,ngens):
@@ -563,7 +563,7 @@ def unpickle(filename):
 if __name__ == "__main__":
     result=main()
 #print(result.shape)
-#store(result)
+store(result)
 
 def export_randalignments(organism_array,outfile_prefix="outfile"):
 	num_orgs = organism_array.size
