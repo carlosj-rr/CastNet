@@ -159,12 +159,13 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
     orgs_per_org=np.array([np.round(out_pop_size/num_in_orgs).astype(int)])
     curr_pop_size=orgs_per_org*num_in_orgs
     if strategy == 'equal':
+        print("equal reproduction strategy selected...")
         orgs_per_org=np.repeat(orgs_per_org,num_in_orgs)
     elif strategy == 'fitness_linked':
         print("Reproduction is fitness bound.")
-        pass
+        raise NotImplementedError("Fitness linked reproductive strategy is not yet implemented. Sorry!")
     else:
-        raise ValueError(f"Reproductive strategy: <{strategy}> not recognized")
+        raise ValueError(f"Reproductive strategy \"{strategy}\" not recognized.\nStrategy must be either \'equal\' or \'fitness_linked\'.")
     counter=0
     out_pop=np.ndarray((curr_pop_size[0],),dtype=object)
     #print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }")
@@ -174,10 +175,11 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
         for i in range(num_offsp):
             indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
             out_pop[counter]=indiv
-            print(f"Produced organism #{counter}")
+            #print(f"Produced organism #{counter}")
             counter=counter+1
             #print(np.all(out_pop[counter == out_pop[(counter-1)]]))
     out_pop=cleanup_deads(out_pop) # removing any dead organisms.
+    print(f"{out_pop.size} organisms survived")
     return(out_pop)
 
 class NegativeIndex(Exception):
@@ -315,65 +317,82 @@ def regulator_mutator(in_grn,genes_on,in_dec,in_thresh,muttype_vect):
     else:
         out_threshs,out_decs=curr_thr,curr_dec
     if curr_muttype_vect.size > 0:
+        refmat=np.repeat(1,curr_grn.size).reshape(curr_grn.shape)
+        refmat[:]=curr_genes_on
+        #print(refmat)
         for i in curr_muttype_vect:
             gene=i[0]
+            if gene not in range(num_genes):
+                raise IndexError(f"Gene number {gene} is not within the number of genes in the system (integers between 0 and {num_genes-1})")
             mtype=i[1]
-            print(f"Gene {gene} is {curr_genes_on[gene]}.")
-            if mtype in [1,2]: # For all non-KO mutations (i.e. synonymous, and non-synonymous)...
-                if curr_genes_on[gene]: # If the gene is ON...
-                    all_links_forgene=list(zip(np.repeat(gene,num_genes),range(num_genes)))
-                    if mtype == 1: # And the mutation is non-synonymous...
-                        rand_idx=np.random.choice(np.arange(len(all_links_forgene))) # FIXED # get a random index number for mutating a link
-                        coordinates=tuple(all_links_forgene[rand_idx]) # get the random link's specific coordinates
-                        val=curr_grn[coordinates] # Extract the value that will be mutated.
-                        curr_grn[coordinates]=weight_mut(val,0.5) # mutate the value by a good amount
-                    elif mtype == 2: # If gene is ON, and the mutation is synonymous...
-                        rand_idx=np.random.choice(np.arange(len(all_links_forgene)))
-                        coordinates=tuple(all_links_forgene[rand_idx])
-                        val=curr_grn[coordinates] # Same as above
-                        curr_grn[coordinates]=weight_mut(val,0.001) # mutate the value by a very small proportion.
+            exprstate=curr_genes_on[gene]
+            #print(f"Expected: Gene {gene}\tExpression {exprstate}\tMutation type {mtype}.\n")
+            if mtype in [1,2]:
+                if exprstate == 0 and mtype == 1: # Gene OFF, Non-Synonymous mutation (uses active sites)
+                    active_sites=np.array(list(zip(np.where(refmat == 1)[0],np.where(refmat == 1)[1])))  # non-silent sites for non-synonymous mutations
+                    #print("Observed: Gene X\tExpression 0\tMutation type 1~~~~\n<<<<>>>>\n")
+                    if active_sites.size == 0: #if in the same generation, all genes of the organism have been KO'd...
+                        #print("All genes have been turned OFF, NS mutation will be on any link from the gene, and it will turn it ON.")
+                        mutable_sites=np.array(list(zip(np.repeat(gene,num_genes),range(num_genes))))
                     else:
-                        raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
-                else: # If the gene is OFF...
-                    if mtype == 1: # And the mutation is non-synonymous
-                        inactive_links=np.array(list(zip(np.where(curr_grn == 0)[0],np.where(curr_grn == 0)[1])))
-                        inactives_in_gene=inactive_links[inactive_links[:,0] == gene]
-                        print(f"Number of inactive genes is {len(inactives_in_gene)}.")
-                        if len(inactives_in_gene > 0):
-                            rand_idx=np.random.choice(np.arange(len(inactives_in_gene)))
-                            coordinates=tuple(inactives_in_gene[rand_idx])
-                            print(f"Activating link in {coordinates}, which now has {curr_grn[coordinates]}. Make sure it's zero.")
-                            mean_exp_val=np.mean(np.abs(curr_grn[np.nonzero(curr_grn)])) # Mean expression amount
-                            sign=np.random.choice((-1,1)) # Randomly choose between negative or positive
-                            new_val=mean_exp_val*sign
-                        else:
-                            # This block turns off a non-zero link.
-                            active_links=np.array(list(zip(np.nonzero(curr_grn)[0],np.nonzero(curr_grn)[1])))
-                            actives_in_gene=active_links[active_links[:,0] == gene]
-                            rand_idx=np.random.choice(range(len(actives_in_gene)))
-                            coordinates=tuple(actives_in_gene[rand_idx])
-                            print(f"Activating link in {coordinates}, which now has {curr_grn[coordinates]}. Make sure it's NOT zero.")
-                            new_val=0
-                        curr_grn[coordinates]=new_val
-                    elif mtype == 2: # If gene is OFF, and the mutation is synonymous...
-                        all_links_forgene=list(zip(np.repeat(gene,num_genes),range(num_genes)))
-                        rand_idx=np.random.choice(np.arange(len(all_links_forgene)))
-                        coordinates=tuple(all_links_forgene[rand_idx]) # get the random link's specific coordinates
-                        val=curr_grn[coordinates] # Extract the value that will be mutated.
-                        curr_grn[coordinates]=weight_mut(val,0.5) # mutate the value.
+                        #print("There are enough NS sites to mutate...As you were!")
+                        mutable_sites=active_sites[np.where(active_sites[:,0] == gene)]
+                    site_to_mutate=tuple(mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
+                    curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
+                    #print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
+                if exprstate == 0 and mtype == 2: #Gene OFF, Synonymous mutation (uses inactive sites)
+                    #print("Observed: Gene X\tExpression 0\tMutation type 2~~~~\n<<<<>>>>\n")
+                    #print("Using the inactives site matrix...")
+                    inactive_sites=np.array(list(zip(np.where(refmat == 0)[0],np.where(refmat == 0)[1]))) #silent sites for synonymous mutations
+                    #print(inactive_sites[0:10])
+                    gene_col=inactive_sites[np.where(inactive_sites[:,1] == gene)]
+                    gene_row=inactive_sites[np.where(inactive_sites[:,0] == gene)]
+                    mutable_sites=np.row_stack((gene_col,gene_row))
+                    site_to_mutate=tuple(mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
+                    curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
+                    #print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
+                if exprstate == 1 and mtype == 1: #Gene ON, Non-Synonymous mutation (uses active sites)
+                    #print("Observed: Gene X\tExpression 1\tMutation type 1~~~~\n<<<<>>>>\n")
+                    active_sites=np.array(list(zip(np.where(refmat == 1)[0],np.where(refmat == 1)[1])))  # non-silent sites for non-synonymous mutations
+                    #print(f"Gene {gene} is ON (exprstate={exprstate}, AND the mutation typs is NS (Mtype={mtype})")
+                    gene_col=active_sites[np.where(active_sites[:,1] == gene)]
+                    gene_row=active_sites[np.where(active_sites[:,0] == gene)]
+                    mutable_sites=np.row_stack((gene_col,gene_row))
+                    site_to_mutate=tuple(mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
+                    #print(site_to_mutate)
+                    #print(in_grn[site_to_mutate])
+                    curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
+                    #print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
+                if exprstate == 1 and mtype == 2:#Gene OFF, Synonymous mutation (uses inactive sites)
+                    #print("Observed: Gene X\tExpression 1\tMutation type 2~~~~\n<<<<>>>>\n")
+                    #print(f"Gene {gene} is ON (exprstate={exprstate}, AND the mutation typs is S (Mtype={mtype}")
+                    #print("Using the inactives site matrix...")
+                    inactive_sites=np.array(list(zip(np.where(refmat == 0)[0],np.where(refmat == 0)[1]))) #silent sites for synonymous mutations
+                    #print(inactive_sites[0:10])
+                    if inactive_sites.size == 0: # If all genes are on, the 'gene_row' array will come up empty, so it switches to mutating any gene, a tiny little bit.
+                        #print("All genes are on, synonymous mutation will be in an active link, but it will be very tiny...")
+                        mutable_sites=np.array(list(zip(np.repeat(gene,num_genes),range(num_genes))))
+                        site_to_mutate=tuple(mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
+                        curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.001)
                     else:
-                        raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
+                        #print("there are more than 0 genes off, phew!!")
+                        gene_row=inactive_sites[np.where(inactive_sites[:,0] == gene)]
+                        mutable_sites=gene_row
+                        site_to_mutate=tuple(mutable_sites[np.random.choice(range(mutable_sites.shape[0]))])
+                        curr_grn[site_to_mutate]=weight_mut(in_grn[site_to_mutate],0.5)
             elif mtype == 0: # If mutation is KO
+                #print(f"Observed: Gene X\tExpression X\tMutation 0~~~~\n<<<<>>>>\n")
                 curr_grn[gene,:]=0
                 curr_grn[:,gene]=0
                 out_grn=curr_grn
-                curr_genes_on[gene]=0 # Important change to avoid THE bug.
+                curr_genes_on[gene]=0 # Important change so the refmat is updated.
+                #print(curr_genes_on)
+                refmat[:]=curr_genes_on # Important change to avoid being unable to find synonymous mutations later on.
             else:
                 raise MutationTypeError(f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2].")
-    else:
-        pass
-    out_grn=cp.deepcopy(curr_grn)
+    out_grn=curr_grn
     return(out_grn,out_threshs,out_decs)
+
 
 def threshs_and_decs_mutator(in_thresh,in_dec,mutarr):
     in_thresh=cp.deepcopy(in_thresh)
@@ -425,6 +444,7 @@ def cleanup_deads(in_pop):
         print(f"Your population went extinct. Sorry for your loss.")
         out_pop=np.array([])
     return(out_pop)
+
 class UnknownSelectiveStrategy(Exception):
     pass
 
@@ -434,7 +454,7 @@ def select(in_pop,p=0.1,strategy='high pressure'):
     fitnesses=np.array([ x[9] for x in in_pop[:] ])
     if num_survivors == 0:
         raise ValueError(f"A proportion of {p} results in 0 survivors, you've selected your population into extinction.")
-    print(f"Proportion of survivors will be {p}, which will be {num_survivors}, out of a total of {pop_size}") # DEBUG
+    #print(f"Proportion of survivors will be {p}, which will be {num_survivors}, out of a total of {pop_size}") # DEBUG
     if strategy == "high pressure":
         out_idcs=np.argpartition(fitnesses,-num_survivors)[-num_survivors:] # returns the **indices** for the top 'num_survivors' fitnesses.
     elif strategy == "low pressure" and p < 0.5:
@@ -453,51 +473,76 @@ def select(in_pop,p=0.1,strategy='high pressure'):
 def randsplit(in_pop,out_pop_size):
     #in_pop=cp.deepcopy(in_pop)
     inpopsize=in_pop.shape[0]
-    idcs_lina=np.random.choice(range(inpopsize),int(inpopsize/2),replace=False)
-    idcs_linb=np.array([ rand for rand in np.arange(inpopsize) if rand not in idcs_lina])
-    print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
-    print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
-    print(f"Output populations should be of {out_pop_size} individuals.")
-    #lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
-    #linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
+    if inpopsize > 2:
+        idcs_lina=np.random.choice(range(inpopsize),int(inpopsize/2),replace=False)
+        idcs_linb=np.array([ rand for rand in np.arange(inpopsize) if rand not in idcs_lina])
+        lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
+        linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
+    elif inpopsize == 2:
+        l=[1,0]
+        idx_lina=np.random.choice((0,1),1)[0]
+        idx_linb=l[idx_lina]
+        lina=grow_pop(in_pop[idx_lina],out_pop_size,'equal')
+        linb=grow_pop(in_pop[idx_linb],out_pop_size,'equal')
+    elif inpopsize == 1:
+        print("Input population has single individual only")
+        lina=grow_pop(in_pop,out_pop_size,'equal')
+        linb=grow_pop(in_pop,out_pop_size,'equal')
+    elif inpopsize < 1:
+        raise ValueError(f"Input population doesn't have enough individuals: {inpopsize}.")
+    #print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
+    #print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
+    #print(f"Output populations should be of {out_pop_size} individuals.")
     return(lina,linb)
 
-def main(founder):
-    founder=cp.deepcopy(founder)
-    results_array=np.ndarray(9,dtype=object)
+def old_randsplit(in_pop,out_pop_size):
+    #in_pop=cp.deepcopy(in_pop)
+    inpopsize=in_pop.shape[0]
+    idcs_lina=np.random.choice(range(inpopsize),int(inpopsize/2),replace=False)
+    idcs_linb=np.array([ rand for rand in np.arange(inpopsize) if rand not in idcs_lina])
+    #print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
+    #print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
+    #print(f"Output populations should be of {out_pop_size} individuals.")
+    lina=grow_pop(in_pop[idcs_lina],out_pop_size,'equal')
+    linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
+    return(lina,linb)
+
+def main():
+    founder=founder_miner(0.3)
+    results_array=np.ndarray(13,dtype=object)
     founder_pop=grow_pop(founder,pf.pop_size,'equal')
     results_array[0]=cp.deepcopy(founder_pop)
-    stem_lin1,stem_lin2=randsplit(founder_pop,pf.pop_size)
-    stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    results_array[1]=cp.deepcopy(stem_lin1)
-    results_array[2]=cp.deepcopy(stem_lin2)
-    results_array[3]=cp.deepcopy(stem_lin3)
-    results_array[4]=cp.deepcopy(stem_lin4)
-    four_branches=np.array([stem_lin1,stem_lin2,stem_lin3,stem_lin4],dtype=object)
-    n_genslist1=np.array([100,100,100,100])
+    stem_anc1,stem_anc2=randsplit(founder_pop,pf.pop_size)
+    #stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
+    results_array[1]=cp.deepcopy(stem_anc1)
+    results_array[2]=cp.deepcopy(stem_anc2)
+    #results_array[3]=cp.deepcopy(stem_lin3)
+    #results_array[4]=cp.deepcopy(stem_lin4)
+    anc_branches=np.array([stem_anc1,stem_anc2],dtype=object)
+    n_genslist1=np.array([10000,10000])
 
     with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol,four_branches,n_genslist1)
+        result = pool.map(branch_evol,anc_branches,n_genslist1)
         
-    tip_lin1,tip_lin2,tip_lin3,tip_lin4=np.array(list(result),dtype=object)
-    results_array[5]=cp.deepcopy(tip_lin1)
-    results_array[6]=cp.deepcopy(tip_lin2)
-    results_array[7]=cp.deepcopy(tip_lin3)
-    results_array[8]=cp.deepcopy(tip_lin4)
-    if False:
-        stem_lin3,stem_lin4=randsplit(tip_lin1,pf.pop_size)
-        results_array[5],results_array[6]=cp.deepcopy(stem_lin3),cp.deepcopy(stem_lin4)
-        stem_lin5,stem_lin6=randsplit(tip_lin2,pf.pop_size)
-        results_array[7],results_array[8]=cp.deepcopy(stem_lin5),cp.deepcopy(stem_lin6)
+    tip_anc1,tip_anc2=np.array(list(result),dtype=object)
+    results_array[3]=cp.deepcopy(tip_anc1)
+    results_array[4]=cp.deepcopy(tip_anc2)
+
+    #results_array[7]=cp.deepcopy(tip_lin3)
+    #results_array[8]=cp.deepcopy(tip_lin4)
+    stem_leafa,stem_leafb=randsplit(tip_anc1,pf.pop_size)
+    results_array[5],results_array[6]=cp.deepcopy(stem_leafa),cp.deepcopy(stem_leafb)
+    stem_leafc,stem_leafd=randsplit(tip_anc2,pf.pop_size)
+    results_array[7],results_array[8]=cp.deepcopy(stem_leafc),cp.deepcopy(stem_leafd)
         
-        four_branches=np.array([stem_lin3,stem_lin4, stem_lin5, stem_lin6],dtype=object)
-        n_genslist2=np.array([10,10,10,10])
+    four_leaves=np.array([stem_leafa,stem_leafb, stem_leafc, stem_leafd],dtype=object)
+    n_genslist2=np.array([10000,10000,10000,10000])
         
-        with ProcessPoolExecutor() as pool:
-            result = pool.map(branch_evol,four_branches,n_genslist2)
+    with ProcessPoolExecutor() as pool:
+        result = pool.map(branch_evol,four_leaves,n_genslist2)
             
-        tip_lin3,tip_lin4,tip_lin5,tip_lin6=np.array(list(result),dtype=object)
-        results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(tip_lin3),cp.deepcopy(tip_lin4),cp.deepcopy(tip_lin5),cp.deepcopy(tip_lin6)
+    tip_leafa,tip_leafb,tip_leafc,tip_leafd=np.array(list(result),dtype=object)
+    results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(tip_leafa),cp.deepcopy(tip_leafb),cp.deepcopy(tip_leafc),cp.deepcopy(tip_leafd)
     return(results_array)
 
 def branch_evol(in_pop,ngens):
@@ -508,8 +553,6 @@ def branch_evol(in_pop,ngens):
             survivors=select(in_pop,pf.prop_survivors,pf.select_strategy)
             next_pop=grow_pop(survivors,pf.pop_size,pf.reproductive_strategy)
             in_pop=next_pop
-    else:
-        pass
     return(in_pop)
 
 def unpickle(filename):
@@ -520,5 +563,19 @@ def unpickle(filename):
 if __name__ == "__main__":
     result=main()
 #print(result.shape)
-#store(result)
+store(result)
 
+def export_randalignments(organism_array,outfile_prefix="outfile"):
+	num_orgs = organism_array.size
+	rand_seqs=np.random.choice(num_orgs,10)
+	num_genes = organism_array[0][1].shape[0]
+	sequences_array = np.array([ x[1] for x in organism_array ])
+	for i in range(num_genes):
+		filename = outfile_prefix + "_gene" + str(i) + ".fas"
+		with open(filename,"w") as gene_file:
+			for j in range(rand_seqs.size):
+				seq_name = ">"+outfile_prefix+"_"+str(i) + "_org" + str(j)
+				sequence = ''.join(organism_array[j][1][i])
+				print(seq_name, file=gene_file)
+				print(sequence, file=gene_file)
+		print("Gene",str(i),"done")

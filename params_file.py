@@ -6,14 +6,14 @@ prop_unlinked = 0.7
 thresh_boundaries = (0.1,2)
 decay_boundaries = (0,2)
 dev_steps = 15 # For the moment no more than 999 is possible
-pop_size = 1000 # For the moment, Multiple of 10
+pop_size = 100 # For the moment, Multiple of 10
 
 # MUTATION PARAMETERS
 #thresh_decay_mut_bounds = (-0.01,0.01)
 #thresh_mutation_rate = 0 # It can also be 0.001, for example
 #prob_thresh_change = 0
 #decay_mutation_rate = 0
-seq_mutation_rate = 0.001	# Mutation prob per base, per generation.  Ex:
+seq_mutation_rate = 0.000001	# Mutation prob per base, per generation.  Ex:
 				# 1 mutation per 10,000 bases per generation: 1/10000 = 0.0001
 				# For now, JC model "hardcoded" (each base is equally likely to mutate into any other base).
 #link_mutation_bounds = (-0.01,0.01)
