@@ -200,6 +200,7 @@ def mutation_wrapper(orgarr,mut_rateseq):
     in_fitness=orgarrcp[9]
     mutations=randomMutations(in_genome.size,mut_rateseq)
     if np.any(mutations):
+        print(f"{mutations.size} mutation(s) in this reproductive event")
         mut_coords=codPos(mutations,in_genome.shape)
         out_genome,out_proteome,mutlocs=mutate_genome(in_genome,in_proteome,mut_coords)
         out_grn,out_thresh,out_decs=regulator_mutator(in_grn,in_genes_on,in_decs,in_thresh,mutlocs)
@@ -207,7 +208,7 @@ def mutation_wrapper(orgarr,mut_rateseq):
         out_genes_on=(out_dev.sum(axis=0) != 0).astype(int)
         out_fitness=calcFitness(out_dev)
     else:
-        print("No mutations this time.")
+        #print("No mutations this time.")
         out_genome=in_genome
         out_proteome=in_proteome
         out_grn=in_grn
@@ -519,7 +520,7 @@ def main():
     #results_array[3]=cp.deepcopy(stem_lin3)
     #results_array[4]=cp.deepcopy(stem_lin4)
     anc_branches=np.array([stem_anc1,stem_anc2],dtype=object)
-    n_genslist1=np.array([10000,10000])
+    n_genslist1=np.array([10,10])
 
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol,anc_branches,n_genslist1)
@@ -536,8 +537,8 @@ def main():
     results_array[7],results_array[8]=cp.deepcopy(stem_leafc),cp.deepcopy(stem_leafd)
         
     four_leaves=np.array([stem_leafa,stem_leafb, stem_leafc, stem_leafd],dtype=object)
-    n_genslist2=np.array([10000,10000,10000,10000])
-        
+    n_genslist2=np.array([10,10,10,10])
+    
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol,four_leaves,n_genslist2)
             
@@ -548,7 +549,7 @@ def main():
 def branch_evol(in_pop,ngens):
     in_pop=cp.deepcopy(in_pop)
     if in_pop.size:
-        for gen in np.arange(ngens):
+        for gen in range(ngens):
             print(f"producing generation {gen}")
             survivors=select(in_pop,pf.prop_survivors,pf.select_strategy)
             next_pop=grow_pop(survivors,pf.pop_size,pf.reproductive_strategy)
@@ -562,7 +563,7 @@ def unpickle(filename):
 
 if __name__ == "__main__":
     result=main()
-#print(result.shape)
+print("Analysis completed",result.shape)
 store(result)
 
 def export_randalignments(organism_array,outfile_prefix="outfile"):
