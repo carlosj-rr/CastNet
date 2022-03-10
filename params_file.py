@@ -1,12 +1,12 @@
 # CONSTRUCTION PARAMETERS
 num_genes = 10
-seq_length = 3000 # Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
+seq_length = 3000 # Number of bases per gene. Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
 prop_unlinked = 0.7
 #prop_no_threshold = 0.5
 thresh_boundaries = (0.1,2)
 decay_boundaries = (0,2)
 dev_steps = 15 # For the moment no more than 999 is possible
-pop_size = 1000 # For the moment, Multiple of 10
+pop_size = 100 # For the moment, Multiple of 10
 
 # MUTATION PARAMETERS
 #thresh_decay_mut_bounds = (-0.01,0.01)

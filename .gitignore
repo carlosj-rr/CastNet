@@ -143,3 +143,6 @@ slurm*
 *.csv
 *.xslx
 EvolRun*
+
+#Other scripts
+*.R
