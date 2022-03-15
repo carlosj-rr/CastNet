@@ -561,10 +561,10 @@ def unpickle(filename):
     output=pickle.load(pickle_off)
     return(output)
 
-#if __name__ == "__main__":
-#    result=main()
-#print("Analysis completed",result.shape)
-#store(result)
+if __name__ == "__main__":
+    result=main()
+print("Analysis completed",result.shape)
+store(result)
 
 def export_randalignments(organism_array,outfile_prefix="outfile"):
 	num_orgs = organism_array.size
