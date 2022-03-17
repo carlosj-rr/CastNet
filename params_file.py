@@ -13,7 +13,7 @@ pop_size = 100 # For the moment, Multiple of 10
 #thresh_mutation_rate = 0 # It can also be 0.001, for example
 #prob_thresh_change = 0
 #decay_mutation_rate = 0
-seq_mutation_rate = 6.6666666E-6	# Mutation prob per base, per generation.
+seq_mutation_rate = 0.2	# Mutation prob per base, per generation.
                                     # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
 #link_mutation_bounds = (-0.01,0.01)
 

@@ -168,26 +168,42 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
     else:
         raise ValueError(f"Reproductive strategy \"{strategy}\" not recognized.\nStrategy must be either \'equal\' or \'fitness_linked\'.")
     #out_pop=propagate(curr_pop_size[0])
-    counter=0
+    start_idcs=np.ndarray(num_in_orgs,dtype=int)
+    for idx in range(len(orgs_per_org)):
+        start_idcs[idx]=idx*orgs_per_org[idx]
+    stop_idcs=start_idcs+(orgs_per_org-1)
     out_pop=np.ndarray((curr_pop_size[0],),dtype=object)
+
+    with ProcessPoolExecutor() as pool:
+        result = pool.map(make_offsps,in_orgs,out_pop,start_idcs,stop_idcs)
+    #print(list(result))
+    return(result)
     #print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }")
-    for k in range(num_in_orgs): # taking each input organism and adding the requested offspring to the output population.
-        num_offsp=orgs_per_org[k]
-        #print(f"The current organism will produce {num_offsp} offspring")
-        for i in range(num_offsp):
-            indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
-            out_pop[counter]=indiv
+    #for k in range(num_in_orgs): # taking each input organism and adding the requested offspring to the output population.
+    #    num_offsp=orgs_per_org[k]
+    #    #print(f"The current organism will produce {num_offsp} offspring")
+    #    for i in range(num_offsp):
+    #        indiv=mutation_wrapper(in_orgs,pf.seq_mutation_rate)[0]
+    #        out_pop[counter]=indiv
             #print(f"Produced organism #{counter}")
-            counter=counter+1
+    #        counter=counter+1
             #print(np.all(out_pop[counter == out_pop[(counter-1)]]))
     out_pop=cleanup_deads(out_pop) # removing any dead organisms.
     print(f"{out_pop.size} organisms survived")
+    return(out_pop)
+
+#@numba.jit(nopython=True,cache=True,parallel=True)
+def make_offsps(parent,out_pop,start_idx,stop_idx):
+    for i in range(start_idx,stop_idx):
+        indiv=mutation_wrapper(parent,pf.seq_mutation_rate)[0]
+        out_pop[i]=indiv
     return(out_pop)
 
 class NegativeIndex(Exception):
     pass
 
 # Input is an organism array, as produced by the founder_miner() function, and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
+#@numba.jit(nopython=True,cache=True)
 def mutation_wrapper(orgarr,mut_rateseq):
     orgarrcp=cp.deepcopy(orgarr[0])
     in_gen_num=orgarrcp[0]
