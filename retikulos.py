@@ -538,7 +538,7 @@ def main():
     #results_array[3]=cp.deepcopy(stem_lin3)
     #results_array[4]=cp.deepcopy(stem_lin4)
     anc_branches=np.array([anc1_stem,anc2_stem],dtype=object)
-    genslist1=np.array([10000,10000])
+    genslist1=np.array([10,10])
 
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol,anc_branches,genslist1)
@@ -555,7 +555,7 @@ def main():
     results_array[7],results_array[8]=cp.deepcopy(leafc_stem),cp.deepcopy(leafd_stem)
         
     four_leaves=np.array([leafa_stem,leafb_stem,leafc_stem,leafd_stem],dtype=object)
-    genslist2=np.array([10000,10000,10000,10000])
+    genslist2=np.array([10,10,10,10])
     
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol,four_leaves,genslist2)
@@ -579,10 +579,10 @@ def unpickle(filename):
     output=pickle.load(pickle_off)
     return(output)
 
-#if __name__ == "__main__":
-#    result=main()
-#print(result.shape)
-#store(result)
+if __name__ == "__main__":
+    result=main()
+print(result.shape)
+store(result)
 
 def export_randalignments(organism_array,outfile_prefix="outfile"):
 	num_orgs = organism_array.size
