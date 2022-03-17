@@ -508,7 +508,7 @@ def old_randsplit(in_pop,out_pop_size):
     linb=grow_pop(in_pop[idcs_linb],out_pop_size,'equal')
     return(lina,linb)
 
-def main():
+def main_parallel():
     founder=founder_miner(0.3)
     results_array=np.ndarray(13,dtype=object)
     founder_pop=grow_pop(founder,pf.pop_size,'equal')
@@ -546,6 +546,44 @@ def main():
     results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(leafa_tip),cp.deepcopy(leafb_tip),cp.deepcopy(leafc_tip),cp.deepcopy(leafd_tip)
     return(results_array)
 
+def main_serial():
+    founder=founder_miner(0.3)
+    results_array=np.ndarray(13,dtype=object)
+    founder_pop=grow_pop(founder,pf.pop_size,'equal')
+    results_array[0]=cp.deepcopy(founder_pop)
+    anc1_stem,anc2_stem=randsplit(founder_pop,pf.pop_size)
+    #stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
+    results_array[1]=cp.deepcopy(anc1_stem)
+    results_array[2]=cp.deepcopy(anc2_stem)
+    #results_array[3]=cp.deepcopy(stem_lin3)
+    #results_array[4]=cp.deepcopy(stem_lin4)
+    anc_branches=np.array([anc1_stem,anc2_stem],dtype=object)
+    genslist1=np.array([10,10])
+
+    for i in range(len(anc_branches)):
+        results_array[i+3] = branch_evol(anc_branches[i],genslist1[i])
+        
+    #anc1_tip,anc2_tip=list(result)
+    #results_array[3]=cp.deepcopy(anc1_tip)
+    #results_array[4]=cp.deepcopy(anc2_tip)
+
+    #results_array[7]=cp.deepcopy(tip_lin3)
+    #results_array[8]=cp.deepcopy(tip_lin4)
+    leafa_stem,leafb_stem=randsplit(results_array[3],pf.pop_size)
+    results_array[5],results_array[6]=cp.deepcopy(leafa_stem),cp.deepcopy(leafb_stem)
+    leafc_stem,leafd_stem=randsplit(results_array[4],pf.pop_size)
+    results_array[7],results_array[8]=cp.deepcopy(leafc_stem),cp.deepcopy(leafd_stem)
+        
+    four_leaves=np.array([leafa_stem,leafb_stem,leafc_stem,leafd_stem],dtype=object)
+    genslist2=np.array([10,10,10,10])
+    
+    for i in range(len(four_leaves)):
+        results_array[i+9] = branch_evol(four_leaves[i],genslist2[i])
+            
+    #leafa_tip,leafb_tip,leafc_tip,leafd_tip=list(result)
+    #results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(leafa_tip),cp.deepcopy(leafb_tip),cp.deepcopy(leafc_tip),cp.deepcopy(leafd_tip)
+    return(results_array)
+
 def branch_evol(in_pop,ngens):
     in_pop=cp.deepcopy(in_pop)
     if in_pop.size:
@@ -562,7 +600,7 @@ def unpickle(filename):
     return(output)
 
 if __name__ == "__main__":
-    result=main()
+    result=main_serial()
 print("Analysis completed",result.shape)
 store(result)
 
