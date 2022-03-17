@@ -10,8 +10,8 @@ import sys
 import matplotlib.pyplot as plt
 import pickle
 from datetime import datetime,date
-import numba
 import cProfile #This is to benchmark the code. Recommended by Djole.
+import re
 from concurrent.futures import ProcessPoolExecutor # for using multiple cores.
 
 dna_codons=np.array(['ATA', 'ATC', 'ATT', 'ATG', 'ACA', 'ACC', 'ACG', 'ACT', 'AAC',
@@ -171,13 +171,13 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
     start_idcs=np.ndarray(num_in_orgs,dtype=int)
     for idx in range(len(orgs_per_org)):
         start_idcs[idx]=idx*orgs_per_org[idx]
-    stop_idcs=start_idcs+(orgs_per_org-1)
+    stop_idcs=start_idcs+orgs_per_org
     out_pop=np.ndarray((curr_pop_size[0],),dtype=object)
 
-    with ProcessPoolExecutor() as pool:
-        result = pool.map(make_offsps,in_orgs,out_pop,start_idcs,stop_idcs)
+    for i in range(num_in_orgs):
+        print(f"Running iteration {i}")
+        out_pop=make_offsps(in_orgs[i],out_pop,start_idcs[i],stop_idcs[i])
     #print(list(result))
-    return(result)
     #print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }")
     #for k in range(num_in_orgs): # taking each input organism and adding the requested offspring to the output population.
     #    num_offsp=orgs_per_org[k]
