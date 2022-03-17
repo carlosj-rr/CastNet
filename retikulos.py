@@ -10,6 +10,7 @@ import sys
 import matplotlib.pyplot as plt
 import pickle
 from datetime import datetime,date
+import numba
 import cProfile #This is to benchmark the code. Recommended by Djole.
 from concurrent.futures import ProcessPoolExecutor # for using multiple cores.
 
@@ -166,6 +167,7 @@ def grow_pop(in_orgs,out_pop_size,strategy='equal'):
         raise NotImplementedError("Fitness linked reproductive strategy is not yet implemented. Sorry!")
     else:
         raise ValueError(f"Reproductive strategy \"{strategy}\" not recognized.\nStrategy must be either \'equal\' or \'fitness_linked\'.")
+    #out_pop=propagate(curr_pop_size[0])
     counter=0
     out_pop=np.ndarray((curr_pop_size[0],),dtype=object)
     #print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }")
@@ -560,10 +562,10 @@ def unpickle(filename):
     output=pickle.load(pickle_off)
     return(output)
 
-if __name__ == "__main__":
-    result=main()
+#if __name__ == "__main__":
+#    result=main()
 #print(result.shape)
-store(result)
+#store(result)
 
 def export_randalignments(organism_array,outfile_prefix="outfile"):
 	num_orgs = organism_array.size
