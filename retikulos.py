@@ -202,6 +202,7 @@ def mutation_wrapper(orgarr,mut_rateseq):
     in_fitness=orgarrcp[9]
     mutations=randomMutations(in_genome.size,mut_rateseq)
     if np.any(mutations):
+        print(f"{mutations.size} mutation(s) in this reproductive event")
         mut_coords=codPos(mutations,in_genome.shape)
         out_genome,out_proteome,mutlocs=mutate_genome(in_genome,in_proteome,mut_coords)
         out_grn,out_thresh,out_decs=regulator_mutator(in_grn,in_genes_on,in_decs,in_thresh,mutlocs)
@@ -209,7 +210,7 @@ def mutation_wrapper(orgarr,mut_rateseq):
         out_genes_on=(out_dev.sum(axis=0) != 0).astype(int)
         out_fitness=calcFitness(out_dev)
     else:
-        print("No mutations this time.")
+        #print("No mutations this time.")
         out_genome=in_genome
         out_proteome=in_proteome
         out_grn=in_grn
@@ -514,43 +515,43 @@ def main():
     results_array=np.ndarray(13,dtype=object)
     founder_pop=grow_pop(founder,pf.pop_size,'equal')
     results_array[0]=cp.deepcopy(founder_pop)
-    stem_anc1,stem_anc2=randsplit(founder_pop,pf.pop_size)
+    anc1_stem,anc2_stem=randsplit(founder_pop,pf.pop_size)
     #stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    results_array[1]=cp.deepcopy(stem_anc1)
-    results_array[2]=cp.deepcopy(stem_anc2)
+    results_array[1]=cp.deepcopy(anc1_stem)
+    results_array[2]=cp.deepcopy(anc2_stem)
     #results_array[3]=cp.deepcopy(stem_lin3)
     #results_array[4]=cp.deepcopy(stem_lin4)
-    anc_branches=np.array([stem_anc1,stem_anc2],dtype=object)
-    n_genslist1=np.array([10000,10000])
+    anc_branches=np.array([anc1_stem,anc2_stem],dtype=object)
+    genslist1=np.array([10000,10000])
 
     with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol,anc_branches,n_genslist1)
+        result = pool.map(branch_evol,anc_branches,genslist1)
         
-    tip_anc1,tip_anc2=np.array(list(result),dtype=object)
-    results_array[3]=cp.deepcopy(tip_anc1)
-    results_array[4]=cp.deepcopy(tip_anc2)
+    anc1_tip,anc2_tip=list(result)
+    results_array[3]=cp.deepcopy(anc1_tip)
+    results_array[4]=cp.deepcopy(anc2_tip)
 
     #results_array[7]=cp.deepcopy(tip_lin3)
     #results_array[8]=cp.deepcopy(tip_lin4)
-    stem_leafa,stem_leafb=randsplit(tip_anc1,pf.pop_size)
-    results_array[5],results_array[6]=cp.deepcopy(stem_leafa),cp.deepcopy(stem_leafb)
-    stem_leafc,stem_leafd=randsplit(tip_anc2,pf.pop_size)
-    results_array[7],results_array[8]=cp.deepcopy(stem_leafc),cp.deepcopy(stem_leafd)
+    leafa_stem,leafb_stem=randsplit(anc1_tip,pf.pop_size)
+    results_array[5],results_array[6]=cp.deepcopy(leafa_stem),cp.deepcopy(leafb_stem)
+    leafc_stem,leafd_stem=randsplit(anc2_tip,pf.pop_size)
+    results_array[7],results_array[8]=cp.deepcopy(leafc_stem),cp.deepcopy(leafd_stem)
         
-    four_leaves=np.array([stem_leafa,stem_leafb, stem_leafc, stem_leafd],dtype=object)
-    n_genslist2=np.array([10000,10000,10000,10000])
-        
+    four_leaves=np.array([leafa_stem,leafb_stem,leafc_stem,leafd_stem],dtype=object)
+    genslist2=np.array([10000,10000,10000,10000])
+    
     with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol,four_leaves,n_genslist2)
+        result = pool.map(branch_evol,four_leaves,genslist2)
             
-    tip_leafa,tip_leafb,tip_leafc,tip_leafd=np.array(list(result),dtype=object)
-    results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(tip_leafa),cp.deepcopy(tip_leafb),cp.deepcopy(tip_leafc),cp.deepcopy(tip_leafd)
+    leafa_tip,leafb_tip,leafc_tip,leafd_tip=list(result)
+    results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(leafa_tip),cp.deepcopy(leafb_tip),cp.deepcopy(leafc_tip),cp.deepcopy(leafd_tip)
     return(results_array)
 
 def branch_evol(in_pop,ngens):
     in_pop=cp.deepcopy(in_pop)
     if in_pop.size:
-        for gen in np.arange(ngens):
+        for gen in range(ngens):
             print(f"producing generation {gen}")
             survivors=select(in_pop,pf.prop_survivors,pf.select_strategy)
             next_pop=grow_pop(survivors,pf.pop_size,pf.reproductive_strategy)

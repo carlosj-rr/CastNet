@@ -1,6 +1,6 @@
 # CONSTRUCTION PARAMETERS
 num_genes = 10
-seq_length = 1500 # Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
+seq_length = 3000 # Number of bases per gene. Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
 prop_unlinked = 0.7
 #prop_no_threshold = 0.5
 thresh_boundaries = (0.1,2)
@@ -13,16 +13,15 @@ pop_size = 100 # For the moment, Multiple of 10
 #thresh_mutation_rate = 0 # It can also be 0.001, for example
 #prob_thresh_change = 0
 #decay_mutation_rate = 0
-seq_mutation_rate = 0.000001	# Mutation prob per base, per generation.  Ex:
-				# 1 mutation per 10,000 bases per generation: 1/10000 = 0.0001
-				# For now, JC model "hardcoded" (each base is equally likely to mutate into any other base).
+seq_mutation_rate = 6.6666666E-6	# Mutation prob per base, per generation.
+                                    # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
 #link_mutation_bounds = (-0.01,0.01)
 
 new_link_bounds = (-2,2)
 
 # SELECTION PARAMETERS
 min_reproducin = 0.1
-prop_survivors = 0.25 # For the moment, it must result in a whole number when multiplied by the pop_size
+prop_survivors = 0.1 # For the moment, it must result in a whole number when multiplied by the pop_size
 #tot_offspring = pop_size
 select_strategy = "high pressure" # ""high pressure", "low pressure", and "totally relaxed""
 
