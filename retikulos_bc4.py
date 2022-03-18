@@ -1,17 +1,12 @@
-from multiprocessing.sharedctypes import Value
-import numpy as np
 import copy as cp
-import scipy, os, time
-import random
-import params_file as pf
-from scipy import stats
-import math
-import sys
-import matplotlib.pyplot as plt
 import pickle
-from datetime import datetime, date
-import cProfile  # This is to benchmark the code. Recommended by Djole.
 from concurrent.futures import ProcessPoolExecutor  # for using multiple cores.
+from datetime import datetime
+
+import numpy as np
+import scipy
+
+import params_file as pf
 
 dna_codons = np.array(
     [
@@ -161,20 +156,19 @@ def founder_miner(min_fitness=0.6):
         n_generation = 0
         n_genes = pf.num_genes
         seq_len = pf.seq_length
-        genome, proteome = makeGenomeandProteome(
+        genome, proteome = make_genome_and_proteome(
             seq_len, n_genes, dna_codons, trans_aas
         )
         # Importing the values for producing all the regulatory information.
-        prop_off = (
-            pf.prop_unlinked
-        )  # thresholds and decays will have the converse of this probability as 0s. See blow.
+        # thresholds and decays will have the converse of this probability as 0s. See blow.
+        prop_off = pf.prop_unlinked
         thresh_boundaries = pf.thresh_boundaries  # tuple of 2 values.
         decay_boundaries = pf.decay_boundaries  # tuple of 2 values.
-        grn = makeGRN(n_genes, prop_off)
-        thresholds = randomMaskedVector(
+        grn = make_grn(n_genes, prop_off)
+        thresholds = random_masked_vector(
             n_genes, (1 - prop_off), min(thresh_boundaries), max(thresh_boundaries)
         )
-        decays = randomMaskedVector(
+        decays = random_masked_vector(
             n_genes, (1 - prop_off), min(decay_boundaries), max(decay_boundaries)
         )
         # Importing values for the developmental info
@@ -182,7 +176,7 @@ def founder_miner(min_fitness=0.6):
         start_vect = (lambda x: np.array([1] * 1 + [0] * (x - 1)))(n_genes)
         development = develop(start_vect, grn, decays, thresholds, dev_steps)
         genes_on = (development.sum(axis=0) != 0).astype(int)
-        fitness = calcFitness(development)
+        fitness = calc_fitness(development)
         out_arr = np.array(
             [
                 np.array(
@@ -205,7 +199,7 @@ def founder_miner(min_fitness=0.6):
     return out_arr
 
 
-def makeGenomeandProteome(
+def make_genome_and_proteome(
     seq_length, num_genes, dna_codons=dna_codons, trans_aas=trans_aas
 ):
     if seq_length % 3:
@@ -223,25 +217,26 @@ def makeGenomeandProteome(
                 np.random.choice((61, 62, 63), 1),
             )
         )
-        # len(rand_codons)
         genome_arr[i] = np.array(dna_codons[rand_codon_idx])
         proteome_arr[i] = np.array(trans_aas[rand_codon_idx])
-    return (genome_arr, proteome_arr)
+    return genome_arr, proteome_arr
 
 
-def makeGRN(numGenes, prop_unlinked):
-    grn = randomMaskedVector(
-        numGenes**2, prop_unlinked, pf.new_link_bounds[0], pf.new_link_bounds[1]
+def make_grn(num_genes, prop_unlinked):
+    grn = random_masked_vector(
+        num_genes**2, prop_unlinked, pf.new_link_bounds[0], pf.new_link_bounds[1]
     )
-    grn = grn.reshape(numGenes, numGenes)
+    grn = grn.reshape(num_genes, num_genes)
     return grn
 
 
-# Function that creates a vector of a given amount of values (within a given range), in which a certain proportion of the values are masked.
-def randomMaskedVector(num_vals, prop_zero=0, min_val=0, max_val=1):
+# Function that creates a vector of a given amount of values (within a given range), in which a certain proportion of
+# the values are masked.
+def random_masked_vector(num_vals, prop_zero=0, min_val=0, max_val=1):
     if min_val > max_val:
         raise ValueError(
-            f"Minimum value {min_val} is larger than the maximum value {max_val}.\nConsider revising the function call to randomMaskedVector()"
+            f"Minimum value {min_val} is larger than the maximum value {max_val}.\n"
+            f"Consider revising the function call to randomMaskedVector()"
         )
     range_size = max_val - min_val
     if prop_zero == 0:
@@ -253,9 +248,6 @@ def randomMaskedVector(num_vals, prop_zero=0, min_val=0, max_val=1):
     return rpv
 
 
-# mut_kinds=np.array(["nonsense","non-synonymous","synonymous"])
-
-
 def develop(start_vect, grn, decays, thresholds, dev_steps):
     start_vect = cp.deepcopy(start_vect)
     geneExpressionProfile = np.ndarray(((pf.dev_steps + 1), pf.num_genes))
@@ -265,45 +257,39 @@ def develop(start_vect, grn, decays, thresholds, dev_steps):
     invect = start_vect
     counter = 1
     for i in range(dev_steps):
-        decayed_invect = (lambda x, l: x * np.exp(-l))(
-            invect, decays
-        )  # apply decay to all gene qties. previously: exponentialDecay(invect,decays)
-        exp_change = np.matmul(
-            grn, decayed_invect
-        )  # calculate the regulatory effect of the decayed values.
-        pre_thresholds = (
-            exp_change + decayed_invect
-        )  # add the decayed amounts to the regulatory effects
-        thresholder = (pre_thresholds > thresholds).astype(
-            int
-        )  # a vector to rectify the resulting values to their thresholds.
-        currV = (
-            pre_thresholds * thresholder
-        )  # rectify with the thresholder vect. This step resulted in the deletion of the 'rectify()' function
+        # apply decay to all gene qties. previously: exponentialDecay(invect,decays)
+        decayed_invect = (lambda x, l: x * np.exp(-l))(invect, decays)
+        # calculate the regulatory effect of the decayed values.
+        exp_change = np.matmul(grn, decayed_invect)
+        # add the decayed amounts to the regulatory effects
+        pre_thresholds = exp_change + decayed_invect
+        # a vector to rectify the resulting values to their thresholds.
+        thresholder = (pre_thresholds > thresholds).astype(int)
+        # rectify with the thresholder vect. This step resulted in the deletion of the 'rectify()' function
+        currV = pre_thresholds * thresholder
         geneExpressionProfile[(i + 1)] = currV
         invect = currV
         counter = counter + 1
     return geneExpressionProfile
 
 
-def calcFitness(development):
+def calc_fitness(development):
     min_reproducin = pf.min_reproducin
-    is_alive = lastGeneExpressed(development, min_reproducin)
+    is_alive = last_gene_expressed(development, min_reproducin)
     if is_alive:
-        genes_on = propGenesOn(development)
-        exp_stab = expressionStability(development)
-        sim_to_exp = 1 - exponentialSimilarity(
-            development
-        )  # added "1 -" as I realized that the R^2 value would approac 1 the more it assimilated an exponential function.
+        genes_on = prop_genes_on(development)
+        exp_stab = expression_stability(development)
+        # added "1 -" as I realized that the R^2 value would approac 1 the more it assimilated an exponential function.
+        sim_to_exp = 1 - exponential_similarity(development)
         fitness_val = np.mean([genes_on, exp_stab, sim_to_exp])
     else:
         fitness_val = 0
     return fitness_val
 
 
-def lastGeneExpressed(
-    development, min_reproducin
-):  # is the last gene ever expressed above 'min_reproducin' level? AND is it expressed above 0 in the last developmental step?
+# is the last gene ever expressed above 'min_reproducin' level?
+# AND is it expressed above 0 in the last developmental step?
+def last_gene_expressed(development, min_reproducin):
     dev_steps, num_genes = development.shape
     last_col_bool = development[:, (num_genes - 1)] > min_reproducin
     last_val_last_col = development[dev_steps - 1, (num_genes - 1)]
@@ -314,20 +300,19 @@ def lastGeneExpressed(
     return return_val
 
 
-def propGenesOn(development):
+def prop_genes_on(development):
     genes_on = development.sum(axis=0) > 0
     return genes_on.mean()
 
 
-def expressionStability(development):  # I haven't thought deeply about this.
+def expression_stability(development):  # TODO I haven't thought deeply about this.
     row_sums = development.sum(axis=1)  # What proportion of the data range is
-    stab_val = row_sums.std() / (
-        row_sums.max() - row_sums.min()
-    )  # the stdev? Less = better
+    # TODO the stdev? Less = better
+    stab_val = row_sums.std() / (row_sums.max() - row_sums.min())
     return stab_val
 
 
-def exponentialSimilarity(development):
+def exponential_similarity(development):
     dev_steps, num_genes = development.shape
     row_means = development.mean(axis=1)
     tot_dev_steps = dev_steps
@@ -367,22 +352,22 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
         )
     else:
         raise ValueError(
-            f"Reproductive strategy \"{strategy}\" not recognized.\nStrategy must be either 'equal' or 'fitness_linked'."
+            f'Reproductive strategy "{strategy}" not recognized.\n'
+            f"Strategy must be either 'equal' or 'fitness_linked'."
         )
     counter = 0
     out_pop = np.ndarray((curr_pop_size[0],), dtype=object)
-    # print(f"Shape of output population is {out_pop.shape}\nOrganisms per organisms are {orgs_per_org }")
-    for k in range(
-        num_in_orgs
-    ):  # taking each input organism and adding the requested offspring to the output population.
+
+    # taking each input organism and adding the requested offspring to the output population.
+    for k in range(num_in_orgs):
         num_offsp = orgs_per_org[k]
-        # print(f"The current organism will produce {num_offsp} offspring")
+
         for i in range(num_offsp):
             indiv = mutation_wrapper(in_orgs, pf.seq_mutation_rate)[0]
             out_pop[counter] = indiv
-            # print(f"Produced organism #{counter}")
+
             counter = counter + 1
-            # print(np.all(out_pop[counter == out_pop[(counter-1)]]))
+
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
     print(f"{out_pop.size} organisms survived")
     return out_pop
@@ -392,7 +377,8 @@ class NegativeIndex(Exception):
     pass
 
 
-# Input is an organism array, as produced by the founder_miner() function, and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
+# Input is an organism array, as produced by the founder_miner() function,
+# and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
 def mutation_wrapper(orgarr, mut_rateseq):
     orgarrcp = cp.deepcopy(orgarr[0])
     in_gen_num = orgarrcp[0]
@@ -405,10 +391,10 @@ def mutation_wrapper(orgarr, mut_rateseq):
     in_dev = orgarrcp[7]
     in_genes_on = (in_dev.sum(axis=0) != 0).astype(int)
     in_fitness = orgarrcp[9]
-    mutations = randomMutations(in_genome.size, mut_rateseq)
+    mutations = random_mutations(in_genome.size, mut_rateseq)
     if np.any(mutations):
         print(f"{mutations.size} mutation(s) in this reproductive event")
-        mut_coords = codPos(mutations, in_genome.shape)
+        mut_coords = cod_pos(mutations, in_genome.shape)
         out_genome, out_proteome, mutlocs = mutate_genome(
             in_genome, in_proteome, mut_coords
         )
@@ -417,9 +403,9 @@ def mutation_wrapper(orgarr, mut_rateseq):
         )
         out_dev = develop(start_vect, out_grn, out_decs, out_thresh, pf.dev_steps)
         out_genes_on = (out_dev.sum(axis=0) != 0).astype(int)
-        out_fitness = calcFitness(out_dev)
+        out_fitness = calc_fitness(out_dev)
     else:
-        # print("No mutations this time.")
+
         out_genome = in_genome
         out_proteome = in_proteome
         out_grn = in_grn
@@ -449,10 +435,9 @@ def mutation_wrapper(orgarr, mut_rateseq):
     return out_org
 
 
-def randomMutations(genome_size, mut_rateseq):  # genome_size is in CODONS
-    total_bases = (
-        genome_size * 3
-    )  # Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
+def random_mutations(genome_size, mut_rateseq):  # genome_size is in CODONS
+    # Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
+    total_bases = genome_size * 3
     mutations = np.random.choice((0, 1), total_bases, p=(1 - mut_rateseq, mut_rateseq))
     m = np.array(np.where(mutations != 0)).flatten()
     if m.size:
@@ -462,13 +447,14 @@ def randomMutations(genome_size, mut_rateseq):  # genome_size is in CODONS
     return output
 
 
-def codPos(muts, gnome_shape):
+def cod_pos(muts, gnome_shape):
     # base1=num+1
     num_genes = gnome_shape[0]
     num_codons = gnome_shape[1]
     if np.any(muts < 0):
         raise NegativeIndex(
-            f"There are negative index values in your mutation indices:\n{muts}.\n This will result in untractable mutations.\nConsder double-checking the result of randomMutations()"
+            f"There are negative index values in your mutation indices:\n{muts}.\n"
+            f"This will result in untractable mutations.\nConsder double-checking the result of randomMutations()"
         )
     out_array = np.ndarray((muts.size, 3), dtype=object)
     gene_bps = num_codons * 3
@@ -493,13 +479,13 @@ def codPos(muts, gnome_shape):
 def mutate_genome(old_gnome, old_prome, mut_coords):
     gnome = cp.deepcopy(old_gnome)
     prome = cp.deepcopy(old_prome)
-    mut_num = mut_coords.shape[
-        0
-    ]  # get the number of rows in the mutation coordinate array, this is the number of mutations
+    # get the number of rows in the mutation coordinate array, this is the number of mutations
+    mut_num = mut_coords.shape[0]
     muttype_vect = np.ndarray((mut_num, 2), dtype=object)
     if np.any(mut_coords < 0):
         raise NegativeIndex(
-            f"Some indices in the mutation coordinates are negative:\n{mut_coords}\nThis may result in untractable mutations.\nConsider examining the output of codPos()."
+            f"Some indices in the mutation coordinates are negative:\n{mut_coords}\n"
+            f"This may result in untractable mutations.\nConsider examining the output of codPos()."
         )
     for i in range(mut_num):
         coordinates = mut_coords[i, :]
@@ -508,7 +494,7 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
         selected_codpos = coordinates[2]
         selected_codon = gnome[selected_gene, selected_codon_from_gene]
         prev_aacid = translate_codon(selected_codon)
-        mutated_codon = pointMutateCodon(selected_codon, selected_codpos)
+        mutated_codon = point_mutate_codon(selected_codon, selected_codpos)
         gnome[selected_gene, selected_codon_from_gene] = mutated_codon
         new_aacid = translate_codon(mutated_codon)
         if prev_aacid == new_aacid:  # Synonymous mutations are plotted as '2'
@@ -521,13 +507,14 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
         muttype_vect[i] = (selected_gene, muttype)
     out_genome = gnome
     out_proteome = prome
-    return (out_genome, out_proteome, muttype_vect)
+    return out_genome, out_proteome, muttype_vect
 
 
-def pointMutateCodon(codon, pos_to_mutate):
+def point_mutate_codon(codon, pos_to_mutate):
     if pos_to_mutate < 0:
         raise NegativeIndex(
-            f"Codon position {pos_to_mutate} is negative\nThis can cause intractable mutations\nConsider verifying the output of codPos()"
+            f"Codon position {pos_to_mutate} is negative\nThis can cause intractable mutations\n"
+            f"Consider verifying the output of codPos()"
         )
     bases = ("T", "C", "A", "G")
     base = codon[pos_to_mutate]
@@ -551,16 +538,18 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
     curr_muttype_vect = cp.deepcopy(muttype_vect)
     if np.any(curr_muttype_vect < 0):
         raise NegativeIndex(
-            f"There is a number in the mutations array that is negative:\n\n{curr_muttype_vect}\n\nThis may result in untractable mutations, consider inspecting the output of codPos()"
+            f"There is a number in the mutations array that is negative:\n\n{curr_muttype_vect}\n\n"
+            f"This may result in untractable mutations, consider inspecting the output of codPos()"
         )
+    # TODO check this unused thing and remove if uneccesary
     inactive_links = np.array(
         list(zip(np.where(curr_grn == 0)[0], np.where(curr_grn == 0)[1]))
     )
     num_genes = curr_genes_on.size
     # Choosing mutations for the thresholds or decays...
-    prop = (lambda x: 2 / (2 + x))(
-        num_genes
-    )  # proportion of total regulatory interactions that are thresholds OR decays (simplified from "2N/(2N+N^2)", where N is the total number of genes.)
+    # proportion of total regulatory interactions that are thresholds
+    # OR decays (simplified from "2N/(2N+N^2)", where N is the total number of genes.)
+    prop = (lambda x: 2 / (2 + x))(num_genes)
     hits = np.nonzero(np.random.choice((0, 1), len(muttype_vect), p=(1 - prop, prop)))[
         0
     ]
@@ -573,33 +562,33 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
     if curr_muttype_vect.size > 0:
         refmat = np.repeat(1, curr_grn.size).reshape(curr_grn.shape)
         refmat[:] = curr_genes_on
-        # print(refmat)
+
         for i in curr_muttype_vect:
             gene = i[0]
             if gene not in range(num_genes):
                 raise IndexError(
-                    f"Gene number {gene} is not within the number of genes in the system (integers between 0 and {num_genes-1})"
+                    f"Gene number {gene} is not within the number of genes in the system "
+                    f"(integers between 0 and {num_genes-1})"
                 )
             mtype = i[1]
             exprstate = curr_genes_on[gene]
-            # print(f"Expected: Gene {gene}\tExpression {exprstate}\tMutation type {mtype}.\n")
+
             if mtype in [1, 2]:
-                if (
-                    exprstate == 0 and mtype == 1
-                ):  # Gene OFF, Non-Synonymous mutation (uses active sites)
+                # Gene OFF, Non-Synonymous mutation (uses active sites)
+                if exprstate == 0 and mtype == 1:
+                    # non-silent sites for non-synonymous mutations
                     active_sites = np.array(
                         list(zip(np.where(refmat == 1)[0], np.where(refmat == 1)[1]))
-                    )  # non-silent sites for non-synonymous mutations
-                    # print("Observed: Gene X\tExpression 0\tMutation type 1~~~~\n<<<<>>>>\n")
-                    if (
-                        active_sites.size == 0
-                    ):  # if in the same generation, all genes of the organism have been KO'd...
-                        # print("All genes have been turned OFF, NS mutation will be on any link from the gene, and it will turn it ON.")
+                    )
+
+                    # if in the same generation, all genes of the organism have been KO'd...
+                    if active_sites.size == 0:
+
                         mutable_sites = np.array(
                             list(zip(np.repeat(gene, num_genes), range(num_genes)))
                         )
                     else:
-                        # print("There are enough NS sites to mutate...As you were!")
+
                         mutable_sites = active_sites[
                             np.where(active_sites[:, 0] == gene)
                         ]
@@ -607,16 +596,15 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
                         mutable_sites[np.random.choice(range(mutable_sites.shape[0]))]
                     )
                     curr_grn[site_to_mutate] = weight_mut(in_grn[site_to_mutate], 0.5)
-                    # print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
-                if (
-                    exprstate == 0 and mtype == 2
-                ):  # Gene OFF, Synonymous mutation (uses inactive sites)
-                    # print("Observed: Gene X\tExpression 0\tMutation type 2~~~~\n<<<<>>>>\n")
-                    # print("Using the inactives site matrix...")
+
+                # Gene OFF, Synonymous mutation (uses inactive sites)
+                if exprstate == 0 and mtype == 2:
+
+                    # silent sites for synonymous mutations
                     inactive_sites = np.array(
                         list(zip(np.where(refmat == 0)[0], np.where(refmat == 0)[1]))
-                    )  # silent sites for synonymous mutations
-                    # print(inactive_sites[0:10])
+                    )
+
                     gene_col = inactive_sites[np.where(inactive_sites[:, 1] == gene)]
                     gene_row = inactive_sites[np.where(inactive_sites[:, 0] == gene)]
                     mutable_sites = np.row_stack((gene_col, gene_row))
@@ -624,39 +612,34 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
                         mutable_sites[np.random.choice(range(mutable_sites.shape[0]))]
                     )
                     curr_grn[site_to_mutate] = weight_mut(in_grn[site_to_mutate], 0.5)
-                    # print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
-                if (
-                    exprstate == 1 and mtype == 1
-                ):  # Gene ON, Non-Synonymous mutation (uses active sites)
-                    # print("Observed: Gene X\tExpression 1\tMutation type 1~~~~\n<<<<>>>>\n")
+                # Gene ON, Non-Synonymous mutation (uses active sites)
+                if exprstate == 1 and mtype == 1:
+
+                    # non-silent sites for non-synonymous mutations
                     active_sites = np.array(
                         list(zip(np.where(refmat == 1)[0], np.where(refmat == 1)[1]))
-                    )  # non-silent sites for non-synonymous mutations
-                    # print(f"Gene {gene} is ON (exprstate={exprstate}, AND the mutation typs is NS (Mtype={mtype})")
+                    )
+
                     gene_col = active_sites[np.where(active_sites[:, 1] == gene)]
                     gene_row = active_sites[np.where(active_sites[:, 0] == gene)]
                     mutable_sites = np.row_stack((gene_col, gene_row))
                     site_to_mutate = tuple(
                         mutable_sites[np.random.choice(range(mutable_sites.shape[0]))]
                     )
-                    # print(site_to_mutate)
-                    # print(in_grn[site_to_mutate])
+
                     curr_grn[site_to_mutate] = weight_mut(in_grn[site_to_mutate], 0.5)
-                    # print(f"value {in_grn[site_to_mutate]} mutated into {curr_grn[site_to_mutate]}.")
-                if (
-                    exprstate == 1 and mtype == 2
-                ):  # Gene OFF, Synonymous mutation (uses inactive sites)
-                    # print("Observed: Gene X\tExpression 1\tMutation type 2~~~~\n<<<<>>>>\n")
-                    # print(f"Gene {gene} is ON (exprstate={exprstate}, AND the mutation typs is S (Mtype={mtype}")
-                    # print("Using the inactives site matrix...")
+
+                # Gene OFF, Synonymous mutation (uses inactive sites)
+                if exprstate == 1 and mtype == 2:
+
+                    # silent sites for synonymous mutations
                     inactive_sites = np.array(
                         list(zip(np.where(refmat == 0)[0], np.where(refmat == 0)[1]))
-                    )  # silent sites for synonymous mutations
-                    # print(inactive_sites[0:10])
-                    if (
-                        inactive_sites.size == 0
-                    ):  # If all genes are on, the 'gene_row' array will come up empty, so it switches to mutating any gene, a tiny little bit.
-                        # print("All genes are on, synonymous mutation will be in an active link, but it will be very tiny...")
+                    )
+
+                    # If all genes are on, the 'gene_row' array will come up empty,
+                    # so it switches to mutating any gene, a tiny little bit.
+                    if inactive_sites.size == 0:
                         mutable_sites = np.array(
                             list(zip(np.repeat(gene, num_genes), range(num_genes)))
                         )
@@ -669,7 +652,7 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
                             in_grn[site_to_mutate], 0.001
                         )
                     else:
-                        # print("there are more than 0 genes off, phew!!")
+
                         gene_row = inactive_sites[
                             np.where(inactive_sites[:, 0] == gene)
                         ]
@@ -682,40 +665,40 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
                         curr_grn[site_to_mutate] = weight_mut(
                             in_grn[site_to_mutate], 0.5
                         )
-            elif mtype == 0:  # If mutation is KO
-                # print(f"Observed: Gene X\tExpression X\tMutation 0~~~~\n<<<<>>>>\n")
+            elif mtype == 0:
+                # If mutation is KO
                 curr_grn[gene, :] = 0
                 curr_grn[:, gene] = 0
+                # TODO This is unused
                 out_grn = curr_grn
-                curr_genes_on[gene] = 0  # Important change so the refmat is updated.
-                # print(curr_genes_on)
-                refmat[
-                    :
-                ] = curr_genes_on  # Important change to avoid being unable to find synonymous mutations later on.
+                # Important change so the refmat is updated.
+                curr_genes_on[gene] = 0
+                # Important change to avoid being unable to find synonymous mutations later on.
+                refmat[:] = curr_genes_on
             else:
                 raise MutationTypeError(
                     f"Gene{gene}'s mutation type <{mtype}> is unclear,\nit must be one of [0,1,2]."
                 )
     out_grn = curr_grn
-    return (out_grn, out_threshs, out_decs)
+    return out_grn, out_threshs, out_decs
 
 
 def threshs_and_decs_mutator(in_thresh, in_dec, mutarr):
     in_thresh = cp.deepcopy(in_thresh)
     in_dec = cp.deepcopy(in_dec)
+    # make a tuple in which the threshold array is the first value, and the decays the second.
     the_tuple = (
         in_thresh,
         in_dec,
-    )  # make a tuple in which the threshold array is the first value, and the decays the second.
+    )
     # This will allow me to easily choose among them at the time of mutating, see within the for loop.
-    genes = mutarr[:, 0]  # get the genes to be mutated from the mutarray's 1st column
-    for i in np.arange(
-        len(genes)
-    ):  # go through each gene, and decide randomly whether to make a threshold or a decay mutation in the gene.
+    # get the genes to be mutated from the mutarray's 1st column
+    genes = mutarr[:, 0]
+    # go through each gene, and decide randomly whether to make a threshold or a decay mutation in the gene.
+    for i in np.arange(len(genes)):
         tuple_idx = np.random.choice((0, 1))
-        gene_num = genes[
-            i
-        ]  # extract specific gene number that has to be mutated. This maps to the thresh and dec arrays.
+        # extract specific gene number that has to be mutated. This maps to the thresh and dec arrays.
+        gene_num = genes[i]
         isit_ko = mutarr[i, 1] == 0
         if isit_ko:
             new_value = 0
@@ -723,19 +706,19 @@ def threshs_and_decs_mutator(in_thresh, in_dec, mutarr):
             new_value = abs(weight_mut(the_tuple[tuple_idx][gene_num]))
         the_tuple[tuple_idx][gene_num] = new_value
     out_thresh, out_decs = (the_tuple[0], the_tuple[1])
-    return (out_thresh, out_decs)
+    return out_thresh, out_decs
 
 
 def weight_mut(value, scaler=0.01):
-    val = abs(value)  # Make sure value is positive
+    # Make sure value is positive
+    val = abs(value)
     if val == 0:
         """For 0, simply get 1, and then modify it by the scale
         This is for activating values that are off."""
         val = scaler / scaler
     scaled_val = val * scaler  # scale the value
-    newVal = value + np.random.uniform(
-        -scaled_val, scaled_val
-    )  # add the scaled portion to the total value to get the final result.
+    # add the scaled portion to the total value to get the final result.
+    newVal = value + np.random.uniform(-scaled_val, scaled_val)
     return newVal
 
 
@@ -756,7 +739,7 @@ def cleanup_deads(in_pop):
     if live_ones.size == tot_orgs:
         out_pop = cp.deepcopy(in_pop)
     elif live_ones.size != 0:
-        # print(f"{tot_orgs - live_ones.size} organisms are dead. Sorry for your loss...")
+
         out_pop = cp.deepcopy(in_pop[live_ones])
     elif live_ones.size == 0:
         print(f"Your population went extinct. Sorry for your loss.")
@@ -776,11 +759,10 @@ def select(in_pop, p=0.1, strategy="high pressure"):
         raise ValueError(
             f"A proportion of {p} results in 0 survivors, you've selected your population into extinction."
         )
-    # print(f"Proportion of survivors will be {p}, which will be {num_survivors}, out of a total of {pop_size}") # DEBUG
+
     if strategy == "high pressure":
-        out_idcs = np.argpartition(fitnesses, -num_survivors)[
-            -num_survivors:
-        ]  # returns the **indices** for the top 'num_survivors' fitnesses.
+        # returns the **indices** for the top 'num_survivors' fitnesses.
+        out_idcs = np.argpartition(fitnesses, -num_survivors)[-num_survivors:]
     elif strategy == "low pressure" and p < 0.5:
         half = int(pop_size / 2)
         top_half = np.argpartition(fitnesses, -half)[-half:]
@@ -791,7 +773,9 @@ def select(in_pop, p=0.1, strategy="high pressure"):
         out_idcs = np.random.choice(range(pop_size), num_survivors, replace=False)
     else:
         raise UnknownSelectiveStrategy(
-            f'Selective strategy {strategy} is not recognized\nThis value should be any of "high pressure", "low pressure", or "totally relaxed".\n Please double-check your input.'
+            f"Selective strategy {strategy} is not recognized\n"
+            f'This value should be any of "high pressure", "low pressure", or "totally relaxed".\n '
+            f"Please double-check your input."
         )
     out_pop = cp.deepcopy(in_pop[out_idcs])
     return out_pop
@@ -823,10 +807,7 @@ def randsplit(in_pop, out_pop_size):
         raise ValueError(
             f"Input population doesn't have enough individuals: {inpopsize}."
         )
-    # print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
-    # print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
-    # print(f"Output populations should be of {out_pop_size} individuals.")
-    return (lina, linb)
+    return lina, linb
 
 
 def old_randsplit(in_pop, out_pop_size):
@@ -836,12 +817,9 @@ def old_randsplit(in_pop, out_pop_size):
     idcs_linb = np.array(
         [rand for rand in np.arange(inpopsize) if rand not in idcs_lina]
     )
-    # print(f"The first random subselection of indices is of size {idcs_lina.size}, and the second of {idcs_linb.size}.")
-    # print(f"Do they share any number whatsoever?:\n{np.any(idcs_lina == idcs_linb)}")
-    # print(f"Output populations should be of {out_pop_size} individuals.")
     lina = grow_pop(in_pop[idcs_lina], out_pop_size, "equal")
     linb = grow_pop(in_pop[idcs_linb], out_pop_size, "equal")
-    return (lina, linb)
+    return lina, linb
 
 
 def main_parallel():
@@ -935,7 +913,8 @@ def main_serial():
         results_array[i + 9] = branch_evol(four_leaves[i], genslist2[i])
 
     # leafa_tip,leafb_tip,leafc_tip,leafd_tip=list(result)
-    # results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(leafa_tip),cp.deepcopy(leafb_tip),cp.deepcopy(leafc_tip),cp.deepcopy(leafd_tip)
+    # results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(leafa_tip),
+    # cp.deepcopy(leafb_tip),cp.deepcopy(leafc_tip),cp.deepcopy(leafd_tip)
     return results_array
 
 
@@ -966,6 +945,7 @@ def export_randalignments(organism_array, outfile_prefix="outfile"):
     num_orgs = organism_array.size
     rand_seqs = np.random.choice(num_orgs, 10)
     num_genes = organism_array[0][1].shape[0]
+    # TODO this is unused
     sequences_array = np.array([x[1] for x in organism_array])
     for i in range(num_genes):
         filename = outfile_prefix + "_gene" + str(i) + ".fas"
