@@ -739,7 +739,6 @@ def cleanup_deads(in_pop):
     if live_ones.size == tot_orgs:
         out_pop = cp.deepcopy(in_pop)
     elif live_ones.size != 0:
-
         out_pop = cp.deepcopy(in_pop[live_ones])
     elif live_ones.size == 0:
         print(f"Your population went extinct. Sorry for your loss.")
@@ -822,6 +821,86 @@ def old_randsplit(in_pop, out_pop_size):
     return lina, linb
 
 
+def branch_evol(in_pop, ngens):
+    in_pop = cp.deepcopy(in_pop)
+    if in_pop.size:
+        for gen in range(ngens):
+            print(f"producing generation {gen}")
+            survivors = select(in_pop, pf.prop_survivors, pf.select_strategy)
+            next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
+            in_pop = next_pop
+    return in_pop
+
+
+def unpickle(filename):
+    pickle_off = open(filename, "rb")
+    output = pickle.load(pickle_off)
+    return output
+
+
+def export_randalignments(organism_array, outfile_prefix="outfile"):
+    num_orgs = organism_array.size
+    rand_seqs = np.random.choice(num_orgs, 10)
+    num_genes = organism_array[0][1].shape[0]
+    # TODO this is unused
+    sequences_array = np.array([x[1] for x in organism_array])
+    for i in range(num_genes):
+        filename = outfile_prefix + "_gene" + str(i) + ".fas"
+        with open(filename, "w") as gene_file:
+            for j in range(rand_seqs.size):
+                seq_name = ">" + outfile_prefix + "_" + str(i) + "_org" + str(j)
+                sequence = "".join(organism_array[j][1][i])
+                print(seq_name, file=gene_file)
+                print(sequence, file=gene_file)
+        print("Gene", str(i), "done")
+
+
+def main_serial():
+    founder = founder_miner(0.3)
+    results_array = np.ndarray(13, dtype=object)
+    founder_pop = grow_pop(founder, pf.pop_size, "equal")
+    results_array[0] = cp.deepcopy(founder_pop)
+    anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
+    # stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
+    results_array[1] = cp.deepcopy(anc1_stem)
+    results_array[2] = cp.deepcopy(anc2_stem)
+    # results_array[3]=cp.deepcopy(stem_lin3)
+    # results_array[4]=cp.deepcopy(stem_lin4)
+    anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
+    genslist1 = np.array([10, 10])
+
+    for i in range(len(anc_branches)):
+        results_array[i + 3] = branch_evol(anc_branches[i], genslist1[i])
+
+    # anc1_tip,anc2_tip=list(result)
+    # results_array[3]=cp.deepcopy(anc1_tip)
+    # results_array[4]=cp.deepcopy(anc2_tip)
+
+    # results_array[7]=cp.deepcopy(tip_lin3)
+    # results_array[8]=cp.deepcopy(tip_lin4)
+    leafa_stem, leafb_stem = randsplit(results_array[3], pf.pop_size)
+    results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
+        leafb_stem
+    )
+    leafc_stem, leafd_stem = randsplit(results_array[4], pf.pop_size)
+    results_array[7], results_array[8] = cp.deepcopy(leafc_stem), cp.deepcopy(
+        leafd_stem
+    )
+
+    four_leaves = np.array(
+        [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
+    )
+    genslist2 = np.array([10, 10, 10, 10])
+
+    for i in range(len(four_leaves)):
+        results_array[i + 9] = branch_evol(four_leaves[i], genslist2[i])
+
+    # leafa_tip,leafb_tip,leafc_tip,leafd_tip=list(result)
+    # results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(leafa_tip),
+    # cp.deepcopy(leafb_tip),cp.deepcopy(leafc_tip),cp.deepcopy(leafd_tip)
+    return results_array
+
+
 def main_parallel():
     founder = founder_miner(0.3)
     results_array = np.ndarray(13, dtype=object)
@@ -871,88 +950,7 @@ def main_parallel():
     )
     return results_array
 
-
-def main_serial():
-    founder = founder_miner(0.3)
-    results_array = np.ndarray(13, dtype=object)
-    founder_pop = grow_pop(founder, pf.pop_size, "equal")
-    results_array[0] = cp.deepcopy(founder_pop)
-    anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
-    # stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    results_array[1] = cp.deepcopy(anc1_stem)
-    results_array[2] = cp.deepcopy(anc2_stem)
-    # results_array[3]=cp.deepcopy(stem_lin3)
-    # results_array[4]=cp.deepcopy(stem_lin4)
-    anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([10, 10])
-
-    for i in range(len(anc_branches)):
-        results_array[i + 3] = branch_evol(anc_branches[i], genslist1[i])
-
-    # anc1_tip,anc2_tip=list(result)
-    # results_array[3]=cp.deepcopy(anc1_tip)
-    # results_array[4]=cp.deepcopy(anc2_tip)
-
-    # results_array[7]=cp.deepcopy(tip_lin3)
-    # results_array[8]=cp.deepcopy(tip_lin4)
-    leafa_stem, leafb_stem = randsplit(results_array[3], pf.pop_size)
-    results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
-        leafb_stem
-    )
-    leafc_stem, leafd_stem = randsplit(results_array[4], pf.pop_size)
-    results_array[7], results_array[8] = cp.deepcopy(leafc_stem), cp.deepcopy(
-        leafd_stem
-    )
-
-    four_leaves = np.array(
-        [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
-    )
-    genslist2 = np.array([10, 10, 10, 10])
-
-    for i in range(len(four_leaves)):
-        results_array[i + 9] = branch_evol(four_leaves[i], genslist2[i])
-
-    # leafa_tip,leafb_tip,leafc_tip,leafd_tip=list(result)
-    # results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(leafa_tip),
-    # cp.deepcopy(leafb_tip),cp.deepcopy(leafc_tip),cp.deepcopy(leafd_tip)
-    return results_array
-
-
-def branch_evol(in_pop, ngens):
-    in_pop = cp.deepcopy(in_pop)
-    if in_pop.size:
-        for gen in range(ngens):
-            print(f"producing generation {gen}")
-            survivors = select(in_pop, pf.prop_survivors, pf.select_strategy)
-            next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
-            in_pop = next_pop
-    return in_pop
-
-
-def unpickle(filename):
-    pickle_off = open(filename, "rb")
-    output = pickle.load(pickle_off)
-    return output
-
-
 if __name__ == "__main__":
     result = main_serial()
-print("Analysis completed", result.shape)
-store(result)
-
-
-def export_randalignments(organism_array, outfile_prefix="outfile"):
-    num_orgs = organism_array.size
-    rand_seqs = np.random.choice(num_orgs, 10)
-    num_genes = organism_array[0][1].shape[0]
-    # TODO this is unused
-    sequences_array = np.array([x[1] for x in organism_array])
-    for i in range(num_genes):
-        filename = outfile_prefix + "_gene" + str(i) + ".fas"
-        with open(filename, "w") as gene_file:
-            for j in range(rand_seqs.size):
-                seq_name = ">" + outfile_prefix + "_" + str(i) + "_org" + str(j)
-                sequence = "".join(organism_array[j][1][i])
-                print(seq_name, file=gene_file)
-                print(sequence, file=gene_file)
-        print("Gene", str(i), "done")
+    print("Analysis completed", result.shape)
+    store(result)
