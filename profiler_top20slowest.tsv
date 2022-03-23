@@ -1,0 +1,30 @@
+Thu Mar 17 16:35:52 2022    testProfile1.test
+
+         2013904656 function calls (1615080156 primitive calls) in 707.949 seconds
+
+   Ordered by: cumulative time
+   List reduced from 3882 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+   1153/1    0.029    0.000  707.955  707.955 {built-in method builtins.exec}
+        1    0.012    0.012  707.955  707.955 retikulos_bc4.py:1(<module>)
+        1    0.002    0.002  706.169  706.169 retikulos_bc4.py:549(main_serial)
+       67    0.554    0.008  669.008    9.985 retikulos_bc4.py:156(grow_pop)
+        6    0.145    0.024  617.899  102.983 retikulos_bc4.py:587(branch_evol)
+398388534/73272  330.598    0.000  573.134    0.008 copy.py:128(deepcopy)
+185672/73272   85.416    0.000  572.527    0.008 {method '__deepcopy__' of 'numpy.ndarray' objects}
+     6642    1.815    0.000  520.065    0.078 retikulos_bc4.py:189(mutation_wrapper)
+     6642    3.806    0.001  233.469    0.035 retikulos_bc4.py:257(mutate_genome)
+       67    0.002    0.000  131.121    1.957 retikulos_bc4.py:434(cleanup_deads)
+796800014   77.522    0.000   77.522    0.000 {method 'get' of 'dict' objects}
+        3    0.007    0.002   63.606   21.202 retikulos_bc4.py:474(randsplit)
+     6642   17.725    0.003   59.311    0.009 retikulos_bc4.py:301(regulator_mutator)
+398662051   44.253    0.000   44.253    0.000 {built-in method builtins.id}
+398189635   34.776    0.000   34.776    0.000 copy.py:182(_deepcopy_atomic)
+  1704329   31.996    0.000   31.996    0.000 {built-in method numpy.array}
+     6642    8.783    0.001   23.790    0.004 retikulos_bc4.py:234(codPos)
+3462200/3076127    6.617    0.000   23.122    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+   796609   20.592    0.000   21.018    0.000 {method 'choice' of 'numpy.random.mtrand.RandomState' objects}
+   796408   16.560    0.000   20.491    0.000 retikulos_bc4.py:147(translate_codon)
+
+
