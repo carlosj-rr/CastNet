@@ -832,28 +832,32 @@ def branch_evol(in_pop, ngens):
     return in_pop
 
 
+import numpy as np; import pickle; filename="EvolRun_03-16-2022_13-39-55.pkl"
+
 def unpickle(filename):
     pickle_off = open(filename, "rb")
     output = pickle.load(pickle_off)
     return output
 
 
-def export_randalignments(organism_array, outfile_prefix="outfile"):
+def bloop(organism_array, outfile_prefix="outfile"):
     num_orgs = organism_array.size
     rand_seqs = np.random.choice(num_orgs, 10)
     num_genes = organism_array[0][1].shape[0]
     # TODO this is unused
     sequences_array = np.array([x[1] for x in organism_array])
     for i in range(num_genes):
-        filename = outfile_prefix + "_gene" + str(i) + ".fas"
+        filename = outfile_prefix + "_gene_" + str(i) + ".fas"
         with open(filename, "w") as gene_file:
             for j in range(rand_seqs.size):
                 seq_name = ">" + outfile_prefix + "_" + str(i) + "_org" + str(j)
-                sequence = "".join(organism_array[j][1][i])
+                sequence=''.join(organism_array[j][1][i])
                 print(seq_name, file=gene_file)
                 print(sequence, file=gene_file)
         print("Gene", str(i), "done")
 
+
+run2=unpickle(filename)
 
 def main_serial():
     founder = founder_miner(0.3)
