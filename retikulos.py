@@ -207,8 +207,8 @@ def make_genome_and_proteome(
     else:
         num_codons = int(seq_length / 3)
     idx_vect = np.array(range(0, len(dna_codons) - 3))
-    genome_arr = np.empty((num_genes, num_codons), dtype=object)
-    proteome_arr = np.empty((num_genes, num_codons), dtype=object)
+    genome_arr = np.empty((num_genes, num_codons), dtype=int)
+    proteome_arr = np.empty((num_genes, num_codons), dtype=int)
     for i in range(0, num_genes):
         rand_codon_idx = np.hstack(
             (
