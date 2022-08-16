@@ -831,8 +831,6 @@ def branch_evol(in_pop, ngens):
     return in_pop
 
 
-import numpy as np; import pickle; filename="EvolRun_03-16-2022_13-39-55.pkl"
-
 def unpickle(filename):
     pickle_off = open(filename, "rb")
     output = pickle.load(pickle_off)
