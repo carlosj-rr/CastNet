@@ -854,7 +854,7 @@ def bloop(organism_array, outfile_prefix="outfile"):
         print("Gene", str(i), "done")
 
 
-run2=unpickle(filename)
+#run2=unpickle(filename)
 
 def main_serial():
     founder = founder_miner(0.3)
