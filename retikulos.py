@@ -177,8 +177,6 @@ def founder_miner(min_fitness=0.6):
         genes_on = (development.sum(axis=0) != 0).astype(int)
         fitness = calc_fitness(development)
         out_arr = np.array(
-            [
-                np.array(
                     (
                         n_generation,
                         genome,
@@ -193,8 +191,6 @@ def founder_miner(min_fitness=0.6):
                     ),
                     dtype=object,
                 )
-            ]
-        )
     return out_arr
 
 
@@ -363,7 +359,6 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
         for j in range(num_offsp):
             out_pop[counter] = place_holder
             counter = counter + 1
-    return(out_pop)
     out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)))))
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
     print(f"{out_pop.size} organisms survived")
