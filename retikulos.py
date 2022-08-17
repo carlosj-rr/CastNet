@@ -248,11 +248,11 @@ def random_masked_vector(num_vals, prop_zero=0, min_val=0, max_val=1):
 
 
 def develop(start_vect, grn, decays, thresholds, dev_steps):
-    start_vect = cp.deepcopy(start_vect)
-    geneExpressionProfile = np.ndarray(((pf.dev_steps + 1), pf.num_genes))
-    geneExpressionProfile[0] = np.array([start_vect])
+    #start_vect = cp.deepcopy(start_vect)
+    gene_expression_profile = np.ndarray(((pf.dev_steps + 1), pf.num_genes))
+    gene_expression_profile[0] = np.array([start_vect])
     # Running the organism's development, and outputting the results
-    # in an array called geneExpressionProfile
+    # in an array called gene_expression_profile
     invect = start_vect
     counter = 1
     for i in range(dev_steps):
@@ -266,10 +266,10 @@ def develop(start_vect, grn, decays, thresholds, dev_steps):
         thresholder = (pre_thresholds > thresholds).astype(int)
         # rectify with the thresholder vect. This step resulted in the deletion of the 'rectify()' function
         currV = pre_thresholds * thresholder
-        geneExpressionProfile[(i + 1)] = currV
+        gene_expression_profile[(i + 1)] = currV
         invect = currV
         counter = counter + 1
-    return geneExpressionProfile
+    return gene_expression_profile
 
 
 def calc_fitness(development):
