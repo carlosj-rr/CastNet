@@ -277,7 +277,7 @@ def calc_fitness(development):
     is_alive = last_gene_expressed(development, min_reproducin)
     if is_alive:
         genes_on = prop_genes_on(development)
-        exp_stab = expression_stability(development)
+        exp_stab = expression_stability(development) # not doing what it's meant to - see issues on GitHub page.
         # added "1 -" as I realized that the R^2 value would approac 1 the more it assimilated an exponential function.
         sim_to_exp = 1 - exponential_similarity(development)
         fitness_val = np.mean([genes_on, exp_stab, sim_to_exp])
@@ -509,21 +509,23 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
     return out_genome, out_proteome, muttype_vect
 
 
-def point_mutate_codon(codon, pos_to_mutate):
+def point_mutate_codon(codon, pos_to_mutate): # Has to be made consisten with the new integer codification of bases.
     if pos_to_mutate < 0:
         raise NegativeIndex(
             f"Codon position {pos_to_mutate} is negative\nThis can cause intractable mutations\n"
             f"Consider verifying the output of codPos()"
         )
-    bases = ("T", "C", "A", "G")
-    base = codon[pos_to_mutate]
-    change = [x for x in bases if x != base]
-    new_base = np.random.choice(change)
-    split_codon = np.array(list(codon))
-    split_codon[pos_to_mutate] = new_base
-    new_codon = "".join(split_codon)
+    bases = (1, 2, 3, 4)
+    txt_codon=np.array(list(str(codon)))
+    subs=np.setxor1d(bases,txt_codon[pos_to_mutate])
+    def reform_txt_codon(txt_codon,pos_to_mutate,sub):
+        txt_codon[pos_to_mutate]=sub
+        return(int(''.join(txt_codon)))
+    options=np.ndarray(3,dtype=int)
+    for i in range(len(subs)):
+        options[i]=reform_txt_codon(txt_codon,pos_to_mutate,subs[i])
+    new_codon = np.random.choice(options)
     return new_codon
-
 
 class MutationTypeError(Exception):
     pass
