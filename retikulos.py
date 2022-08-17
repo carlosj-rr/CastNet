@@ -325,7 +325,7 @@ class CodonError(Exception):
 
 
 def translate_codon(codon):
-    if np.where(dna_codons == codon)[0].size != 0:
+    if codon in dna_codons:
         idx = np.where(dna_codons == codon)[0][0]
         aminoac = trans_aas[idx]
     else:
@@ -357,12 +357,14 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
     counter = 0
     out_pop = np.ndarray((curr_pop_size[0],), dtype=object)
     # taking each input organism and adding the requested offspring to the output population.
-    for k in range(num_in_orgs):
-        num_offsp = orgs_per_org[k]
-        for i in range(num_offsp):
-            indiv = mutation_wrapper(in_orgs, pf.seq_mutation_rate)[0]
-            out_pop[counter] = indiv
+    for i in range(num_in_orgs):
+        num_offsp = orgs_per_org[i]
+        place_holder=cp.deepcopy(in_orgs[i][0])
+        for j in range(num_offsp):
+            out_pop[counter] = place_holder
             counter = counter + 1
+    return(out_pop)
+    out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)))))
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
     print(f"{out_pop.size} organisms survived")
     return out_pop
@@ -375,7 +377,8 @@ class NegativeIndex(Exception):
 # Input is an organism array, as produced by the founder_miner() function,
 # and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
 def mutation_wrapper(orgarr, mut_rateseq):
-    orgarrcp = cp.deepcopy(orgarr[0])
+    #orgarrcp = cp.deepcopy(orgarr[0])
+    orgarrcp = orgarr
     in_gen_num = orgarrcp[0]
     in_genome = orgarrcp[1]
     in_proteome = orgarrcp[2]
@@ -400,7 +403,6 @@ def mutation_wrapper(orgarr, mut_rateseq):
         out_genes_on = (out_dev.sum(axis=0) != 0).astype(int)
         out_fitness = calc_fitness(out_dev)
     else:
-
         out_genome = in_genome
         out_proteome = in_proteome
         out_grn = in_grn
@@ -411,7 +413,6 @@ def mutation_wrapper(orgarr, mut_rateseq):
         out_fitness = in_fitness
     out_gen_num = in_gen_num + 1
     out_org = np.array(
-        [
             [
                 out_gen_num,
                 out_genome,
@@ -423,8 +424,7 @@ def mutation_wrapper(orgarr, mut_rateseq):
                 out_dev,
                 out_genes_on,
                 out_fitness,
-            ]
-        ],
+            ],
         dtype=object,
     )
     return out_org
@@ -474,6 +474,7 @@ def cod_pos(muts, gnome_shape):
 def mutate_genome(old_gnome, old_prome, mut_coords):
     gnome = cp.deepcopy(old_gnome)
     prome = cp.deepcopy(old_prome)
+    #gnome,prome=old_gnome,old_prome
     # get the number of rows in the mutation coordinate array, this is the number of mutations
     mut_num = mut_coords.shape[0]
     muttype_vect = np.ndarray((mut_num, 2), dtype=object)
