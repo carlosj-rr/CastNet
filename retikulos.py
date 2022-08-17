@@ -360,7 +360,7 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
             counter = counter + 1
     out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)))))
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
-    print(f"{out_pop.size} organisms survived")
+    print(f"{out_pop.shape[0]} organisms survived")
     return out_pop
 
 
