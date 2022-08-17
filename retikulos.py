@@ -355,9 +355,8 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
     # taking each input organism and adding the requested offspring to the output population.
     for i in range(num_in_orgs):
         num_offsp = orgs_per_org[i]
-        place_holder=cp.deepcopy(in_orgs[i][0])
         for j in range(num_offsp):
-            out_pop[counter] = place_holder
+            out_pop[counter] = cp.deepcopy(in_orgs[i])
             counter = counter + 1
     out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)))))
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
