@@ -337,7 +337,7 @@ def translate_codon(codon):
 
 # Assumes input is a population (i.e. an array of organism arrays), it should crash if it doesn't find 2 dimensions.
 def grow_pop(in_orgs, out_pop_size, strategy="equal"):
-    in_orgs = cp.deepcopy(in_orgs)
+    #in_orgs = cp.deepcopy(in_orgs)
     num_in_orgs = in_orgs.shape[0]
     orgs_per_org = np.array([np.round(out_pop_size / num_in_orgs).astype(int)])
     curr_pop_size = orgs_per_org * num_in_orgs
@@ -356,17 +356,13 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
         )
     counter = 0
     out_pop = np.ndarray((curr_pop_size[0],), dtype=object)
-
     # taking each input organism and adding the requested offspring to the output population.
     for k in range(num_in_orgs):
         num_offsp = orgs_per_org[k]
-
         for i in range(num_offsp):
             indiv = mutation_wrapper(in_orgs, pf.seq_mutation_rate)[0]
             out_pop[counter] = indiv
-
             counter = counter + 1
-
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
     print(f"{out_pop.size} organisms survived")
     return out_pop
