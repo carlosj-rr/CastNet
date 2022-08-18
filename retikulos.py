@@ -778,7 +778,7 @@ def select(in_pop, p=0.1, strategy="high pressure"):
             f'This value should be any of "high pressure", "low pressure", or "totally relaxed".\n '
             f"Please double-check your input."
         )
-    out_pop = cp.deepcopy(in_pop[out_idcs])
+    out_pop = in_pop[out_idcs]
     return out_pop
 
 
