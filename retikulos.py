@@ -355,14 +355,18 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
             f"Strategy must be either 'equal' or 'fitness_linked'."
         )
     counter = 0
-    out_pop = np.ndarray((curr_pop_size[0],), dtype=object)
+    out_pop = np.ndarray((curr_pop_size,), dtype=object)
     # taking each input organism and adding the requested offspring to the output population.
     for i in range(num_in_orgs):
         num_offsp = orgs_per_org[i]
         for j in range(num_offsp):
-            out_pop[counter] = cp.deepcopy(in_orgs[i])
-            counter = counter + 1
-    out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)))))
+            if num_in_orgs == 1:
+                out_pop[counter] = cp.deepcopy(in_orgs)
+            else:
+                out_pop[counter] = cp.deepcopy(in_orgs[i])
+            counter += 1
+    with ProcessPoolExecutor() as pool:
+        out_pop=np.array(list(pool.map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)))))
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
     print(f"{out_pop.shape[0]} organisms survived")
     return out_pop
