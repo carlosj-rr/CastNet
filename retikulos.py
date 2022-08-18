@@ -835,7 +835,7 @@ def branch_evol(in_pop, ngens):
             print(f"producing generation {gen}")
             survivors = select(in_pop, pf.prop_survivors, pf.select_strategy)
             if type(survivors) == bool:
-                print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen-1} generations")
+                print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen-1} generation(s)")
                 return(branch[0:(gen-1)])
             print(f"Survivor number is {len(survivors)}.")
             next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
