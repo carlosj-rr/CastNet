@@ -757,7 +757,7 @@ def select(in_pop, p=0.1, strategy="high pressure"):
         print(
             f"A proportion of {p} results in 0 survivors, you've selected your population into extinction."
         )
-        return None
+        return False
     else:
         out_pop=np.ndarray(num_survivors,dtype=object)
     if strategy == "high pressure":
@@ -834,6 +834,9 @@ def branch_evol(in_pop, ngens):
         for gen in range(ngens):
             print(f"producing generation {gen}")
             survivors = select(in_pop, pf.prop_survivors, pf.select_strategy)
+            if type(survivors) == bool:
+                print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen-1} generations")
+                return(branch[0:(gen-1)])
             print(f"Survivor number is {len(survivors)}.")
             next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
             branch[gen]=next_pop
@@ -858,7 +861,7 @@ def bloop(organism_array, outfile_prefix="outfile"):
     sequences_array = np.array([x[1] for x in organism_array])
     for i in range(num_genes):
         filename = outfile_prefix + "_gene_" + str(i) + ".fas"
-        with open(filename, "w") as gene_file:
+        with open(filename, "w") as gene_file:  
             for j in range(rand_seqs.size):
                 seq_name = ">" + outfile_prefix + "_" + str(i) + "_org" + str(j)
                 sequence=''.join(organism_array[j][1][i])
