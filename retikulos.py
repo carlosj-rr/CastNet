@@ -825,7 +825,7 @@ def old_randsplit(in_pop, out_pop_size):
 
 
 def branch_evol(in_pop, ngens):
-    in_pop = cp.deepcopy(in_pop)
+    #in_pop = cp.deepcopy(in_pop)
     if in_pop.size:
         for gen in range(ngens):
             print(f"producing generation {gen}")
