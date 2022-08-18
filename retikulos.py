@@ -782,7 +782,10 @@ def select(in_pop, p=0.1, strategy="high pressure"):
 
 def randsplit(in_pop, out_pop_size):
     # in_pop=cp.deepcopy(in_pop)
-    inpopsize = in_pop.shape[0]
+    if len(in_pop.shape) == 1:
+        inpopsize=1
+    else:
+        inpopsize=len(in_pop)
     if inpopsize > 2:
         idcs_lina = np.random.choice(
             range(inpopsize), int(inpopsize / 2), replace=False
