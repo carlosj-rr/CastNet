@@ -393,7 +393,7 @@ def mutation_wrapper(orgarr, mut_rateseq):
     in_fitness = orgarrcp[9]
     mutations = random_mutations(in_genome.size, mut_rateseq)
     if np.any(mutations):
-        print(f"{mutations.size} mutation(s) in this reproductive event")
+        #print(f"{mutations.size} mutation(s) in this reproductive event")
         mut_coords = cod_pos(mutations, in_genome.shape)
         out_genome, out_proteome, mutlocs = mutate_genome(
             in_genome, in_proteome, mut_coords
@@ -755,10 +755,12 @@ def select(in_pop, p=0.1, strategy="high pressure"):
     num_survivors = int(pop_size * p)
     fitnesses = np.array([x[9] for x in in_pop[:]])
     if num_survivors == 0:
-        raise ValueError(
+        print(
             f"A proportion of {p} results in 0 survivors, you've selected your population into extinction."
         )
-
+        return None
+    else:
+        out_pop=np.ndarray(num_survivors,dtype=object)
     if strategy == "high pressure":
         # returns the **indices** for the top 'num_survivors' fitnesses.
         out_idcs = np.argpartition(fitnesses, -num_survivors)[-num_survivors:]
@@ -826,13 +828,19 @@ def old_randsplit(in_pop, out_pop_size):
 
 def branch_evol(in_pop, ngens):
     #in_pop = cp.deepcopy(in_pop)
+    branch=np.ndarray((ngens,),dtype=object)
     if in_pop.size:
         for gen in range(ngens):
             print(f"producing generation {gen}")
             survivors = select(in_pop, pf.prop_survivors, pf.select_strategy)
+            print(f"Survivor number is {len(survivors)}.")
             next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
+            branch[gen]=next_pop
+            print(f"Generation {gen} of {ngens} completed.")
             in_pop = next_pop
-    return in_pop
+    else:
+        raise ValueError(f"Input population {in_pop} is has no individuals.")
+    return branch
 
 
 def unpickle(filename):
