@@ -376,7 +376,6 @@ class NegativeIndex(Exception):
     pass
 
 
-# Input is an organism array, as produced by the founder_miner() function,
 # and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
 def mutation_wrapper(orgarr, mut_rateseq):
     #orgarrcp = cp.deepcopy(orgarr[0])
@@ -778,10 +777,9 @@ def select(in_pop, p=0.1, strategy="high pressure"):
             f'This value should be any of "high pressure", "low pressure", or "totally relaxed".\n '
             f"Please double-check your input."
         )
-    if len(in_pop.shape) == 1:
-        out_pop=in_pop
-    else:
-        out_pop = in_pop[out_idcs]
+    out_pop = in_pop[out_idcs]
+    if num_survivors == 1:
+        out_pop = out_pop[0]
     return out_pop
 
 
