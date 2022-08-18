@@ -339,7 +339,7 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
         num_in_orgs=1
     else:
         num_in_orgs=len(in_orgs)
-    orgs_per_org = np.array([np.round(out_pop_size / num_in_orgs).astype(int)])
+    orgs_per_org = np.round(out_pop_size / num_in_orgs).astype(int)
     curr_pop_size = orgs_per_org * num_in_orgs
     if strategy == "equal":
         print("equal reproduction strategy selected...")
