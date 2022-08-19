@@ -361,9 +361,9 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
         num_offsp = orgs_per_org[i]
         for j in range(num_offsp):
             if num_in_orgs == 1:
-                out_pop[counter] = cp.deepcopy(in_orgs)
+                out_pop[counter] = np.ndarray.copy(in_orgs)
             else:
-                out_pop[counter] = cp.deepcopy(in_orgs[i])
+                out_pop[counter] = np.ndarray.copy(in_orgs[i])
             counter += 1
     with ProcessPoolExecutor() as pool:
         out_pop=np.array(list(pool.map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)))))
