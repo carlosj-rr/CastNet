@@ -361,12 +361,11 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
         num_offsp = orgs_per_org[i]
         for j in range(num_offsp):
             if num_in_orgs == 1:
-                out_pop[counter] = np.ndarray.copy(in_orgs)
+                out_pop[counter] = np.array([x for x in in_orgs],dtype=object)
             else:
-                out_pop[counter] = np.ndarray.copy(in_orgs[i])
+                out_pop[counter] = np.array([x for x in in_orgs[i]],dtype=object)
             counter += 1
-    with ProcessPoolExecutor() as pool:
-        out_pop=np.array(list(pool.map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)))))
+    out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop))))) # ProcessPoolExecutor was used here to parallelize, but resulted in really inconsistent output.
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
     print(f"{out_pop.shape[0]} organisms survived")
     return out_pop
@@ -378,7 +377,7 @@ class NegativeIndex(Exception):
 
 # and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
 def mutation_wrapper(orgarr, mut_rateseq):
-    #orgarrcp = cp.deepcopy(orgarr[0])
+    #orgarrcp = cp.deepcopy(orgarr)
     orgarrcp = orgarr
     in_gen_num = orgarrcp[0]
     in_genome = orgarrcp[1]
