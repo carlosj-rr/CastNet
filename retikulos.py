@@ -735,9 +735,9 @@ def cleanup_deads(in_pop):
     fitnesses = np.array([x[9] for x in in_pop[:]])
     live_ones = np.nonzero(fitnesses)[0]
     if live_ones.size == tot_orgs:
-        out_pop = cp.deepcopy(in_pop)
+        out_pop = in_pop
     elif live_ones.size != 0:
-        out_pop = cp.deepcopy(in_pop[live_ones])
+        out_pop = in_pop[live_ones]
     elif live_ones.size == 0:
         print(f"Your population went extinct. Sorry for your loss.")
         out_pop = np.array([])
