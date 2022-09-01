@@ -749,6 +749,14 @@ class UnknownSelectiveStrategy(Exception):
 
 
 def select(in_pop, p=0.1, strategy="high pressure"):
+    if (lambda x: len(x.shape) == 1)(in_pop): #if it is a single organism
+        print("You have passed a single organism for selection. Confirming it is alive...")
+        if in_pop[9] > 0:
+            print("It is alive, congratulations, this will be your survivor")
+            return in_pop
+        else:
+            print("Ah well. your only survivor was dead. This lineage is now extinct.")
+            return False
     pop_size = in_pop.shape[0]
     num_survivors = int(pop_size * p)
     fitnesses = np.array([x[9] for x in in_pop[:]])
