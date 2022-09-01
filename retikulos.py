@@ -834,28 +834,28 @@ def old_randsplit(in_pop, out_pop_size):
     return lina, linb
 
 
-def branch_evol(in_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq):
+def branch_evol(parent_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq):
     #in_pop = cp.deepcopy(in_pop)
-    branch=np.ndarray((ngens,),dtype=object)
-    if in_pop.size:
+    #branch=np.ndarray((ngens,),dtype=object)
+    if parent_pop.size:
         for gen in range(ngens):
-            print(f"producing generation {gen+1}")
-            survivors = select(in_pop, pf.prop_survivors, pf.select_strategy)
+            #print(f"producing generation {gen+1}")
+            survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
             if type(survivors) == bool:
                 print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen-1} generation(s)")
-                return(branch[0:(gen-1)])
+                return(parent_pop)
             print(f"Survivor number is {len(survivors)}.")
             next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
-            branch[gen]=next_pop
+            #branch[gen]=next_pop
             print(f"Generation {gen+1} of {ngens} completed.")
-            in_pop = next_pop
-            if (gen+1) % reporting_freq == 0: # I don't understand why this is not tripping when the modulo is 0.
+            parent_pop = next_pop
+            if (gen+1) % reporting_freq == 0:
                 filename="Generation_"+str(gen+1)+"_branch_"+str(branch_num)+".npy"
                 print(f"####### Saving population {gen+1} to {filename}")
                 np.save(filename,next_pop)
     else:
-        raise ValueError(f"Input population {in_pop} is has no individuals.")
-    return branch
+        raise ValueError(f"Input population {parent_pop} is has no individuals.")
+    return
 
 
 def unpickle(filename):
