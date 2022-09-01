@@ -789,7 +789,7 @@ def select(in_pop, p=0.1, strategy="high pressure"):
         out_pop = out_pop[0]
     return out_pop
 
-
+# Add a storing to disk command here
 def randsplit(in_pop, out_pop_size):
     # in_pop=cp.deepcopy(in_pop)
     if len(in_pop.shape) == 1:
