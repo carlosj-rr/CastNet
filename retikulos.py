@@ -834,7 +834,7 @@ def old_randsplit(in_pop, out_pop_size):
     return lina, linb
 
 
-def branch_evol(in_pop, ngens,reporting_freq=pf.reporting_freq):
+def branch_evol(in_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq):
     #in_pop = cp.deepcopy(in_pop)
     branch=np.ndarray((ngens,),dtype=object)
     if in_pop.size:
@@ -847,12 +847,12 @@ def branch_evol(in_pop, ngens,reporting_freq=pf.reporting_freq):
             print(f"Survivor number is {len(survivors)}.")
             next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
             branch[gen]=next_pop
-            print(f"Generation {gen} of {ngens} completed.")
+            print(f"Generation {gen+1} of {ngens} completed.")
             in_pop = next_pop
-            if gen % reporting_freq == 0:
-                #filename="Gen"+str(gen)+"_pop.npy"
-                print(next_pop)
-                #np.save(filename,next_pop)
+            if (gen+1) % reporting_freq == 0: # I don't understand why this is not tripping when the modulo is 0.
+                filename="Generation_"+str(gen+1)+"_branch_"+str(branch_num)+".npy"
+                print(f"####### Saving population {gen+1} to {filename}")
+                np.save(filename,next_pop)
     else:
         raise ValueError(f"Input population {in_pop} is has no individuals.")
     return branch
@@ -942,9 +942,9 @@ def main_parallel():
     # results_array[4]=cp.deepcopy(stem_lin4)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
     genslist1 = np.array([20, 20])
-
+    br_names = np.array([1,2])
     with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol, anc_branches, genslist1)
+        result = pool.map(branch_evol, anc_branches, genslist1,br_names)
 
     anc1_tip, anc2_tip = list(result)
 
