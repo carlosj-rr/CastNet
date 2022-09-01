@@ -860,7 +860,7 @@ def unpickle(filename):
     return output
 
 
-def bloop(organism_array, outfile_prefix="outfile"):
+def gene_ali_saver(organism_array, outfile_prefix="outfile"):
     num_orgs = organism_array.size
     rand_seqs = np.random.choice(num_orgs, 10)
     num_genes = organism_array[0][1].shape[0]
@@ -927,7 +927,7 @@ def main_serial():
 
 def main_parallel():
     founder = founder_miner(0.3)
-    results_array = np.ndarray(13, dtype=object)
+    results_array = np.ndarray(5, dtype=object)
     founder_pop = grow_pop(founder, pf.pop_size, "equal")
     results_array[0] = cp.deepcopy(founder_pop)
     anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
@@ -937,15 +937,16 @@ def main_parallel():
     # results_array[3]=cp.deepcopy(stem_lin3)
     # results_array[4]=cp.deepcopy(stem_lin4)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([10, 10])
+    genslist1 = np.array([200, 200])
 
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol, anc_branches, genslist1)
 
     anc1_tip, anc2_tip = list(result)
+
     results_array[3] = cp.deepcopy(anc1_tip)
     results_array[4] = cp.deepcopy(anc2_tip)
-
+    return results_array
     # results_array[7]=cp.deepcopy(tip_lin3)
     # results_array[8]=cp.deepcopy(tip_lin4)
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
