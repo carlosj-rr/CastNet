@@ -834,12 +834,12 @@ def old_randsplit(in_pop, out_pop_size):
     return lina, linb
 
 
-def branch_evol(in_pop, ngens):
+def branch_evol(in_pop, ngens,reporting_freq=pf.reporting_freq):
     #in_pop = cp.deepcopy(in_pop)
     branch=np.ndarray((ngens,),dtype=object)
     if in_pop.size:
         for gen in range(ngens):
-            print(f"producing generation {gen}")
+            print(f"producing generation {gen+1}")
             survivors = select(in_pop, pf.prop_survivors, pf.select_strategy)
             if type(survivors) == bool:
                 print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen-1} generation(s)")
@@ -849,6 +849,10 @@ def branch_evol(in_pop, ngens):
             branch[gen]=next_pop
             print(f"Generation {gen} of {ngens} completed.")
             in_pop = next_pop
+            if gen % reporting_freq == 0:
+                #filename="Gen"+str(gen)+"_pop.npy"
+                print(next_pop)
+                #np.save(filename,next_pop)
     else:
         raise ValueError(f"Input population {in_pop} is has no individuals.")
     return branch
@@ -937,7 +941,7 @@ def main_parallel():
     # results_array[3]=cp.deepcopy(stem_lin3)
     # results_array[4]=cp.deepcopy(stem_lin4)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([200, 200])
+    genslist1 = np.array([20, 20])
 
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol, anc_branches, genslist1)
