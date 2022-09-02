@@ -14,7 +14,7 @@ reporting_freq=10 # How many generations should a snapshot be saved to disk
 #thresh_mutation_rate = 0 # It can also be 0.001, for example
 #prob_thresh_change = 0
 #decay_mutation_rate = 0
-seq_mutation_rate = 0.2E-2	# Mutation prob per base, per generation.
+seq_mutation_rate = 2.0E-3	# Mutation prob per base, per generation.
                                     # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
 #link_mutation_bounds = (-0.01,0.01)
 
