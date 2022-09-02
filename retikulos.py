@@ -682,11 +682,13 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
 
 
 def threshs_and_decs_mutator(in_thresh, in_dec, mutarr):
-    in_thresh = cp.deepcopy(in_thresh)
-    in_dec = cp.deepcopy(in_dec)
+    curr_thresh = np.random.random(len(in_thresh))
+    np.copyto(curr_thresh,in_thresh)
+    curr_dec=np.random.random(len(in_dec))
+    np.copyto(curr_dec,in_dec)
     # make a tuple in which the threshold array is the first value, and the decays the second.
     the_tuple = (
-        in_thresh,
+        curr_thresh,
         in_dec,
     )
     # This will allow me to easily choose among them at the time of mutating, see within the for loop.
