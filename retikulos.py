@@ -1,4 +1,4 @@
-import copy as cp
+#import copy as cp
 import pickle
 from concurrent.futures import ProcessPoolExecutor  # for using multiple cores.
 from datetime import datetime
@@ -472,8 +472,11 @@ def cod_pos(muts, gnome_shape):
 
 
 def mutate_genome(old_gnome, old_prome, mut_coords):
-    gnome = cp.deepcopy(old_gnome)
-    prome = cp.deepcopy(old_prome)
+    rng=np.random.default_rng()
+    gnome = rng.integers(111,444,old_gnome.size).reshape(old_gnome.shape)
+    np.copyto(gnome,old_gnome)
+    prome = rng.integers(0,100,old_prome.size).reshape(old_prome.shape)
+    np.copyto(prome,old_prome)
     #gnome,prome=old_gnome,old_prome
     # get the number of rows in the mutation coordinate array, this is the number of mutations
     mut_num = mut_coords.shape[0]
@@ -529,11 +532,18 @@ class MutationTypeError(Exception):
 
 
 def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
-    curr_grn = cp.deepcopy(in_grn)
-    curr_thr = cp.deepcopy(in_thresh)
-    curr_genes_on = cp.deepcopy(genes_on)
-    curr_dec = cp.deepcopy(in_dec)
-    curr_muttype_vect = cp.deepcopy(muttype_vect)
+    rng=np.random.default_rng()
+    curr_grn=rng.random(in_grn.shape[0]**2).reshape(in_grn.shape)
+    np.copyto(curr_grn,in_grn)
+    #curr_grn = in_grn
+    #curr_thr = cp.deepcopy(in_thresh)
+    curr_thr=in_thresh
+    #curr_genes_on = cp.deepcopy(genes_on)
+    curr_genes_on=genes_on
+    #curr_dec = cp.deepcopy(in_dec)
+    curr_dec=in_dec
+    #curr_muttype_vect = cp.deepcopy(muttype_vect)
+    curr_muttype_vect = muttype_vect
     if np.any(curr_muttype_vect < 0):
         raise NegativeIndex(
             f"There is a number in the mutations array that is negative:\n\n{curr_muttype_vect}\n\n"
@@ -682,14 +692,15 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
 
 
 def threshs_and_decs_mutator(in_thresh, in_dec, mutarr):
-    curr_thresh = np.random.random(len(in_thresh))
+    rng=np.random.default_rng()
+    curr_thresh = rng.random(len(in_thresh))
     np.copyto(curr_thresh,in_thresh)
-    curr_dec=np.random.random(len(in_dec))
+    curr_dec=rng.random(len(in_dec))
     np.copyto(curr_dec,in_dec)
     # make a tuple in which the threshold array is the first value, and the decays the second.
     the_tuple = (
         curr_thresh,
-        in_dec,
+        curr_dec,
     )
     # This will allow me to easily choose among them at the time of mutating, see within the for loop.
     # get the genes to be mutated from the mutarray's 1st column
@@ -751,8 +762,10 @@ class UnknownSelectiveStrategy(Exception):
 
 
 def select(in_pop, p=0.1, strategy="high pressure"):
+    #print(in_pop)
     if (lambda x: len(x.shape) == 1)(in_pop): #if it is a single organism
         print("You have passed a single organism for selection. Confirming it is alive...")
+        print(in_pop)
         if in_pop[9] > 0:
             print("It is alive, congratulations, this will be your survivor")
             return in_pop
@@ -839,25 +852,37 @@ def old_randsplit(in_pop, out_pop_size):
 def branch_evol(parent_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq):
     #in_pop = cp.deepcopy(in_pop)
     #branch=np.ndarray((ngens,),dtype=object)
-    if parent_pop.size:
+    print(f"Size of parental population: {len(parent_pop)}")
+    if parent_pop.size > 0:
         for gen in range(ngens):
+            if parent_pop.size > 0:
             #print(f"producing generation {gen+1}")
-            survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
-            if type(survivors) == bool:
-                print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen-1} generation(s)")
-                return(parent_pop)
-            print(f"Survivor number is {len(survivors)}.")
-            next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
-            #branch[gen]=next_pop
-            print(f"Generation {gen+1} of {ngens} completed.")
-            parent_pop = next_pop
-            if (gen+1) % reporting_freq == 0:
-                filename="Generation_"+str(gen+1)+"_branch_"+str(branch_num)+".npy"
-                print(f"####### Saving population {gen+1} to {filename}")
-                np.save(filename,next_pop)
+                survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
+                if type(survivors) == bool:
+                    print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen-1} generation(s)")
+                    filename="Extinct_branch"+str(branch_num)+"_generation_"+str(gen)+".npy"
+                    np.save(filename,parent_pop)
+                    return
+                print(f"Survivor number is {len(survivors)}.")
+                next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
+                if next_pop.size == 0:
+                    print(f"Selection got the better of your branch {branch_num}, and it went extinct. Time to package and save to disk the truncated population")
+                    filename="Extinct_branch"+str(branch_num)+"_generation_"+str(gen)+".npy"
+                    np.save(filename,parent_pop)
+                    return
+                #branch[gen]=next_pop
+                print(f"Generation {gen+1} of {ngens} completed.")
+                parent_pop = next_pop
+                if (gen+1) % reporting_freq == 0:
+                    filename="Generation_"+str(gen+1)+"_branch_"+str(branch_num)+".npy"
+                    print(f"####### Saving population {gen+1} to {filename}")
+                    np.save(filename,next_pop)
+            else:
+                print("Your population was extinguished.")
+                return
     else:
-        raise ValueError(f"Input population {parent_pop} is has no individuals.")
-    return
+        print(f"Input population {parent_pop} has no individuals. Stopping simulation.")
+        return
 
 
 def unpickle(filename):
@@ -885,22 +910,22 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
 
 #run2=unpickle(filename)
 
-def main_serial():
-    founder = founder_miner(0.3)
-    results_array = np.ndarray(13, dtype=object)
-    founder_pop = grow_pop(founder, pf.pop_size, "equal")
-    results_array[0] = cp.deepcopy(founder_pop)
-    anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
-    # stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    results_array[1] = cp.deepcopy(anc1_stem)
-    results_array[2] = cp.deepcopy(anc2_stem)
+#def main_serial():
+#    founder = founder_miner(0.3)
+#    results_array = np.ndarray(13, dtype=object)
+#    founder_pop = grow_pop(founder, pf.pop_size, "equal")
+#    #results_array[0] = cp.deepcopy(founder_pop)
+#    anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
+#    # stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
+    #results_array[1] = cp.deepcopy(anc1_stem)
+    #results_array[2] = cp.deepcopy(anc2_stem)
     # results_array[3]=cp.deepcopy(stem_lin3)
     # results_array[4]=cp.deepcopy(stem_lin4)
-    anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([10, 10])
+#    anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
+#    genslist1 = np.array([10, 10])
 
-    for i in range(len(anc_branches)):
-        results_array[i + 3] = branch_evol(anc_branches[i], genslist1[i])
+#    for i in range(len(anc_branches)):
+#        results_array[i + 3] = branch_evol(anc_branches[i], genslist1[i])
 
     # anc1_tip,anc2_tip=list(result)
     # results_array[3]=cp.deepcopy(anc1_tip)
@@ -908,38 +933,41 @@ def main_serial():
 
     # results_array[7]=cp.deepcopy(tip_lin3)
     # results_array[8]=cp.deepcopy(tip_lin4)
-    leafa_stem, leafb_stem = randsplit(results_array[3], pf.pop_size)
-    results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
-        leafb_stem
-    )
-    leafc_stem, leafd_stem = randsplit(results_array[4], pf.pop_size)
-    results_array[7], results_array[8] = cp.deepcopy(leafc_stem), cp.deepcopy(
-        leafd_stem
-    )
+#    leafa_stem, leafb_stem = randsplit(results_array[3], pf.pop_size)
+#    results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
+#        leafb_stem
+#    )
+#    leafc_stem, leafd_stem = randsplit(results_array[4], pf.pop_size)
+#    results_array[7], results_array[8] = cp.deepcopy(leafc_stem), cp.deepcopy(
+#        leafd_stem
+#    )
 
-    four_leaves = np.array(
-        [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
-    )
-    genslist2 = np.array([10, 10, 10, 10])
+#    four_leaves = np.array(
+#        [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
+#    )
+#    genslist2 = np.array([10, 10, 10, 10])
 
-    for i in range(len(four_leaves)):
-        results_array[i + 9] = branch_evol(four_leaves[i], genslist2[i])
+#    for i in range(len(four_leaves)):
+#        results_array[i + 9] = branch_evol(four_leaves[i], genslist2[i])
 
     # leafa_tip,leafb_tip,leafc_tip,leafd_tip=list(result)
     # results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(leafa_tip),
     # cp.deepcopy(leafb_tip),cp.deepcopy(leafc_tip),cp.deepcopy(leafd_tip)
-    return results_array
+#    return results_array
 
 
 def main_parallel():
     founder = founder_miner(0.3)
-    results_array = np.ndarray(5, dtype=object)
+    print("Founder created")
+    #results_array = np.ndarray(5, dtype=object)
     founder_pop = grow_pop(founder, pf.pop_size, "equal")
-    results_array[0] = cp.deepcopy(founder_pop)
+    print("Founder pop created")
+    #results_array[0] = cp.deepcopy(founder_pop)
     anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
+    print("Founding split created")
     # stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    results_array[1] = cp.deepcopy(anc1_stem)
-    results_array[2] = cp.deepcopy(anc2_stem)
+    #results_array[1] = cp.deepcopy(anc1_stem)
+    #results_array[2] = cp.deepcopy(anc2_stem)
     # results_array[3]=cp.deepcopy(stem_lin3)
     # results_array[4]=cp.deepcopy(stem_lin4)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
@@ -950,9 +978,9 @@ def main_parallel():
 
     anc1_tip, anc2_tip = list(result)
 
-    results_array[3] = cp.deepcopy(anc1_tip)
-    results_array[4] = cp.deepcopy(anc2_tip)
-    return results_array
+    #results_array[3] = cp.deepcopy(anc1_tip)
+    #results_array[4] = cp.deepcopy(anc2_tip)
+    return
     # results_array[7]=cp.deepcopy(tip_lin3)
     # results_array[8]=cp.deepcopy(tip_lin4)
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
