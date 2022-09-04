@@ -459,10 +459,7 @@ def cod_pos(muts, gnome_shape):
     genenum_array = np.repeat(range(num_genes), gene_bps)
     codpos_array = np.tile([0, 1, 2], num_codons * num_genes)
     codnum_array = np.tile(range(gene_bps),num_genes)
-    for i in range(num_genes):
-        codnum_array[i, :] = np.repeat(range(num_codons), 3)
-    codnum_array = codnum_array.flatten()
-    coords_arr=codnum_array = np.tile(range(gene_bps),num_genes)
+    coords_arr=np.array(list(zip(genenum_array,codnum_array,codpos_array)))
     return coords_arr[muts]
 
 def mutate_genome(old_gnome, old_prome, mut_coords):
