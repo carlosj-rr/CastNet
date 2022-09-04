@@ -477,7 +477,7 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
             f"Some indices in the mutation coordinates are negative:\n{mut_coords}\n"
             f"This may result in untractable mutations.\nConsider examining the output of codPos()."
         )
-    # DEBUG: CHANGE TO A MAP() APPLIED FUNCTION IF POSSIBLE.
+    # DEBUG: CHANGE TO A MATRIX OPERATION
     for i in range(mut_num):
         coordinates = mut_coords[i, :]
         selected_gene = coordinates[0]
