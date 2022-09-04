@@ -371,7 +371,7 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
     return out_pop
 
 
-class NegativeIndex(Exception):
+class IncorrectIndex(Exception):
     pass
 
 
@@ -447,16 +447,16 @@ def cod_pos(muts, gnome_shape):
     num_genes = gnome_shape[0]
     num_codons = gnome_shape[1]
     if np.any(muts < 0):
-        raise NegativeIndex(
+        raise IncorrectIndex(
             f"There are negative index values in your mutation indices:\n{muts}.\n"
             f"This will result in untractable mutations.\nConsder double-checking the result of randomMutations()"
         )
     out_array = np.ndarray((muts.size, 3), dtype=object)
     gene_bps = num_codons * 3
-    genenum_array = np.ndarray((num_genes, gene_bps), dtype=object)
-    for i in range(num_genes):
-        genenum_array[i, :] = i
-    genenum_array = genenum_array.flatten()
+    #genenum_array = np.ndarray((num_genes, gene_bps), dtype=object)
+    #for i in range(num_genes):
+    #    genenum_array[i, :] = i
+    genenum_array = np.repeat(range(num_genes), gene_bps)
     codpos_array = np.tile([0, 1, 2], num_codons * num_genes)
     codnum_array = np.ndarray((num_genes, gene_bps), dtype=object)
     for i in range(num_genes):
@@ -482,10 +482,11 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
     mut_num = mut_coords.shape[0]
     muttype_vect = np.ndarray((mut_num, 2), dtype=object)
     if np.any(mut_coords < 0):
-        raise NegativeIndex(
+        raise IncorrectIndex(
             f"Some indices in the mutation coordinates are negative:\n{mut_coords}\n"
             f"This may result in untractable mutations.\nConsider examining the output of codPos()."
         )
+    # DEBUG: CHANGE TO A MAP() APPLIED FUNCTION IF POSSIBLE.
     for i in range(mut_num):
         coordinates = mut_coords[i, :]
         selected_gene = coordinates[0]
@@ -509,22 +510,25 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
     return out_genome, out_proteome, muttype_vect
 
 
-def point_mutate_codon(codon, pos_to_mutate): # Has to be made consisten with the new integer codification of bases.
-    if pos_to_mutate < 0:
-        raise NegativeIndex(
-            f"Codon position {pos_to_mutate} is negative\nThis can cause intractable mutations\n"
-            f"Consider verifying the output of codPos()"
-        )
-    bases = (1, 2, 3, 4)
-    txt_codon=np.array(list(str(codon)))
-    subs=np.setxor1d(bases,txt_codon[pos_to_mutate])
-    def reform_txt_codon(txt_codon,pos_to_mutate,sub):
-        txt_codon[pos_to_mutate]=sub
-        return(int(''.join(txt_codon)))
-    options=np.ndarray(3,dtype=int)
-    for i in range(len(subs)):
-        options[i]=reform_txt_codon(txt_codon,pos_to_mutate,subs[i])
-    new_codon = np.random.choice(options)
+def point_mutate_codon(codon, pos_to_mutate):
+    opts=np.array([[1,2,3],[-1,1,2],[-2,-1,1],[-3,-2,-1]])
+    if pos_to_mutate == 0:
+        factor=100
+        value=codon//100
+        key=opts[value-1]
+    if pos_to_mutate == 1:
+        factor=10
+        value=codon%100//10
+        key=opts[value-1]
+    if pos_to_mutate == 2:
+        factor=1
+        value=codon%10
+        key=opts[value-1]
+    #else:
+    #    raise IncorrectIndex(
+    #        f"ERROR: Codon position {pos_to_mutate} is not within the options {(0,1,2)}"
+    #    )
+    new_codon=codon+np.random.choice(key)*factor
     return new_codon
 
 class MutationTypeError(Exception):
@@ -971,7 +975,7 @@ def main_parallel():
     # results_array[3]=cp.deepcopy(stem_lin3)
     # results_array[4]=cp.deepcopy(stem_lin4)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([20, 20])
+    genslist1 = np.array([200, 200])
     br_names = np.array([1,2])
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol, anc_branches, genslist1,br_names)
