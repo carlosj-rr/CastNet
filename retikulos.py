@@ -549,7 +549,7 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
     #curr_muttype_vect = cp.deepcopy(muttype_vect)
     curr_muttype_vect = muttype_vect
     if np.any(curr_muttype_vect < 0):
-        raise NegativeIndex(
+        raise IncorrectIndex(
             f"There is a number in the mutations array that is negative:\n\n{curr_muttype_vect}\n\n"
             f"This may result in untractable mutations, consider inspecting the output of codPos()"
         )
@@ -1013,7 +1013,7 @@ def main_parallel():
     )
     return results_array
 
-if __name__ == "__main__":
-    result = main_serial()
-    print("Analysis completed", result.shape)
-    store(result)
+#if __name__ == "__main__":
+ #   result = main_serial()
+ #   print("Analysis completed", result.shape)
+#    store(result)
