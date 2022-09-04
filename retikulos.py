@@ -451,25 +451,19 @@ def cod_pos(muts, gnome_shape):
             f"There are negative index values in your mutation indices:\n{muts}.\n"
             f"This will result in untractable mutations.\nConsder double-checking the result of randomMutations()"
         )
-    out_array = np.ndarray((muts.size, 3), dtype=object)
+    #out_array = np.ndarray((muts.size, 3), dtype=object)
     gene_bps = num_codons * 3
     #genenum_array = np.ndarray((num_genes, gene_bps), dtype=object)
     #for i in range(num_genes):
     #    genenum_array[i, :] = i
     genenum_array = np.repeat(range(num_genes), gene_bps)
     codpos_array = np.tile([0, 1, 2], num_codons * num_genes)
-    codnum_array = np.ndarray((num_genes, gene_bps), dtype=object)
+    codnum_array = np.tile(range(gene_bps),num_genes)
     for i in range(num_genes):
         codnum_array[i, :] = np.repeat(range(num_codons), 3)
     codnum_array = codnum_array.flatten()
-    for i in range(muts.size):
-        basenum = muts[i]
-        mut_val = np.array(
-            [genenum_array[basenum], codnum_array[basenum], codpos_array[basenum]]
-        )
-        out_array[i, :] = mut_val
-    return out_array
-
+    coords_arr=codnum_array = np.tile(range(gene_bps),num_genes)
+    return coords_arr[muts]
 
 def mutate_genome(old_gnome, old_prome, mut_coords):
     rng=np.random.default_rng()
