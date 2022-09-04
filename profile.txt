@@ -1,0 +1,200 @@
+         664221 function calls (633126 primitive calls) in 0.980 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.979    0.979 <stdin>:1(<module>)
+        1    0.001    0.001    0.979    0.979 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:335(grow_pop)
+      100    0.016    0.000    0.978    0.010 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:379(mutation_wrapper)
+      100    0.034    0.000    0.447    0.004 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:474(mutate_genome)
+86483/55389    0.081    0.000    0.355    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+      100    0.087    0.001    0.338    0.003 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:534(regulator_mutator)
+     6019    0.034    0.000    0.321    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:512(point_mutate_codon)
+    12238    0.110    0.000    0.186    0.000 {method 'choice' of 'numpy.random.mtrand.RandomState' objects}
+     6019    0.003    0.000    0.175    0.000 <__array_function__ internals>:2(setxor1d)
+     6019    0.024    0.000    0.166    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/arraysetops.py:451(setxor1d)
+    50738    0.158    0.000    0.158    0.000 {built-in method numpy.array}
+      100    0.043    0.000    0.113    0.001 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:445(cod_pos)
+    12038    0.004    0.000    0.103    0.000 <__array_function__ internals>:2(unique)
+    12038    0.010    0.000    0.090    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/arraysetops.py:138(unique)
+    12438    0.006    0.000    0.078    0.000 <__array_function__ internals>:2(prod)
+    12038    0.064    0.000    0.077    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:323(translate_codon)
+    12438    0.009    0.000    0.065    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2912(prod)
+    12038    0.039    0.000    0.060    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/arraysetops.py:310(_unique1d)
+    12984    0.020    0.000    0.058    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:70(_wrapreduction)
+     1102    0.001    0.000    0.054    0.000 <__array_function__ internals>:2(repeat)
+     1102    0.001    0.000    0.053    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:437(repeat)
+     1204    0.001    0.000    0.053    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:52(_wrapfunc)
+     1102    0.001    0.000    0.051    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:39(_wrapit)
+     1594    0.000    0.000    0.044    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_asarray.py:23(asarray)
+    15687    0.007    0.000    0.042    0.000 <__array_function__ internals>:2(concatenate)
+      100    0.001    0.000    0.038    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:433(random_mutations)
+    30614    0.011    0.000    0.037    0.000 <__array_function__ internals>:2(where)
+    18057    0.010    0.000    0.034    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:521(reform_txt_codon)
+    14160    0.032    0.000    0.032    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+     3276    0.001    0.000    0.025    0.000 <__array_function__ internals>:2(vstack)
+    18057    0.024    0.000    0.024    0.000 {method 'join' of 'str' objects}
+    31285    0.007    0.000    0.022    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_asarray.py:110(asanyarray)
+     6019    0.006    0.000    0.021    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:723(weight_mut)
+     3276    0.003    0.000    0.020    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/shape_base.py:223(vstack)
+      100    0.002    0.000    0.020    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:694(threshs_and_decs_mutator)
+    12338    0.017    0.000    0.017    0.000 {method 'flatten' of 'numpy.ndarray' objects}
+      100    0.000    0.000    0.016    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:271(calc_fitness)
+     6019    0.014    0.000    0.014    0.000 {method 'uniform' of 'numpy.random.mtrand.RandomState' objects}
+      300    0.005    0.000    0.014    0.000 {numpy.random._generator.default_rng}
+     3276    0.001    0.000    0.011    0.000 <__array_function__ internals>:2(atleast_2d)
+       73    0.000    0.000    0.010    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:310(exponential_similarity)
+       73    0.001    0.000    0.009    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/scipy/stats/_stats_mstats_common.py:22(linregress)
+     3276    0.005    0.000    0.008    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/shape_base.py:82(atleast_2d)
+     1201    0.008    0.000    0.008    0.000 {method 'repeat' of 'numpy.ndarray' objects}
+      100    0.005    0.000    0.008    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:246(develop)
+      200    0.005    0.000    0.007    0.000 {method 'integers' of 'numpy.random._generator.Generator' objects}
+    18057    0.007    0.000    0.007    0.000 {method 'sort' of 'numpy.ndarray' objects}
+      300    0.001    0.000    0.006    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/contextlib.py:76(inner)
+    12138    0.005    0.000    0.005    0.000 {built-in method numpy.empty}
+       73    0.000    0.000    0.005    0.000 <__array_function__ internals>:2(cov)
+    12038    0.003    0.000    0.005    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/arraysetops.py:125(_unpack_tuple)
+       73    0.001    0.000    0.005    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/function_base.py:2275(cov)
+    12984    0.004    0.000    0.004    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:71(<dictcomp>)
+      400    0.000    0.000    0.004    0.000 <__array_function__ internals>:2(any)
+      438    0.001    0.000    0.004    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_methods.py:161(_mean)
+    14746    0.004    0.000    0.004    0.000 {built-in method builtins.getattr}
+      100    0.000    0.000    0.003    0.000 <__array_function__ internals>:2(tile)
+    30614    0.003    0.000    0.003    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/multiarray.py:321(where)
+      100    0.001    0.000    0.003    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/shape_base.py:1171(tile)
+      300    0.003    0.000    0.003    0.000 {function SeedSequence.generate_state at 0x7f3c844ee1f0}
+       73    0.000    0.000    0.003    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:303(expression_stability)
+    21909    0.002    0.000    0.002    0.000 {built-in method builtins.len}
+      219    0.000    0.000    0.002    0.000 {method 'mean' of 'numpy.ndarray' objects}
+      219    0.000    0.000    0.002    0.000 <__array_function__ internals>:2(mean)
+     3276    0.001    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/shape_base.py:219(_vhstack_dispatcher)
+       73    0.000    0.000    0.002    0.000 <__array_function__ internals>:2(average)
+      600    0.001    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_ufunc_config.py:32(seterr)
+      219    0.000    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:3301(mean)
+      400    0.000    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2256(any)
+     1500    0.002    0.000    0.002    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:256(<lambda>)
+       73    0.000    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/function_base.py:280(average)
+      300    0.000    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/random.py:791(getrandbits)
+       73    0.000    0.000    0.002    0.000 {method 'std' of 'numpy.ndarray' objects}
+      100    0.000    0.000    0.002    0.000 <__array_function__ internals>:2(delete)
+      300    0.000    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_ufunc_config.py:433(__enter__)
+       73    0.000    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_methods.py:259(_std)
+    12438    0.002    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2907(_prod_dispatcher)
+      100    0.001    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/function_base.py:4310(delete)
+       73    0.001    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_methods.py:194(_var)
+    15687    0.002    0.000    0.002    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/multiarray.py:143(concatenate)
+      600    0.000    0.000    0.002    0.000 <__array_function__ internals>:2(copyto)
+      346    0.000    0.000    0.001    0.000 {method 'sum' of 'numpy.ndarray' objects}
+      400    0.001    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2251(_any_dispatcher)
+     3276    0.001    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/shape_base.py:208(_arrays_for_stack_dispatcher)
+      300    0.001    0.000    0.001    0.000 {built-in method posix.urandom}
+    13057    0.001    0.000    0.001    0.000 {method 'items' of 'dict' objects}
+       73    0.000    0.000    0.001    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:298(prop_genes_on)
+      346    0.000    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_methods.py:45(_sum)
+    12038    0.001    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/arraysetops.py:133(_unique_dispatcher)
+      511    0.001    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_methods.py:65(_count_reduce_items)
+      300    0.000    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_ufunc_config.py:438(__exit__)
+       73    0.000    0.000    0.001    0.000 <__array_function__ internals>:2(broadcast_to)
+     7038    0.001    0.000    0.001    0.000 {built-in method builtins.abs}
+       73    0.000    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:366(broadcast_to)
+       73    0.001    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:339(_broadcast_to)
+       73    0.000    0.000    0.001    0.000 <__array_function__ internals>:2(dot)
+     3717    0.001    0.000    0.001    0.000 {built-in method builtins.hasattr}
+     6019    0.001    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/arraysetops.py:447(_setxor1d_dispatcher)
+      600    0.001    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_ufunc_config.py:132(geterr)
+     1700    0.001    0.000    0.001    0.000 {method 'astype' of 'numpy.ndarray' objects}
+     6553    0.001    0.000    0.001    0.000 {method 'append' of 'list' objects}
+      300    0.001    0.000    0.001    0.000 {method 'random' of 'numpy.random._generator.Generator' objects}
+       73    0.001    0.000    0.001    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/scipy/stats/_stats_py.py:6084(_ttest_finish)
+      100    0.000    0.000    0.001    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:287(last_gene_expressed)
+     4281    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+       73    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(amax)
+      100    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/numeric.py:148(ones)
+      600    0.000    0.000    0.000    0.000 {method 'reshape' of 'numpy.ndarray' objects}
+      101    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(nonzero)
+        2    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/rlcompleter.py:66(complete)
+      600    0.000    0.000    0.000    0.000 {built-in method numpy.seterrobj}
+      200    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/getlimits.py:382(__new__)
+       73    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(amin)
+      300    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/abc.py:117(__instancecheck__)
+     3276    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/shape_base.py:78(_atleast_2d_dispatcher)
+        1    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/rlcompleter.py:130(attr_matches)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2617(amax)
+      100    0.000    0.000    0.000    0.000 {method 'any' of 'numpy.ndarray' objects}
+      100    0.000    0.000    0.000    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:364(<listcomp>)
+      101    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:1827(nonzero)
+      100    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_methods.py:53(_any)
+       73    0.000    0.000    0.000    0.000 {method 'max' of 'numpy.ndarray' objects}
+      300    0.000    0.000    0.000    0.000 {built-in method _abc._abc_instancecheck}
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2742(amin)
+     1200    0.000    0.000    0.000    0.000 {built-in method numpy.geterrobj}
+      100    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_methods.py:37(_amax)
+       73    0.000    0.000    0.000    0.000 {method 'min' of 'numpy.ndarray' objects}
+       73    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(result_type)
+      611    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.normalize_axis_index}
+       73    0.000    0.000    0.000    0.000 <string>:4(__init__)
+     1102    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:433(_repeat_dispatcher)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/_methods.py:41(_amin)
+      876    0.000    0.000    0.000    0.000 {built-in method builtins.issubclass}
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(round_)
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.print}
+      101    0.000    0.000    0.000    0.000 {method 'nonzero' of 'numpy.ndarray' objects}
+      600    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/multiarray.py:1054(copyto)
+      300    0.000    0.000    0.000    0.000 {built-in method from_bytes}
+       73    0.000    0.000    0.000    0.000 {built-in method builtins.any}
+       73    0.000    0.000    0.000    0.000 <string>:1(__new__)
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.eval}
+        1    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:3709(round_)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(around)
+      200    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+      100    0.000    0.000    0.000    0.000 {built-in method builtins.all}
+        1    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:3199(around)
+        3    0.000    0.000    0.000    0.000 {built-in method builtins.dir}
+        1    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/re.py:188(match)
+      200    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/shape_base.py:1243(<genexpr>)
+      200    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/shape_base.py:1253(<genexpr>)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/function_base.py:244(iterable)
+      2/1    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/rlcompleter.py:195(get_class_members)
+       73    0.000    0.000    0.000    0.000 {method 'copy' of 'numpy.ndarray' objects}
+      100    0.000    0.000    0.000    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:560(<lambda>)
+       73    0.000    0.000    0.000    0.000 {built-in method __new__ of type object at 0x56551e670740}
+        1    0.000    0.000    0.000    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:745(cleanup_deads)
+      300    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/contextlib.py:63(_recreate_cm)
+      219    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:3296(_mean_dispatcher)
+        1    0.000    0.000    0.000    0.000 {method 'match' of 're.Pattern' objects}
+      146    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:344(<genexpr>)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:25(_maybe_view_as_subclass)
+       73    0.000    0.000    0.000    0.000 {method 'conj' of 'numpy.ndarray' objects}
+      100    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/shape_base.py:1167(_tile_dispatcher)
+       73    0.000    0.000    0.000    0.000 {method 'squeeze' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/re.py:289(_compile)
+        1    0.000    0.000    0.000    0.000 {method 'round' of 'numpy.ndarray' objects}
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/function_base.py:2270(_cov_dispatcher)
+        1    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.generic' objects}
+       73    0.000    0.000    0.000    0.000 {method '__exit__' of 'numpy.nditer' objects}
+      101    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:1823(_nonzero_dispatcher)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/function_base.py:276(_average_dispatcher)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/scipy/_lib/_bunch.py:201(_get)
+      100    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/function_base.py:4306(_delete_dispatcher)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:362(_broadcast_to_dispatcher)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2612(_amax_dispatcher)
+        1    0.000    0.000    0.000    0.000 {method 'repeat' of 'numpy.generic' objects}
+       73    0.000    0.000    0.000    0.000 {built-in method builtins.iter}
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/multiarray.py:716(dot)
+        1    0.000    0.000    0.000    0.000 /mnt/c/Users/mi21309/OneDrive - University of Bristol/Documents/Programs/retikulos/retikulos.py:748(<listcomp>)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2737(_amin_dispatcher)
+       73    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/multiarray.py:644(result_type)
+        1    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/rlcompleter.py:97(_callable_postfix)
+        1    0.000    0.000    0.000    0.000 {method 'update' of 'set' objects}
+        1    0.000    0.000    0.000    0.000 {method 'group' of 're.Match' objects}
+        2    0.000    0.000    0.000    0.000 /home/win10/miniconda3/envs/biopaiton/lib/python3.9/site-packages/numpy/core/fromnumeric.py:3195(_around_dispatcher)
+        2    0.000    0.000    0.000    0.000 {method 'strip' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 {method 'discard' of 'set' objects}
+        1    0.000    0.000    0.000    0.000 <string>:1(<module>)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.000    0.000 {method 'sort' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'add' of 'set' objects}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.callable}
+
+
