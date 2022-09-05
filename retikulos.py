@@ -2,8 +2,11 @@
 import pickle
 from concurrent.futures import ProcessPoolExecutor  # for using multiple cores.
 from datetime import datetime
+from turtle import pos
 
 import numpy as np
+import jax.numpy as jnp
+from jax import vmap
 import scipy
 
 import params_file as pf
@@ -434,13 +437,21 @@ def random_mutations(genome_size, mut_rateseq):  # genome_size is in CODONS
     # Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
     total_bases = genome_size * 3
     mutations = np.random.choice((0, 1), total_bases, p=(1 - mut_rateseq, mut_rateseq))
-    m = np.array(np.where(mutations != 0)).flatten()
-    if m.size:
-        output = m
+    if np.sum(mutations) > 0:
+        return mutations
     else:
-        output = False
-    return output
+        return False
 
+def new_mutate_genome(old_gnome,old_prome,mut_rateseq):
+    genome_size=old_gnome.size # genome size IN CODONS
+    #num_genes,num_cods_per_gene=old_gnome.shape
+    total_bases=genome_size*3
+    mut_tenner=np.random.choice((10,1), total_bases, p=(1-mut_rateseq, mut_rateseq))
+    mut_tenner_resh=mut_tenner.reshape(3,genome_size).T
+    mutated_codons,mutated_codpos=np.where(mut_tenner_resh != 10)
+    codpos_tomut_vect=np.repeat(np.NaN,genome_size)
+    codpos_tomut_vect[mutated_codons]=mutated_codpos
+    return codpos_tomut_vect
 
 def cod_pos(muts, gnome_shape):
     # base1=num+1
@@ -456,18 +467,17 @@ def cod_pos(muts, gnome_shape):
     #genenum_array = np.ndarray((num_genes, gene_bps), dtype=object)
     #for i in range(num_genes):
     #    genenum_array[i, :] = i
-    genenum_array = np.repeat(range(num_genes), gene_bps)
     codpos_array = np.tile([0, 1, 2], num_codons * num_genes)
-    codnum_array = np.tile(range(gene_bps),num_genes)
-    coords_arr=np.array(list(zip(genenum_array,codnum_array,codpos_array)))
+    basenum_array = np.tile(range(gene_bps),num_genes)
+    genenum_array = np.repeat(range(num_genes), gene_bps)
+    codon_numbers=np.tile(np.repeat(range(num_codons),3),10)
+    coords_arr=np.array([genenum_array,codon_numbers]).T
     return coords_arr[muts]
 
 def mutate_genome(old_gnome, old_prome, mut_coords):
     rng=np.random.default_rng()
     gnome = rng.integers(111,444,old_gnome.size).reshape(old_gnome.shape)
-    np.copyto(gnome,old_gnome)
     prome = rng.integers(0,100,old_prome.size).reshape(old_prome.shape)
-    np.copyto(prome,old_prome)
     #gnome,prome=old_gnome,old_prome
     # get the number of rows in the mutation coordinate array, this is the number of mutations
     mut_num = mut_coords.shape[0]
@@ -477,6 +487,7 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
             f"Some indices in the mutation coordinates are negative:\n{mut_coords}\n"
             f"This may result in untractable mutations.\nConsider examining the output of codPos()."
         )
+        return
     # DEBUG: CHANGE TO A MATRIX OPERATION
     for i in range(mut_num):
         coordinates = mut_coords[i, :]
@@ -501,26 +512,28 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
     return out_genome, out_proteome, muttype_vect
 
 
-def point_mutate_codon(codon, pos_to_mutate):
+def point_mutate_codon(codon,pos_to_mutate): # maybe could be reduced to a single matrix operation involving the 'opts' array, and another one which has the factors, and maybe another one which has the calculated values. Bref, try to make it 100% matrix-based.
     opts=np.array([[1,2,3],[-1,1,2],[-2,-1,1],[-3,-2,-1]])
+    facts_arr=np.array([100,10,1])
+    if pos_to_mutate == 10:
+        return(0)
     if pos_to_mutate == 0:
-        factor=100
+        factor=facts_arr[pos_to_mutate]
         value=codon//100
         key=opts[value-1]
     if pos_to_mutate == 1:
-        factor=10
+        factor=facts_arr[pos_to_mutate]
         value=codon%100//10
         key=opts[value-1]
     if pos_to_mutate == 2:
-        factor=1
+        factor=facts_arr[pos_to_mutate]
         value=codon%10
         key=opts[value-1]
     #else:
     #    raise IncorrectIndex(
     #        f"ERROR: Codon position {pos_to_mutate} is not within the options {(0,1,2)}"
     #    )
-    new_codon=codon+np.random.choice(key)*factor
-    return new_codon
+    return np.random.choice(key)*factor
 
 class MutationTypeError(Exception):
     pass
