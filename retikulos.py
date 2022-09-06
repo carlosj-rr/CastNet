@@ -1,12 +1,16 @@
 #import copy as cp
+import fractions
+from math import factorial
 import pickle
 from concurrent.futures import ProcessPoolExecutor  # for using multiple cores.
 from datetime import datetime
+from secrets import choice
 from turtle import pos
 
 import numpy as np
-import jax.numpy as jnp
-from jax import vmap
+#import jax.numpy as jnp
+#import jax
+#from jax import vmap
 import scipy
 
 import params_file as pf
@@ -333,6 +337,7 @@ def translate_codon(codon):
         )
     return aminoac
 
+trans_cods=np.vectorize(translate_codon)
 
 # Assumes input is a population (i.e. an array of organism arrays), it should crash if it doesn't find 2 dimensions.
 def grow_pop(in_orgs, out_pop_size, strategy="equal"):
@@ -393,11 +398,11 @@ def mutation_wrapper(orgarr, mut_rateseq):
     in_genes_on = (in_dev.sum(axis=0) != 0).astype(int)
     in_fitness = orgarrcp[9]
     mutations = random_mutations(in_genome.size, mut_rateseq)
-    if np.any(mutations):
+    if type(mutations) == np.ndarray:
         #print(f"{mutations.size} mutation(s) in this reproductive event")
-        mut_coords = cod_pos(mutations, in_genome.shape)
-        out_genome, out_proteome, mutlocs = mutate_genome(
-            in_genome, in_proteome, mut_coords
+        #mut_coords = cod_pos(mutations, in_genome.shape)
+        out_genome, out_proteome, mutlocs = new_mutate_genome(
+            in_genome, in_proteome, mutations
         )
         out_grn, out_thresh, out_decs = regulator_mutator(
             in_grn, in_genes_on, in_decs, in_thresh, mutlocs
@@ -436,104 +441,151 @@ def mutation_wrapper(orgarr, mut_rateseq):
 def random_mutations(genome_size, mut_rateseq):  # genome_size is in CODONS
     # Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
     total_bases = genome_size * 3
-    mutations = np.random.choice((0, 1), total_bases, p=(1 - mut_rateseq, mut_rateseq))
-    if np.sum(mutations) > 0:
+    mutations = np.random.choice((10, 1), total_bases, p=(1 - mut_rateseq, mut_rateseq))
+    if np.any(mutations != 10):
         return mutations
     else:
         return False
 
-def new_mutate_genome(old_gnome,old_prome,mut_rateseq):
+def new_mutate_genome(old_gnome,old_prome,mut_tenner):
     genome_size=old_gnome.size # genome size IN CODONS
     #num_genes,num_cods_per_gene=old_gnome.shape
-    total_bases=genome_size*3
-    mut_tenner=np.random.choice((10,1), total_bases, p=(1-mut_rateseq, mut_rateseq))
+    #total_bases=genome_size*3
+    #mut_tenner=np.random.choice((10,1), total_bases, p=(1-mut_rateseq, mut_rateseq))
     mut_tenner_resh=mut_tenner.reshape(3,genome_size).T
     mutated_codons,mutated_codpos=np.where(mut_tenner_resh != 10)
-    codpos_tomut_vect=np.repeat(np.NaN,genome_size)
+    codpos_tomut_vect=np.repeat(10,genome_size)
     codpos_tomut_vect[mutated_codons]=mutated_codpos
-    return codpos_tomut_vect
+    mutating_matrix=point_mutate_codon_vectized(old_gnome.flatten(),codpos_tomut_vect).reshape(old_gnome.shape)
+    new_gnome=old_gnome+mutating_matrix
+    new_prome=trans_cods(new_gnome)
+    tenner=np.repeat(10,genome_size)
+    old_mutated_aas1=old_prome.flatten()[mutated_codons]
+    new_mutated_aas1=new_prome.flatten()[mutated_codons]
+    non_sense_idcs1=np.where(new_mutated_aas1 == 95)[0]
+    nonsense_idcs2=mutated_codons[non_sense_idcs1]
+    tenner[nonsense_idcs2]=0
+    mut_codons_no_nonsense=np.where(list(map((lambda x: x not in nonsense_idcs2),mutated_codons)))[0]
+    old_mutated_aas_no_nonsense=np.where(list(map((lambda x: x not in non_sense_idcs1),range(len(old_mutated_aas1)))))[0] # these indices are the same
+    new_mutated_aas_no_nonsense=np.where(list(map((lambda x: x not in non_sense_idcs1),range(len(new_mutated_aas1)))))[0] # these indices are the same
+    ns_idcs1=np.where(old_mutated_aas_no_nonsense != new_mutated_aas_no_nonsense)[0]
+    ns_idcs2=mut_codons_no_nonsense[ns_idcs1]
+    tenner[ns_idcs2]=1
+    mut_codons_syn=np.where(list(map((lambda x: x not in ns_idcs2),range(len(mut_codons_no_nonsense)))))[0]
+    #mut_codons_syn=np.setdiff1d(mut_codons_no_nonsense,ns_idcs2)
+    tenner[mut_codons_syn]=2
+    tenner_resh=tenner.reshape(old_prome.shape)
+    s_genes=np.where(tenner_resh == 2)[0]
+    ns_genes=np.where(tenner_resh == 1)[0]
+    nonsense_genes=np.where(tenner_resh == 0)[0]
+    col1=np.hstack([s_genes,ns_genes,nonsense_genes])
+    muttype_vect=np.vstack((col1,np.repeat((2,1,0),[s_genes.size,ns_genes.size,nonsense_genes.size]))).T
+    return(new_gnome,new_prome,muttype_vect)
 
-def cod_pos(muts, gnome_shape):
-    # base1=num+1
-    num_genes = gnome_shape[0]
-    num_codons = gnome_shape[1]
-    if np.any(muts < 0):
-        raise IncorrectIndex(
-            f"There are negative index values in your mutation indices:\n{muts}.\n"
-            f"This will result in untractable mutations.\nConsder double-checking the result of randomMutations()"
-        )
-    #out_array = np.ndarray((muts.size, 3), dtype=object)
-    gene_bps = num_codons * 3
-    #genenum_array = np.ndarray((num_genes, gene_bps), dtype=object)
-    #for i in range(num_genes):
-    #    genenum_array[i, :] = i
-    codpos_array = np.tile([0, 1, 2], num_codons * num_genes)
-    basenum_array = np.tile(range(gene_bps),num_genes)
-    genenum_array = np.repeat(range(num_genes), gene_bps)
-    codon_numbers=np.tile(np.repeat(range(num_codons),3),10)
-    coords_arr=np.array([genenum_array,codon_numbers]).T
-    return coords_arr[muts]
+#def cod_pos(muts, gnome_shape):
+#    # base1=num+1
+#    num_genes = gnome_shape[0]
+#    num_codons = gnome_shape[1]
+#    if np.any(muts < 0):
+#        raise IncorrectIndex(
+#            f"There are negative index values in your mutation indices:\n{muts}.\n"
+#            f"This will result in untractable mutations.\nConsder double-checking the result of randomMutations()"
+#        )
+#    #out_array = np.ndarray((muts.size, 3), dtype=object)
+#    gene_bps = num_codons * 3
+#    #genenum_array = np.ndarray((num_genes, gene_bps), dtype=object)
+#    #for i in range(num_genes):
+#    #    genenum_array[i, :] = i
+#    codpos_array = np.tile([0, 1, 2], num_codons * num_genes)
+#    basenum_array = np.tile(range(gene_bps),num_genes)
+#    genenum_array = np.repeat(range(num_genes), gene_bps)
+#    codon_numbers=np.tile(np.repeat(range(num_codons),3),10)
+#    coords_arr=np.array([genenum_array,codon_numbers]).T
+#    return coords_arr[muts]
 
-def mutate_genome(old_gnome, old_prome, mut_coords):
-    rng=np.random.default_rng()
-    gnome = rng.integers(111,444,old_gnome.size).reshape(old_gnome.shape)
-    prome = rng.integers(0,100,old_prome.size).reshape(old_prome.shape)
-    #gnome,prome=old_gnome,old_prome
-    # get the number of rows in the mutation coordinate array, this is the number of mutations
-    mut_num = mut_coords.shape[0]
-    muttype_vect = np.ndarray((mut_num, 2), dtype=object)
-    if np.any(mut_coords < 0):
-        raise IncorrectIndex(
-            f"Some indices in the mutation coordinates are negative:\n{mut_coords}\n"
-            f"This may result in untractable mutations.\nConsider examining the output of codPos()."
-        )
-        return
+#def mutate_genome(old_gnome, old_prome, mut_coords):
+    #rng=np.random.default_rng()
+    #gnome = rng.integers(111,444,old_gnome.size).reshape(old_gnome.shape)
+    #prome = rng.integers(0,100,old_prome.size).reshape(old_prome.shape)
+#    gnome,prome=old_gnome,old_prome
+#    # get the number of rows in the mutation coordinate array, this is the number of mutations
+#    mut_num = mut_coords.shape[0]
+#    muttype_vect = np.ndarray((mut_num, 2), dtype=object)
+#    if np.any(mut_coords < 0):
+#        raise IncorrectIndex(
+#            f"Some indices in the mutation coordinates are negative:\n{mut_coords}\n"
+#            f"This may result in untractable mutations.\nConsider examining the output of codPos()."
+#        )
+#        return
     # DEBUG: CHANGE TO A MATRIX OPERATION
-    for i in range(mut_num):
-        coordinates = mut_coords[i, :]
-        selected_gene = coordinates[0]
-        selected_codon_from_gene = coordinates[1]
-        selected_codpos = coordinates[2]
-        selected_codon = gnome[selected_gene, selected_codon_from_gene]
-        prev_aacid = translate_codon(selected_codon)
-        mutated_codon = point_mutate_codon(selected_codon, selected_codpos)
-        gnome[selected_gene, selected_codon_from_gene] = mutated_codon
-        new_aacid = translate_codon(mutated_codon)
-        if prev_aacid == new_aacid:  # Synonymous mutations are plotted as '2'
-            muttype = 2
-        elif new_aacid == "_":  # Nonsense mutations are plotted as '0'
-            muttype = 0
-        else:  # Nonsynonymous mutations are plotted as '1'
-            muttype = 1
-        prome[selected_gene, selected_codpos] = new_aacid
-        muttype_vect[i] = (selected_gene, muttype)
-    out_genome = gnome
-    out_proteome = prome
-    return out_genome, out_proteome, muttype_vect
+#    for i in range(mut_num):
+#        coordinates = mut_coords[i, :]
+#        selected_gene = coordinates[0]
+#        selected_codon_from_gene = coordinates[1]
+#        selected_codpos = coordinates[2]
+#        selected_codon = gnome[selected_gene, selected_codon_from_gene]
+#        prev_aacid = translate_codon(selected_codon)
+#        mutated_codon = point_mutate_codon(selected_codon, selected_codpos)
+#        gnome[selected_gene, selected_codon_from_gene] = mutated_codon
+#        new_aacid = translate_codon(mutated_codon)
+#        if prev_aacid == new_aacid:  # Synonymous mutations are plotted as '2'
+#            muttype = 2
+#        elif new_aacid == "_":  # Nonsense mutations are plotted as '0'
+#            muttype = 0
+#        else:  # Nonsynonymous mutations are plotted as '1'
+#            muttype = 1
+#        prome[selected_gene, selected_codpos] = new_aacid
+#        muttype_vect[i] = (selected_gene, muttype)
+#    out_genome = gnome
+#    out_proteome = prome
+#    return out_genome, out_proteome, muttype_vect
+
+def point_mutate_codon_new(codon,pos_to_mutate): # Add some operation that ensures the position to mutate is within the boundaries, and that makes it return 0 otherwise. Smth like a relu after subtracting some amount. Nah, a logical will do FTM.
+    possibs=np.array([0,1,2])
+    if pos_to_mutate not in possibs:
+        return 0
+    else:
+        curr_digit=int(list(str(codon))[pos_to_mutate])
+        opts=np.array([[1,2,3],[-1,1,2],[-2,-1,1],[-3,-2,-1]])
+        facts_arr=np.array([100,10,1])
+        return(np.random.choice(opts[curr_digit-1])*facts_arr[pos_to_mutate])
+
+point_mutate_codon_vectized=np.vectorize(point_mutate_codon_new)
+
+#def point_mutate_codon_jaxed(codon,pos_to_mutate): # Add some operation that ensures the position to mutate is within the boundaries, and that makes it return 0 otherwise. Smth like a relu after subtracting some amount. Nah, a logical will do FTM.
+#    possibs=jnp.array([0,1,2])
+#    if pos_to_mutate not in possibs:
+#        return 0
+#    else:
+#        curr_digit=int(list(str(codon))[pos_to_mutate])
+#        opts=jnp.array([[1,2,3],[-1,1,2],[-2,-1,1],[-3,-2,-1]])
+#        facts_arr=jnp.array([100,10,1])
+#        return(jax.random.choice(jax.random.PRNGKey(123),opts[curr_digit-1])*facts_arr[pos_to_mutate])
 
 
-def point_mutate_codon(codon,pos_to_mutate): # maybe could be reduced to a single matrix operation involving the 'opts' array, and another one which has the factors, and maybe another one which has the calculated values. Bref, try to make it 100% matrix-based.
-    opts=np.array([[1,2,3],[-1,1,2],[-2,-1,1],[-3,-2,-1]])
-    facts_arr=np.array([100,10,1])
-    if pos_to_mutate == 10:
-        return(0)
-    if pos_to_mutate == 0:
-        factor=facts_arr[pos_to_mutate]
-        value=codon//100
-        key=opts[value-1]
-    if pos_to_mutate == 1:
-        factor=facts_arr[pos_to_mutate]
-        value=codon%100//10
-        key=opts[value-1]
-    if pos_to_mutate == 2:
-        factor=facts_arr[pos_to_mutate]
-        value=codon%10
-        key=opts[value-1]
-    #else:
-    #    raise IncorrectIndex(
-    #        f"ERROR: Codon position {pos_to_mutate} is not within the options {(0,1,2)}"
-    #    )
-    return np.random.choice(key)*factor
+#def point_mutate_codon(codon,pos_to_mutate): # maybe could be reduced to a single matrix operation involving the 'opts' array, and another one which has the factors, and maybe another one which has the calculated values. Bref, try to make it 100% matrix-based.
+#    opts=np.array([[1,2,3],[-1,1,2],[-2,-1,1],[-3,-2,-1]])
+#    facts_arr=np.array([100,10,1])
+#    if pos_to_mutate == 10:
+#        return(0)
+#    elif pos_to_mutate == 0:
+#        factor=facts_arr[pos_to_mutate]
+#        value=codon//100
+#        key=opts[value-1]
+#    elif pos_to_mutate == 1:
+#        factor=facts_arr[pos_to_mutate]
+#        value=codon%100//10
+#        key=opts[value-1]
+#    elif pos_to_mutate == 2:
+#        factor=facts_arr[pos_to_mutate]
+#        value=codon%10
+#        key=opts[value-1]
+#    else:
+#        raise IncorrectIndex(
+#            f"ERROR: Codon position {pos_to_mutate} is not within the options {(0,1,2)}"
+#        )
+#    return np.random.choice(key)*factor
+
 
 class MutationTypeError(Exception):
     pass
