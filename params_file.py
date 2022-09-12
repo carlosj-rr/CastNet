@@ -7,14 +7,14 @@ thresh_boundaries = (0.1,2)
 decay_boundaries = (0,2)
 dev_steps = 15 # For the moment no more than 999 is possible
 pop_size = 100 # For the moment, Multiple of 10
-reporting_freq=10 # How many generations should a snapshot be saved to disk
+reporting_freq=100 # How many generations should a snapshot be saved to disk
 
 # MUTATION PARAMETERS
 #thresh_decay_mut_bounds = (-0.01,0.01)
 #thresh_mutation_rate = 0 # It can also be 0.001, for example
 #prob_thresh_change = 0
 #decay_mutation_rate = 0
-seq_mutation_rate = 2E-3	# Mutation prob per base, per generation.
+seq_mutation_rate = 1.0666666E-5	# Mutation prob per base, per generation.
                                     # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
 #link_mutation_bounds = (-0.01,0.01)
 
