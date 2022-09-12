@@ -885,6 +885,7 @@ def branch_evol(parent_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq)
             else:
                 print("Your population was extinguished.")
                 return
+            return(next_pop)
     else:
         print(f"Input population {parent_pop} has no individuals. Stopping simulation.")
         return
@@ -962,32 +963,30 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
 
 
 def main_parallel():
-    founder = founder_miner(0.3)
+    founder = founder_miner()
     print("Founder created")
-    results_array = np.ndarray(5, dtype=object)
+    results_array = np.ndarray(13, dtype=object)
     founder_pop = grow_pop(founder, pf.pop_size, "equal")
     print("Founder pop created")
     results_array[0] = cp.deepcopy(founder_pop)
     anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
     print("Founding split created")
-    stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
+    #stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
     results_array[1] = cp.deepcopy(anc1_stem)
     results_array[2] = cp.deepcopy(anc2_stem)
-    results_array[3]=cp.deepcopy(stem_lin3)
-    results_array[4]=cp.deepcopy(stem_lin4)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([200, 200])
+    genslist1 = np.array([10, 10])
     br_names = np.array([1,2])
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol, anc_branches, genslist1,br_names)
 
     anc1_tip, anc2_tip = list(result)
+    print(f"Ancestor 1: {anc1_tip}")
+    print(f"Ancestor 2: {anc2_tip}")
+
 
     results_array[3] = cp.deepcopy(anc1_tip)
     results_array[4] = cp.deepcopy(anc2_tip)
-    #return
-    results_array[7]=cp.deepcopy(tip_lin3)
-    results_array[8]=cp.deepcopy(tip_lin4)
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
     results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
         leafb_stem
@@ -1001,9 +1000,10 @@ def main_parallel():
         [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
     )
     genslist2 = np.array([10, 10, 10, 10])
+    br_names=np.array([3,4,5,6])
 
     with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol, four_leaves, genslist2)
+        result = pool.map(branch_evol, four_leaves, genslist2, br_names)
 
     leafa_tip, leafb_tip, leafc_tip, leafd_tip = list(result)
     results_array[9], results_array[10], results_array[11], results_array[12] = (
