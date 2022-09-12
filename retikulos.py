@@ -919,7 +919,7 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
 #    founder = founder_miner(0.3)
 #    results_array = np.ndarray(13, dtype=object)
 #    founder_pop = grow_pop(founder, pf.pop_size, "equal")
-#    #results_array[0] = cp.deepcopy(founder_pop)
+#    results_array[0] = cp.deepcopy(founder_pop)
 #    anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
 #    # stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
     #results_array[1] = cp.deepcopy(anc1_stem)
@@ -1015,6 +1015,6 @@ def main_parallel():
     return results_array
 
 if __name__ == "__main__":
-    result = main_serial()
+    result = main_parallel()
     print("Analysis completed", result.shape)
     store(result)
