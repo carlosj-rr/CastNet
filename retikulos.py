@@ -1,10 +1,11 @@
-#import copy as cp
+import copy as cp
 import pickle
 from concurrent.futures import ProcessPoolExecutor  # for using multiple cores.
 from datetime import datetime
 
 import numpy as np
 import scipy
+from scipy import stats
 
 import params_file as pf
 
@@ -311,7 +312,7 @@ def exponential_similarity(development):
     dev_steps, num_genes = development.shape
     row_means = development.mean(axis=1)
     tot_dev_steps = dev_steps
-    fitted_line = scipy.stats.linregress(range(tot_dev_steps), np.log(row_means))
+    fitted_line = stats.linregress(range(tot_dev_steps), np.log(row_means))
     r_squared = fitted_line.rvalue**2
     return r_squared
 
@@ -963,17 +964,17 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
 def main_parallel():
     founder = founder_miner(0.3)
     print("Founder created")
-    #results_array = np.ndarray(5, dtype=object)
+    results_array = np.ndarray(5, dtype=object)
     founder_pop = grow_pop(founder, pf.pop_size, "equal")
     print("Founder pop created")
-    #results_array[0] = cp.deepcopy(founder_pop)
+    results_array[0] = cp.deepcopy(founder_pop)
     anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
     print("Founding split created")
-    # stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    #results_array[1] = cp.deepcopy(anc1_stem)
-    #results_array[2] = cp.deepcopy(anc2_stem)
-    # results_array[3]=cp.deepcopy(stem_lin3)
-    # results_array[4]=cp.deepcopy(stem_lin4)
+    stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
+    results_array[1] = cp.deepcopy(anc1_stem)
+    results_array[2] = cp.deepcopy(anc2_stem)
+    results_array[3]=cp.deepcopy(stem_lin3)
+    results_array[4]=cp.deepcopy(stem_lin4)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
     genslist1 = np.array([200, 200])
     br_names = np.array([1,2])
@@ -982,11 +983,11 @@ def main_parallel():
 
     anc1_tip, anc2_tip = list(result)
 
-    #results_array[3] = cp.deepcopy(anc1_tip)
-    #results_array[4] = cp.deepcopy(anc2_tip)
-    return
-    # results_array[7]=cp.deepcopy(tip_lin3)
-    # results_array[8]=cp.deepcopy(tip_lin4)
+    results_array[3] = cp.deepcopy(anc1_tip)
+    results_array[4] = cp.deepcopy(anc2_tip)
+    #return
+    results_array[7]=cp.deepcopy(tip_lin3)
+    results_array[8]=cp.deepcopy(tip_lin4)
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
     results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
         leafb_stem
