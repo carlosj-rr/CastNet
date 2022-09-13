@@ -855,16 +855,16 @@ def old_randsplit(in_pop, out_pop_size):
 
 
 def branch_evol(parent_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq):
-    #in_pop = cp.deepcopy(in_pop)
-    #branch=np.ndarray((ngens,),dtype=object)
-    print(f"Size of parental population: {len(parent_pop)}")
+    in_pop = cp.deepcopy(parent_pop)
+    branch=np.ndarray((ngens,),dtype=object)
+    print(f"Size of parental population: {len(in_pop)}")
     if parent_pop.size > 0:
         for gen in range(ngens):
             if parent_pop.size > 0:
-            #print(f"producing generation {gen+1}")
+                print(f"producing generation {gen+1}")
                 survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
                 if type(survivors) == bool:
-                    print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen-1} generation(s)")
+                    print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen} generation(s)")
                     filename="Extinct_branch"+str(branch_num)+"_generation_"+str(gen)+".npy"
                     np.save(filename,parent_pop)
                     return
@@ -875,7 +875,7 @@ def branch_evol(parent_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq)
                     filename="Extinct_branch"+str(branch_num)+"_generation_"+str(gen)+".npy"
                     np.save(filename,parent_pop)
                     return
-                #branch[gen]=next_pop
+                branch[gen]=next_pop
                 print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
                 if (gen+1) % reporting_freq == 0:
@@ -885,7 +885,7 @@ def branch_evol(parent_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq)
             else:
                 print("Your population was extinguished.")
                 return
-            return(next_pop)
+        return(next_pop)
     else:
         print(f"Input population {parent_pop} has no individuals. Stopping simulation.")
         return
@@ -975,15 +975,14 @@ def main_parallel():
     results_array[1] = cp.deepcopy(anc1_stem)
     results_array[2] = cp.deepcopy(anc2_stem)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([10, 10])
+    genslist1 = np.array([10000, 10000])
     br_names = np.array([1,2])
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol, anc_branches, genslist1,br_names)
 
     anc1_tip, anc2_tip = list(result)
-    print(f"Ancestor 1: {anc1_tip}")
-    print(f"Ancestor 2: {anc2_tip}")
-
+    #print(f"Ancestor 1: {anc1_tip}")
+    #print(f"Ancestor 2: {anc2_tip}")
 
     results_array[3] = cp.deepcopy(anc1_tip)
     results_array[4] = cp.deepcopy(anc2_tip)
@@ -999,7 +998,7 @@ def main_parallel():
     four_leaves = np.array(
         [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
     )
-    genslist2 = np.array([10, 10, 10, 10])
+    genslist2 = np.array([10000, 10000, 10000, 10000])
     br_names=np.array([3,4,5,6])
 
     with ProcessPoolExecutor() as pool:
