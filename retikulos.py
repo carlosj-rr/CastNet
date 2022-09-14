@@ -854,9 +854,10 @@ def old_randsplit(in_pop, out_pop_size):
     return lina, linb
 
 
-def branch_evol(parent_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq):
+def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     in_pop = cp.deepcopy(parent_pop)
-    branch=np.ndarray((ngens,),dtype=object)
+    #branch=np.ndarray((ngens,),dtype=object)
+    #branch_key=str(np.random.randint(0,1e10))
     print(f"Size of parental population: {len(in_pop)}")
     if parent_pop.size > 0:
         for gen in range(ngens):
@@ -865,21 +866,25 @@ def branch_evol(parent_pop, ngens,branch_num=1,reporting_freq=pf.reporting_freq)
                 survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
                 if type(survivors) == bool:
                     print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen} generation(s)")
-                    filename="Extinct_branch"+str(branch_num)+"_generation_"+str(gen)+".npy"
+                    filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".npy"
                     np.save(filename,parent_pop)
                     return
                 print(f"Survivor number is {len(survivors)}.")
                 next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
                 if next_pop.size == 0:
                     print(f"Selection got the better of your branch {branch_num}, and it went extinct. Time to package and save to disk the truncated population")
-                    filename="Extinct_branch"+str(branch_num)+"_generation_"+str(gen)+".npy"
+                    filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".npy"
                     np.save(filename,parent_pop)
                     return
-                branch[gen]=next_pop
+                parent_pop=next_pop
                 print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
                 if (gen+1) % reporting_freq == 0:
-                    filename="Generation_"+str(gen+1)+"_branch_"+str(branch_num)+".npy"
+                    filename="Generation_"+str(gen+1)+"_branch_"+str(branch_id)+".npy"
+                    print(f"####### Saving population {gen+1} to {filename}")
+                    np.save(filename,next_pop)
+                if (gen+1) == ngens:
+                    filename="TipGeneration_"+str(gen+1)+"_branch_"+str(branch_id)+".npy"
                     print(f"####### Saving population {gen+1} to {filename}")
                     np.save(filename,next_pop)
             else:
@@ -968,50 +973,50 @@ def main_parallel():
     results_array = np.ndarray(13, dtype=object)
     founder_pop = grow_pop(founder, pf.pop_size, "equal")
     print("Founder pop created")
-    results_array[0] = cp.deepcopy(founder_pop)
+    #results_array[0] = cp.deepcopy(founder_pop)
     anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
     print("Founding split created")
     #stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    results_array[1] = cp.deepcopy(anc1_stem)
-    results_array[2] = cp.deepcopy(anc2_stem)
+    #results_array[1] = cp.deepcopy(anc1_stem)
+    #results_array[2] = cp.deepcopy(anc2_stem)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([10000, 10000])
-    br_names = np.array([1,2])
+    genslist1 = np.array([15, 15])
+    br_ids = np.random.randint(0,1e10,len(anc_branches)).astype(str)
     with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol, anc_branches, genslist1,br_names)
+        result = pool.map(branch_evol, anc_branches, genslist1,br_ids)
 
     anc1_tip, anc2_tip = list(result)
-    #print(f"Ancestor 1: {anc1_tip}")
-    #print(f"Ancestor 2: {anc2_tip}")
+    print(f"Ancestor 1 shape: {anc1_tip.shape}")
+    print(f"Ancestor 2 shape: {anc2_tip.shape}")
 
-    results_array[3] = cp.deepcopy(anc1_tip)
-    results_array[4] = cp.deepcopy(anc2_tip)
+    #results_array[3] = cp.deepcopy(anc1_tip)
+    #results_array[4] = cp.deepcopy(anc2_tip)
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
-    results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
-        leafb_stem
-    )
+    #results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
+        #leafb_stem
+    #)
     leafc_stem, leafd_stem = randsplit(anc2_tip, pf.pop_size)
-    results_array[7], results_array[8] = cp.deepcopy(leafc_stem), cp.deepcopy(
-        leafd_stem
-    )
+    #results_array[7], results_array[8] = cp.deepcopy(leafc_stem), cp.deepcopy(
+    #    leafd_stem
+    #)
 
     four_leaves = np.array(
         [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
     )
-    genslist2 = np.array([10000, 10000, 10000, 10000])
-    br_names=np.array([3,4,5,6])
+    genslist2 = np.array([15, 15, 15, 15])
+    br_ids = np.random.randint(0,1e10,len(four_leaves)).astype(str)
 
     with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol, four_leaves, genslist2, br_names)
+        result = pool.map(branch_evol, four_leaves, genslist2, br_ids)
 
     leafa_tip, leafb_tip, leafc_tip, leafd_tip = list(result)
-    results_array[9], results_array[10], results_array[11], results_array[12] = (
-        cp.deepcopy(leafa_tip),
-        cp.deepcopy(leafb_tip),
-        cp.deepcopy(leafc_tip),
-        cp.deepcopy(leafd_tip),
-    )
-    return results_array
+    #results_array[9], results_array[10], results_array[11], results_array[12] = (
+    #    cp.deepcopy(leafa_tip),
+    #    cp.deepcopy(leafb_tip),
+    #    cp.deepcopy(leafc_tip),
+    #    cp.deepcopy(leafd_tip),
+    #)
+    return
 
 if __name__ == "__main__":
     result = main_parallel()
