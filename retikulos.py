@@ -1009,7 +1009,7 @@ def main_parallel():
     )
     genslist2 = np.array([10000, 10000, 10000, 10000])
     br_randnums = np.random.randint(0,1e10,len(four_leaves)).astype(str)
-    br_prefix = ['leafA_','leafB_','leafC_','leafD_']
+    br_prefix = [br_ids[[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]'-leafD_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol, four_leaves, genslist2, br_ids)
