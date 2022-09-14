@@ -980,7 +980,7 @@ def main_parallel():
     #results_array[1] = cp.deepcopy(anc1_stem)
     #results_array[2] = cp.deepcopy(anc2_stem)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([15, 15])
+    genslist1 = np.array([10000, 10000])
     br_ids = np.random.randint(0,1e10,len(anc_branches)).astype(str)
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol, anc_branches, genslist1,br_ids)
@@ -1003,7 +1003,7 @@ def main_parallel():
     four_leaves = np.array(
         [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
     )
-    genslist2 = np.array([15, 15, 15, 15])
+    genslist2 = np.array([10000, 10000, 10000, 10000])
     br_ids = np.random.randint(0,1e10,len(four_leaves)).astype(str)
 
     with ProcessPoolExecutor() as pool:
