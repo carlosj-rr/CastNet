@@ -6,6 +6,8 @@ from datetime import datetime
 import numpy as np
 import scipy
 from scipy import stats
+import tqdm
+from tqdm import tqdm
 
 import params_file as pf
 
@@ -343,7 +345,7 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
     orgs_per_org = np.round(out_pop_size / num_in_orgs).astype(int)
     curr_pop_size = orgs_per_org * num_in_orgs
     if strategy == "equal":
-        print("equal reproduction strategy selected...")
+        #print("equal reproduction strategy selected...")
         orgs_per_org = np.repeat(orgs_per_org, num_in_orgs)
     elif strategy == "fitness_linked":
         print("Reproduction is fitness bound.")
@@ -368,7 +370,7 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
             counter += 1
     out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop))))) # ProcessPoolExecutor was used here to parallelize, but resulted in really inconsistent output.
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
-    print(f"{out_pop.shape[0]} organisms survived")
+    #print(f"{out_pop.shape[0]} organisms survived")
     return out_pop
 
 
@@ -860,16 +862,16 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     #branch_key=str(np.random.randint(0,1e10))
     print(f"Size of parental population: {len(in_pop)}")
     if parent_pop.size > 0:
-        for gen in range(ngens):
+        for gen in tqdm(range(ngens),desc=f"{branch_id} branch evolution progress:", ascii=False,ncols=100):
             if parent_pop.size > 0:
-                print(f"producing generation {gen+1}")
+                #print(f"producing generation {gen+1}")
                 survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
                 if type(survivors) == bool:
                     print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen} generation(s)")
                     filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".npy"
                     np.save(filename,parent_pop)
                     return
-                print(f"Survivor number is {len(survivors)}.")
+                #print(f"Survivor number is {len(survivors)}.")
                 next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
                 if next_pop.size == 0:
                     print(f"Selection got the better of your branch {branch_num}, and it went extinct. Time to package and save to disk the truncated population")
@@ -877,7 +879,7 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                     np.save(filename,parent_pop)
                     return
                 parent_pop=next_pop
-                print(f"Generation {gen+1} of {ngens} completed.")
+                #print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
                 if (gen+1) % reporting_freq == 0:
                     filename="Generation_"+str(gen+1)+"_branch_"+str(branch_id)+".npy"
@@ -981,7 +983,9 @@ def main_parallel():
     #results_array[2] = cp.deepcopy(anc2_stem)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
     genslist1 = np.array([10000, 10000])
-    br_ids = np.random.randint(0,1e10,len(anc_branches)).astype(str)
+    br_randnums = np.random.randint(0,1e10,len(anc_branches)).astype(str)
+    br_prefix=['ancestor1_','ancestor2_']
+    br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol, anc_branches, genslist1,br_ids)
 
@@ -1004,8 +1008,9 @@ def main_parallel():
         [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
     )
     genslist2 = np.array([10000, 10000, 10000, 10000])
-    br_ids = np.random.randint(0,1e10,len(four_leaves)).astype(str)
-
+    br_randnums = np.random.randint(0,1e10,len(four_leaves)).astype(str)
+    br_prefix = ['leafA','leafB','leafC','leafD']
+    br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
     with ProcessPoolExecutor() as pool:
         result = pool.map(branch_evol, four_leaves, genslist2, br_ids)
 
