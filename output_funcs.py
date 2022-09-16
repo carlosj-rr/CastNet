@@ -68,7 +68,7 @@ def plot_avg_developments(in_pop,prefix):
         geneerrs=half_std[:,i]
         plt.errorbar(range(mean_dev.shape[0]),genevals,yerr=geneerrs,capsize=5)
         
-    plt.legend(list(map((lambda x,y: x+y),np.repeat("gene ",dev_mean.shape[1]),np.array(list(range(dev_mean.shape[1])),dtype=str))))
+    plt.legend(list(map((lambda x,y: x+y),np.repeat("gene ",mean_dev.shape[1]),np.array(list(range(mean_dev.shape[1])),dtype=str))))
     fig.savefig(outfile)
     return
 
