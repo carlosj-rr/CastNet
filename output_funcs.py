@@ -1,5 +1,7 @@
 from wsgiref import headers
 import numpy as np
+import networkx as nx
+import matplotlib.pylab as plt
 
 # translate an arbitrary sequence of 'integrified bases' into ACTG. Notice the input is an integer, not a string of integers.
 def translate_int_seq(int_seq):
@@ -40,3 +42,33 @@ def ali_saver(dset_prefix,pop_arr,tip_names,asints=True):
                         f.write(headers_list[i])
                         f.write(sequences_list[i])   
     return
+
+def draw_avg_grns(in_pop,prefix):
+    thresholds=[0.001,0.01,0.1,1,1.001,1.01,1,1]
+    mean_grn=np.mean([x[3].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][3].shape)
+    for i in thresholds:
+        outfilename="Tmp_"+str(i)+"_thre_"+prefix+".png"
+        newnet=np.sign((np.abs(mean_grn) > i) * mean_grn)
+        G=nx.from_numpy_array(newnet)
+        G=nx.relabel_nodes(G,dict(zip(range(len(G.nodes())),range(len(G.nodes)))))
+        G=nx.drawing.nx_agraph.to_agraph(G)
+        G.node_attr.update(color="green",style="empty")
+        G.edge_attr.update(color="red",width="100.0")
+        G.draw(outfilename,format='png',prog='neato')
+    return
+ 
+def plot_avg_developments(in_pop,prefix):
+    mean_dev=np.mean([x[7].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][7].shape)
+    stde_dev=np.std([x[7].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][7].shape)
+    half_std=stde_dev/2
+    outfile=prefix+"_mean_pop_dev.png"
+    fig=plt.figure(figsize=(10,5))
+    for i in range(mean_dev.shape[1]):
+        genevals=mean_dev[:,i]
+        geneerrs=half_std[:,i]
+        plt.errorbar(range(mean_dev.shape[0]),genevals,yerr=geneerrs,capsize=5)
+        
+    plt.legend(list(map((lambda x,y: x+y),np.repeat("gene ",dev_mean.shape[1]),np.array(list(range(dev_mean.shape[1])),dtype=str))))
+    fig.savefig(outfile)
+    return
+
