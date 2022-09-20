@@ -74,5 +74,7 @@ def plot_avg_developments(in_pop,prefix):
         plt.errorbar(range(mean_dev.shape[0]),genevals,yerr=[gene_yerrblow,gene_yerrabv],capsize=5)
         
     plt.legend(list(map((lambda x,y: x+y),np.repeat("gene ",mean_dev.shape[1]),np.array(list(range(mean_dev.shape[1])),dtype=str))))
+    plt.suptitle(prefix+" mean pop dev")
     fig.savefig(outfile)
+    plt.close()
     return
