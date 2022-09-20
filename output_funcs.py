@@ -60,15 +60,19 @@ def draw_avg_grns(in_pop,prefix):
 def plot_avg_developments(in_pop,prefix):
     mean_dev=np.mean([x[7].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][7].shape)
     stde_dev=np.std([x[7].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][7].shape)
-    half_std=stde_dev/2
+    yerr=stde_dev/2
+    corr_arr=np.array(list(map((lambda x: 0 if x < 0 else x),(yerr-mean_dev).flatten()))).reshape(mean_dev.shape)
+    yerr_abv=yerr+corr_arr
+    yerr_blow=yerr-corr_arr
     outfile=prefix+"_mean_pop_dev.png"
     fig=plt.figure(figsize=(10,5))
     for i in range(mean_dev.shape[1]):
         genevals=mean_dev[:,i]
-        geneerrs=half_std[:,i]
-        plt.errorbar(range(mean_dev.shape[0]),genevals,yerr=geneerrs,capsize=5)
+        #geneerrs=half_std[:,i]
+        gene_yerrblow=yerr_blow[:,i]
+        gene_yerrabv=yerr_abv[:,i]
+        plt.errorbar(range(mean_dev.shape[0]),genevals,yerr=[gene_yerrblow,gene_yerrabv],capsize=5)
         
     plt.legend(list(map((lambda x,y: x+y),np.repeat("gene ",mean_dev.shape[1]),np.array(list(range(mean_dev.shape[1])),dtype=str))))
     fig.savefig(outfile)
     return
-
