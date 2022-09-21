@@ -8,6 +8,7 @@ import scipy
 from scipy import stats
 import tqdm
 from tqdm import tqdm
+import sys
 
 import params_file as pf
 
@@ -150,6 +151,15 @@ trans_aas = np.array(
     dtype=int,
 )
 
+args=sys.argv
+if len(args) > 1:
+    run_prefix=sys.argv[1]+"-"
+    print(f"Run prefix provided: {run_prefix}")
+    name_given=True
+else:
+    print("A run prefix was not provided, using default \'RUN-\'")
+    run_prefix="RUN-"
+    name_given=False
 
 def founder_miner(min_fitness=0.6):
     fitness = 0
@@ -876,7 +886,7 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                 if next_pop.size == 0:
                     print(f"Selection got the better of your branch {branch_num}, and it went extinct. Time to package and save to disk the truncated population")
                     filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".npy"
-                    np.save(filename,parent_pop)
+                    np.save(filename,parent_pop) # NORMAL EXIT
                     return
                 parent_pop=next_pop
                 #print(f"Generation {gen+1} of {ngens} completed.")
