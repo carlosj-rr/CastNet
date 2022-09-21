@@ -11,6 +11,7 @@ from tqdm import tqdm
 import sys
 
 import params_file as pf
+from output_funcs import translate_int_seq,ali_saver,draw_avg_grns,plot_avg_developments
 
 dna_codons = np.array(
     [
@@ -982,7 +983,7 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
 def main_parallel():
     founder = founder_miner()
     print("Founder created")
-    results_array = np.ndarray(13, dtype=object)
+    #results_array = np.ndarray(13, dtype=object)
     founder_pop = grow_pop(founder, pf.pop_size, "equal")
     print("Founder pop created")
     #results_array[0] = cp.deepcopy(founder_pop)
@@ -992,7 +993,7 @@ def main_parallel():
     #results_array[1] = cp.deepcopy(anc1_stem)
     #results_array[2] = cp.deepcopy(anc2_stem)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([10000, 10000])
+    genslist1 = np.array([15, 15])
     br_randnums = np.random.randint(0,1e10,len(anc_branches)).astype(str)
     br_prefix=['ancestor1_','ancestor2_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
@@ -1017,7 +1018,7 @@ def main_parallel():
     four_leaves = np.array(
         [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
     )
-    genslist2 = np.array([10000, 10000, 10000, 10000])
+    genslist2 = np.array([15, 15, 15, 15])
     br_randnums = np.random.randint(0,1e10,len(four_leaves)).astype(str)
     br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
