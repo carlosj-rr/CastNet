@@ -44,18 +44,33 @@ def ali_saver(dset_prefix,pop_arr,tip_names,asints=True):
     return
 
 def draw_avg_grns(in_pop,prefix):
-    thresholds=[0.001,0.01,0.1,1,1.001,1.01,1,1]
+    thresholds=[0,2]
     mean_grn=np.mean([x[3].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][3].shape)
-    for i in thresholds:
-        outfilename="AvgGRN_"+str(i)+"_thre_"+prefix+".png"
-        newnet=np.sign((np.abs(mean_grn) > i) * mean_grn)
+    outfilename="AvgGRNs_"+prefix+".png"
+    fig = plt.figure(1); plt.clf()
+    fig, axes=plt.subplots(1,2,figsize=(14,6),dpi=300)
+    axes_idcs=np.where(axes)[0]
+    for i in range(len(thresholds)):
+        curr_thre=thresholds[i]
+        curr_axis=axes_idcs[i]
+        newnet=(np.abs(mean_grn) > curr_thre) * mean_grn
         G=nx.from_numpy_array(newnet)
-        G=nx.relabel_nodes(G,dict(zip(range(len(G.nodes())),range(len(G.nodes)))))
-        G=nx.drawing.nx_agraph.to_agraph(G)
-        G.node_attr.update(color="green",style="empty")
-        G.edge_attr.update(color="red",width="100.0")
+        lablist=list(map(lambda x,y: x+y,np.repeat("G",len(G.nodes)),np.array(list(range(len(G.nodes))),dtype=str)))
+        labdict=dict(zip(range(len(lablist)),lablist))
+        G=nx.relabel_nodes(G,labdict)
+        pos=nx.circular_layout(G)
+        edgewith=[ d['weight'] for (u,v,d) in G.edges(data=True)]
+        #G=nx.drawing.nx_agraph.to_agraph(G)
+        #G.node_attr.update(color="green",style="empty")
+        #G.edge_attr.update(color="red",width="100.0")
+        nx.draw_networkx_nodes(G,pos,ax=axes[curr_axis],alpha=0.5,node_shape='o',node_color='blue')
+        nx.draw_networkx_edges(G,pos,width=edgewith, ax=axes[curr_axis], edge_color='red', arrows=True)
+        #nx.draw_networkx_labels(G,labdict,font_size=8)
+        axes[curr_axis].set_title('Threshold: '+str(curr_thre),fontsize=12)
+        axes[curr_axis].set_axis_off()
         #plt.title(prefix+" mean GRN with threshold: "+str(i))
-        G.draw(outfilename,format='png',prog='neato')
+        #G.draw(outfilename,format='png',prog='neato')
+    fig.savefig(outfilename)
     return
  
 def plot_avg_developments(in_pop,prefix):
