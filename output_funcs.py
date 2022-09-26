@@ -44,32 +44,19 @@ def ali_saver(dset_prefix,pop_arr,tip_names,asints=True):
     return
 
 def draw_avg_grns(in_pop,prefix):
-    thresholds=[0,2]
+    #thresholds=[0,2]
     mean_grn=np.mean([x[3].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][3].shape)
-    outfilename="AvgGRNs_"+prefix+".png"
-    fig = plt.figure(1); plt.clf()
-    fig, axes=plt.subplots(1,2,figsize=(14,6),dpi=300)
-    axes_idcs=np.where(axes)[0]
-    for i in range(len(thresholds)):
-        curr_thre=thresholds[i]
-        curr_axis=axes_idcs[i]
-        newnet=(np.abs(mean_grn) > curr_thre) * mean_grn
-        G=nx.from_numpy_array(newnet)
-        lablist=list(map(lambda x,y: x+y,np.repeat("G",len(G.nodes)),np.array(list(range(len(G.nodes))),dtype=str)))
-        labdict=dict(zip(range(len(lablist)),lablist))
-        G=nx.relabel_nodes(G,labdict)
-        pos=nx.circular_layout(G)
-        edgewith=[ d['weight'] for (u,v,d) in G.edges(data=True)]
-        #G=nx.drawing.nx_agraph.to_agraph(G)
-        #G.node_attr.update(color="green",style="empty")
-        #G.edge_attr.update(color="red",width="100.0")
-        nx.draw_networkx_nodes(G,pos,ax=axes[curr_axis],alpha=0.5,node_shape='o',node_color='blue')
-        nx.draw_networkx_edges(G,pos,width=edgewith, ax=axes[curr_axis], edge_color='red', arrows=True)
-        #nx.draw_networkx_labels(G,labdict,font_size=8)
-        axes[curr_axis].set_title('Threshold: '+str(curr_thre),fontsize=12)
-        axes[curr_axis].set_axis_off()
-        #plt.title(prefix+" mean GRN with threshold: "+str(i))
-        #G.draw(outfilename,format='png',prog='neato')
+    outfilename="AvgGRN_"+prefix+".png"
+    G=nx.from_numpy_array(mean_grn)
+    lablist=list(map(lambda x,y: x+y,np.repeat("G",len(G.nodes)),np.array(list(range(len(G.nodes))),dtype=str)))
+    labdict=dict(zip(range(len(lablist)),lablist))
+    pos=nx.circular_layout(G)
+    edgewidth=np.array([ d['weight'] for (u,v,d) in G.edges(data=True)])
+    edge_colors=[ 'red' if x==-1 else 'green' for x in np.sign(edgewidth)]
+    fig = plt.figure(figsize=(12,12),dpi=300); plt.clf()
+    nx.draw_networkx_nodes(G,pos, alpha=0.5, node_size=400*20, node_shape='o',node_color='blue')
+    nx.draw_networkx_edges(G,pos,width=edgewidth, edge_color=edge_colors, arrows=True,arrowsize=100)
+    nx.draw_networkx_labels(G,pos,labels=labdict)
     fig.savefig(outfilename)
     return
  
