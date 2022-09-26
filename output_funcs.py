@@ -56,7 +56,7 @@ def draw_avg_grns(in_pop,prefix):
     fig = plt.figure(figsize=(12,12),dpi=300); plt.clf()
     nx.draw_networkx_nodes(G,pos, alpha=0.5, node_size=400*20, node_shape='o',node_color='blue')
     nx.draw_networkx_edges(G,pos,width=edgewidth, edge_color=edge_colors, arrows=True,arrowsize=100)
-    nx.draw_networkx_labels(G,pos,labels=labdict)
+    nx.draw_networkx_labels(G,pos,labels=labdict, font_size=20, font_weight='bold')
     fig.savefig(outfilename)
     return
  
