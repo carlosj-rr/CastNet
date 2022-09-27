@@ -7,7 +7,7 @@ thresh_boundaries = (0.1,2)
 decay_boundaries = (0,2)
 dev_steps = 15 # For the moment no more than 999 is possible
 pop_size = 100 # For the moment, Multiple of 10
-reporting_freq=1000 # How many generations should a snapshot be saved to disk
+reporting_freq=5 # How many generations should a snapshot be saved to disk
 
 # MUTATION PARAMETERS
 #thresh_decay_mut_bounds = (-0.01,0.01)

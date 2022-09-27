@@ -1,6 +1,6 @@
 import copy as cp
 import pickle
-from concurrent.futures import ProcessPoolExecutor  # for using multiple cores.
+from concurrent.futures import ProcessPoolExecutor  # for running parallel threads.
 from datetime import datetime
 
 import numpy as np
@@ -11,7 +11,7 @@ from tqdm import tqdm
 import sys
 
 import params_file as pf
-from output_funcs import translate_int_seq,ali_saver,draw_avg_grns,plot_avg_developments
+from output_funcs import *
 
 dna_codons = np.array(
     [
