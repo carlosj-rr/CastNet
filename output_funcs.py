@@ -50,8 +50,9 @@ def floating_range(start,stop,step):
             start+=step
         return(outlist)
 
-def draw_avg_grns(in_pop,prefix):
+def draw_avg_grns(in_pop,gen_n):
     #thresholds=[0,2]
+    prefix=gen_n
     mean_grn=np.mean([x[3].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][3].shape)
     n_genes=mean_grn.shape[0]
     angle_range=floating_range(0,360,(360/n_genes))
@@ -68,9 +69,9 @@ def draw_avg_grns(in_pop,prefix):
     edge_colors=[ 'red' if x==-1 else 'green' for x in np.sign(edgewidth)]
     fig = plt.figure(figsize=(12,12),dpi=300); plt.clf()
     ax=fig.gca()
-    ax.set_title("Gen "+str(prefix),fontsize=14)
+    ax.set_title("Gen "+str(prefix),fontsize=16)
     nx.draw_networkx_nodes(G,pos_clockwise, alpha=0.5, node_size=400*20, node_shape='o',node_color='blue')
-    nx.draw_networkx_edges(G,pos_clockwise,width=edgewidth, edge_color=edge_colors, arrows=True,arrowsize=100)
+    nx.draw_networkx_edges(G,pos_clockwise,width=edgewidth*5, edge_color=edge_colors, arrows=True,arrowsize=100)
     nx.draw_networkx_labels(G,pos_clockwise,labels=labdict, font_size=20, font_weight='bold')
     return(fig)
  
@@ -92,6 +93,6 @@ def plot_avg_developments(in_pop,prefix):
         
     plt.legend(list(map((lambda x,y: x+y),np.repeat("gene ",mean_dev.shape[1]),np.array(list(range(mean_dev.shape[1])),dtype=str))))
     plt.suptitle(prefix+" mean pop dev")
-    fig.savefig(outfile)
-    plt.close()
-    return
+    #fig.savefig(outfile)
+    #plt.close()
+    return(fig)
