@@ -43,22 +43,36 @@ def ali_saver(dset_prefix,pop_arr,tip_names,asints=True):
                         f.write(sequences_list[i])   
     return
 
+def floating_range(start,stop,step):
+        outlist=[]
+        while start < stop:
+            outlist.append(start)
+            start+=step
+        return(outlist)
+
 def draw_avg_grns(in_pop,prefix):
     #thresholds=[0,2]
     mean_grn=np.mean([x[3].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][3].shape)
-    outfilename="AvgGRN_"+prefix+".png"
+    n_genes=mean_grn.shape[0]
+    angle_range=floating_range(0,360,(360/n_genes))
+    trans_angles=[ abs(x-90) if x < 90 else 360-(x-90) for x in angle_range]
+    rad_trans=np.multiply(trans_angles,(np.pi/180))
+    coords=list(zip(np.cos(rad_trans),np.sin(rad_trans)))
+    pos_clockwise=dict(zip(range(n_genes),coords))
+    outfilename="AvgGRN_"+str(prefix)+".png"
     G=nx.from_numpy_array(mean_grn)
     lablist=list(map(lambda x,y: x+y,np.repeat("G",len(G.nodes)),np.array(list(range(len(G.nodes))),dtype=str)))
     labdict=dict(zip(range(len(lablist)),lablist))
-    pos=nx.circular_layout(G)
+    #pos=nx.circular_layout(G)
     edgewidth=np.array([ d['weight'] for (u,v,d) in G.edges(data=True)])
     edge_colors=[ 'red' if x==-1 else 'green' for x in np.sign(edgewidth)]
     fig = plt.figure(figsize=(12,12),dpi=300); plt.clf()
-    nx.draw_networkx_nodes(G,pos, alpha=0.5, node_size=400*20, node_shape='o',node_color='blue')
-    nx.draw_networkx_edges(G,pos,width=edgewidth, edge_color=edge_colors, arrows=True,arrowsize=100)
-    nx.draw_networkx_labels(G,pos,labels=labdict, font_size=20, font_weight='bold')
-    fig.savefig(outfilename)
-    return
+    ax=fig.gca()
+    ax.set_title("Gen "+str(prefix),fontsize=14)
+    nx.draw_networkx_nodes(G,pos_clockwise, alpha=0.5, node_size=400*20, node_shape='o',node_color='blue')
+    nx.draw_networkx_edges(G,pos_clockwise,width=edgewidth, edge_color=edge_colors, arrows=True,arrowsize=100)
+    nx.draw_networkx_labels(G,pos_clockwise,labels=labdict, font_size=20, font_weight='bold')
+    return(fig)
  
 def plot_avg_developments(in_pop,prefix):
     mean_dev=np.mean([x[7].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][7].shape)
