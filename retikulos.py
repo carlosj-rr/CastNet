@@ -1,6 +1,6 @@
 import copy as cp
 import pickle
-from concurrent.futures import ProcessPoolExecutor  # for running parallel threads.
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 
 import numpy as np
@@ -9,6 +9,7 @@ from scipy import stats
 import tqdm
 from tqdm import tqdm
 import sys
+import gif
 
 import params_file as pf
 from output_funcs import *
@@ -872,6 +873,10 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     #branch=np.ndarray((ngens,),dtype=object)
     #branch_key=str(np.random.randint(0,1e10))
     print(f"Size of parental population: {len(in_pop)}")
+    flat_grns_arr=np.insert(np.array([ x[3].flatten() for x in in_pop[:] ]),0,np.repeat(0,in_pop.shape[0]),axis=1)
+    print(f"original flat grns array shape is {flat_grns_arr.shape}, make sure it matches with indiv numbers {in_pop.shape[0]}, and the number of genes ({pf.num_genes}) squared: {pf.num_genes**2} plus 1.")
+    out_grns=[]
+    out_devs=[]
     if parent_pop.size > 0:
         for gen in tqdm(range(ngens),desc=f"{branch_id} branch evolution progress:", ascii=False,ncols=100):
             if parent_pop.size > 0:
@@ -880,26 +885,38 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                 if type(survivors) == bool:
                     print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen} generation(s)")
                     filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".npy"
-                    np.save(filename,parent_pop)
+                    np.save(filename,parent_pop) # NORMAL EXIT
                     return
                 #print(f"Survivor number is {len(survivors)}.")
                 next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
                 if next_pop.size == 0:
                     print(f"Selection got the better of your branch {branch_num}, and it went extinct. Time to package and save to disk the truncated population")
                     filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".npy"
-                    np.save(filename,parent_pop) # NORMAL EXIT
+                    np.save(filename,parent_pop)
                     return
                 parent_pop=next_pop
                 #print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
-                if (gen+1) % reporting_freq == 0:
-                    filename="Generation_"+str(gen+1)+"_branch_"+str(branch_id)+".npy"
-                    print(f"####### Saving population {gen+1} to {filename}")
-                    np.save(filename,next_pop)
+                if (gen) % reporting_freq == 0:
+                    prefix="Generation_"+str(gen)+"_branch_"+str(branch_id)
+                    grn_fig=draw_avg_grns(next_pop,gen)
+                    out_grns.append(grn_fig)
+                    dev_fig=plot_avg_developments(next_pop,gen)
+                    out_devs.append(dev_fig)
+                    flat_grns=np.array([ x[3].flatten() for x in next_pop[:] ])
+                    with_gennum=np.insert(flat_grns,0,np.repeat(gen,next_pop.shape[0]),axis=1)
+                    flat_grns_arr=np.vstack((flat_grns_arr,with_gennum))
+                    #np.save(filename,next_pop)
                 if (gen+1) == ngens:
-                    filename="TipGeneration_"+str(gen+1)+"_branch_"+str(branch_id)+".npy"
-                    print(f"####### Saving population {gen+1} to {filename}")
-                    np.save(filename,next_pop)
+                    filename="TipGeneration_"+str(gen+1)+"_branch_"+str(branch_id)
+                    #grn_file="Branch_"+str(branch_id)+"_AvgGRN.gif"
+                    #devs_file="Branch_"+str(branch_id)+"_AvgDevs.gif"
+                    #gif.save(grn_fig,grn_file,duration=1000)
+                    #gif.save(dev_fig,devs_file,duration=1000)
+                    #print(f"####### Saving population {gen+1} to {filename}")
+                    animator(out_grns,out_devs,"Branch_"+str(branch_id))
+                    np.savetxt(filename+".csv",flat_grns_arr,delimiter=",")
+                    return
             else:
                 print("Your population was extinguished.")
                 return
@@ -908,6 +925,10 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
         print(f"Input population {parent_pop} has no individuals. Stopping simulation.")
         return
 
+def animator(grns,devs,file_prefix):
+    gif.save(grns,file_prefix+"_avgGRN.gif")
+    gif.save(devs,file_prefix+"_avgDev.gif")
+    return
 
 def unpickle(filename):
     pickle_off = open(filename, "rb")
