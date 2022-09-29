@@ -873,10 +873,12 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     #branch=np.ndarray((ngens,),dtype=object)
     #branch_key=str(np.random.randint(0,1e10))
     print(f"Size of parental population: {len(in_pop)}")
-    flat_grns_arr=np.insert(np.array([ x[3].flatten() for x in in_pop[:] ]),0,np.repeat(0,in_pop.shape[0]),axis=1)
+    mean_grn=np.mean([x[3].flatten() for x in in_pop[:]],axis=0)
+    flat_grns_arr=np.insert(mean_grn,0,-1,axis=0)
     print(f"original flat grns array shape is {flat_grns_arr.shape}, make sure it matches with indiv numbers {in_pop.shape[0]}, and the number of genes ({pf.num_genes}) squared: {pf.num_genes**2} plus 1.")
     out_grns=[]
     out_devs=[]
+    mean_fitnesses=[np.mean([x[9] for x in in_pop[:]])]
     if parent_pop.size > 0:
         for gen in tqdm(range(ngens),desc=f"{branch_id} branch evolution progress:", ascii=False,ncols=100):
             if parent_pop.size > 0:
@@ -903,9 +905,10 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                     out_grns.append(grn_fig)
                     dev_fig=plot_avg_developments(next_pop,gen)
                     out_devs.append(dev_fig)
-                    flat_grns=np.array([ x[3].flatten() for x in next_pop[:] ])
-                    with_gennum=np.insert(flat_grns,0,np.repeat(gen,next_pop.shape[0]),axis=1)
+                    mean_grn=np.mean([ x[3].flatten() for x in next_pop[:] ],axis=0)
+                    with_gennum=np.insert(mean_grn,0,gen,axis=0)
                     flat_grns_arr=np.vstack((flat_grns_arr,with_gennum))
+                    mean_fitnesses.append(np.mean([x[9] for x in next_pop[:]]))
                     #np.save(filename,next_pop)
                 if (gen+1) == ngens:
                     filename="TipGeneration_"+str(gen+1)+"_branch_"+str(branch_id)
@@ -915,8 +918,9 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                     #gif.save(dev_fig,devs_file,duration=1000)
                     #print(f"####### Saving population {gen+1} to {filename}")
                     animator(out_grns,out_devs,"Branch_"+str(branch_id))
-                    np.savetxt(filename+".csv",flat_grns_arr,delimiter=",")
-                    return
+                    np.savetxt(filename+"_meanGRNs.csv",flat_grns_arr,delimiter=",")
+                    np.savetxt(filename+"_fitnessProg.csv",mean_fitnesses,delimiter=",")
+                    return(next_pop)
             else:
                 print("Your population was extinguished.")
                 return
