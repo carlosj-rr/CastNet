@@ -1018,7 +1018,7 @@ def main_parallel():
     #results_array[1] = cp.deepcopy(anc1_stem)
     #results_array[2] = cp.deepcopy(anc2_stem)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([15, 15])
+    genslist1 = np.array([10, 10])
     br_randnums = np.random.randint(0,1e10,len(anc_branches)).astype(str)
     br_prefix=['ancestor1_','ancestor2_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
@@ -1043,7 +1043,7 @@ def main_parallel():
     four_leaves = np.array(
         [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
     )
-    genslist2 = np.array([15, 15, 15, 15])
+    genslist2 = np.array([10, 10, 10, 10])
     br_randnums = np.random.randint(0,1e10,len(four_leaves)).astype(str)
     br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
@@ -1057,9 +1057,11 @@ def main_parallel():
     #    cp.deepcopy(leafc_tip),
     #    cp.deepcopy(leafd_tip),
     #)
-    return
+    return(np.array([founder_pop,anc1_tip,anc2_tip,leafa_tip,leafb_tip,leafc_tip,leafd_tip]))
 
 if __name__ == "__main__":
     result = main_parallel()
+    tip_names=["founder","ancAB","ancCD","tip_A","tip_B","tip_C","tip_D"]
+    ali_saver(run_prefix,result,tip_names)
     print("Analysis completed", result.shape)
-    store(result)
+    #store(result)
