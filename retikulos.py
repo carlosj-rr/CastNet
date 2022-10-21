@@ -288,7 +288,7 @@ def calc_fitness(development):
     is_alive = last_gene_expressed(development, min_reproducin)
     if is_alive:
         genes_on = prop_genes_on(development)
-        exp_stab = expression_stability(development) # not doing what it's meant to - see issues on GitHub page.
+        exp_stab = 1 - expression_stability(development) # not doing what it's meant to - see issues on GitHub page.
         # added "1 -" as I realized that the R^2 value would approac 1 the more it assimilated an exponential function.
         sim_to_exp = 1 - exponential_similarity(development)
         fitness_val = np.mean([genes_on, exp_stab, sim_to_exp])
@@ -316,11 +316,8 @@ def prop_genes_on(development):
 
 
 def expression_stability(development):  # TODO I haven't thought deeply about this.
-    row_sums = development.sum(axis=1)  # What proportion of the data range is
-    # TODO the stdev? Less = better
-    stab_val = row_sums.std() / (row_sums.max() - row_sums.min())
-    return stab_val
-
+    slopes = np.array(list(map((lambda x: stats.linregress(range(len(x)),x)[0]),development.T[:])))  # get the slope of a linear model for each line
+    return np.mean(np.array(list(map(slope_to_angle,slopes)))/90)
 
 def exponential_similarity(development):
     dev_steps, num_genes = development.shape
@@ -330,6 +327,12 @@ def exponential_similarity(development):
     r_squared = fitted_line.rvalue**2
     return r_squared
 
+def rad_to_deg(radnum):
+    return radnum*180/np.pi
+
+def slope_to_angle(m):
+    rez=np.abs(rad_to_deg(np.arctan(m)))
+    return rez
 
 class CodonError(Exception):
     pass
@@ -1018,7 +1021,7 @@ def main_parallel():
     #results_array[1] = cp.deepcopy(anc1_stem)
     #results_array[2] = cp.deepcopy(anc2_stem)
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-    genslist1 = np.array([10, 10])
+    genslist1 = np.array([10000, 10000])
     br_randnums = np.random.randint(0,1e10,len(anc_branches)).astype(str)
     br_prefix=['ancestor1_','ancestor2_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
@@ -1043,7 +1046,7 @@ def main_parallel():
     four_leaves = np.array(
         [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
     )
-    genslist2 = np.array([10, 10, 10, 10])
+    genslist2 = np.array([10000, 10000, 10000, 10000])
     br_randnums = np.random.randint(0,1e10,len(four_leaves)).astype(str)
     br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
