@@ -2,6 +2,7 @@ from wsgiref import headers
 import numpy as np
 import networkx as nx
 import matplotlib.pylab as plt
+import gif
 
 # translate an arbitrary sequence of 'integrified bases' into ACTG. Notice the input is an integer, not a string of integers.
 def translate_int_seq(int_seq):
@@ -12,9 +13,10 @@ def translate_int_seq(int_seq):
     trans_dict={'1':'A','2':'C','3':'T','4':'G'}
     return(''.join(list(map((lambda x: trans_dict.get(x)),list(strint_seq)))))
 
-def ali_saver(dset_prefix,pop_arr,tip_names,asints=True):
-    num_seqs=(np.mean([x.shape[0] for x in pop_arr[:]])*0.04).astype(int)
-    tot_lins=len(pop_arr)
+def ali_saver(dset_prefix,pop_arr,tip_names,asints=True,num_seqs=None):
+    if not num_seqs:
+        num_seqs=(np.mean([x.shape[0] for x in pop_arr[:]])*0.04).astype(int)
+    #tot_lins=len(pop_arr)
     tot_genes=pop_arr[0][0][1].shape[0]
     for gene_idx in range(tot_genes):
         headers_list=[]
@@ -43,6 +45,23 @@ def ali_saver(dset_prefix,pop_arr,tip_names,asints=True):
                         f.write(sequences_list[i])   
     return
 
+def alimaker(pickled_file,num):
+    source_pops=unpickle(pickled_file)
+    lowest_count=min([ x.shape[0] for x in (founder,ancab,anccd,a,b,c,d) ])
+    rand_indivs=np.random.choice(range(lowest_count),10)
+    for gene_idx in range(tot_genes):
+        outfilename="Ali_"+str(num)+"_gene"+str(gene_idx)+".fas"
+        headers_list=[ ">"+x for x in name_list[:] ]
+        seqs_list=[ translate_int_seq(x[rand_num][1][rand_gene]) for x in source_pops[:] ]
+        for indiv_idx in range(len(headers_list)):
+            with open(outfilename,"a") as fc:
+                fc.write(headers_list[indiv_idx])
+                fc.write("\n")
+                fc.write(seqs_list[indiv_idx])
+                fc.write("\n")
+    return
+
+
 def floating_range(start,stop,step):
         outlist=[]
         while start < stop:
@@ -50,6 +69,7 @@ def floating_range(start,stop,step):
             start+=step
         return(outlist)
 
+@gif.frame
 def draw_avg_grns(in_pop,gen_n):
     #thresholds=[0,2]
     prefix=gen_n
@@ -74,7 +94,8 @@ def draw_avg_grns(in_pop,gen_n):
     nx.draw_networkx_edges(G,pos_clockwise,width=edgewidth*5, edge_color=edge_colors, arrows=True,arrowsize=100)
     nx.draw_networkx_labels(G,pos_clockwise,labels=labdict, font_size=20, font_weight='bold')
     return(fig)
- 
+
+@gif.frame
 def plot_avg_developments(in_pop,prefix):
     mean_dev=np.mean([x[7].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][7].shape)
     stde_dev=np.std([x[7].flatten() for x in in_pop[:]],axis=0).reshape(in_pop[0][7].shape)
@@ -82,7 +103,7 @@ def plot_avg_developments(in_pop,prefix):
     corr_arr=np.array(list(map((lambda x: 0 if x < 0 else x),(yerr-mean_dev).flatten()))).reshape(mean_dev.shape)
     yerr_abv=yerr+corr_arr
     yerr_blow=yerr-corr_arr
-    outfile=prefix+"_mean_pop_dev.png"
+    outfile=str(prefix)+"_mean_pop_dev.png"
     fig=plt.figure(figsize=(10,5))
     for i in range(mean_dev.shape[1]):
         genevals=mean_dev[:,i]
@@ -90,9 +111,8 @@ def plot_avg_developments(in_pop,prefix):
         gene_yerrblow=yerr_blow[:,i]
         gene_yerrabv=yerr_abv[:,i]
         plt.errorbar(range(mean_dev.shape[0]),genevals,yerr=[gene_yerrblow,gene_yerrabv],capsize=5)
-        
     plt.legend(list(map((lambda x,y: x+y),np.repeat("gene ",mean_dev.shape[1]),np.array(list(range(mean_dev.shape[1])),dtype=str))))
-    plt.suptitle(prefix+" mean pop dev")
+    plt.suptitle("Gen "+str(prefix),fontsize=16)
     #fig.savefig(outfile)
     #plt.close()
     return(fig)
