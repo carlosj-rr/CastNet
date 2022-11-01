@@ -3,6 +3,12 @@ import numpy as np
 import networkx as nx
 import matplotlib.pylab as plt
 import gif
+import pickle
+
+def unpickle(filename):
+    pickle_off = open(filename, "rb")
+    output = pickle.load(pickle_off)
+    return output
 
 # translate an arbitrary sequence of 'integrified bases' into ACTG. Notice the input is an integer, not a string of integers.
 def translate_int_seq(int_seq):
@@ -49,16 +55,18 @@ def alimaker(pickled_file,num):
     source_pops=unpickle(pickled_file)
     lowest_count=min([ x.shape[0] for x in (founder,ancab,anccd,a,b,c,d) ])
     rand_indivs=np.random.choice(range(lowest_count),10)
-    for gene_idx in range(tot_genes):
-        outfilename="Ali_"+str(num)+"_gene"+str(gene_idx)+".fas"
-        headers_list=[ ">"+x for x in name_list[:] ]
-        seqs_list=[ translate_int_seq(x[rand_num][1][rand_gene]) for x in source_pops[:] ]
-        for indiv_idx in range(len(headers_list)):
-            with open(outfilename,"a") as fc:
-                fc.write(headers_list[indiv_idx])
-                fc.write("\n")
-                fc.write(seqs_list[indiv_idx])
-                fc.write("\n")
+    for rep in range(len(rand_indivs)):
+        rand_num=rand_indivs[rep]
+        for gene_idx in range(tot_genes):
+            outfilename="Ali_"+str(num)+"_gene"+str(gene_idx)+"-rep"+str(rep)+".fas"
+            headers_list=[ ">"+x for x in name_list[:] ]
+            seqs_list=[ translate_int_seq(x[rand_num][1][rand_gene]) for x in source_pops[:] ]
+            for indiv_idx in range(len(headers_list)):
+                with open(outfilename,"a") as fc:
+                    fc.write(headers_list[indiv_idx])
+                    fc.write("\n")
+                    fc.write(seqs_list[indiv_idx])
+                    fc.write("\n")
     return
 
 
