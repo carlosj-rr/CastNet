@@ -315,7 +315,7 @@ def prop_genes_on(development):
     return genes_on.mean()
 
 
-def expression_stability(development):  # TODO I haven't thought deeply about this.
+def expression_stability(development): 
     slopes = np.array(list(map((lambda x: stats.linregress(range(len(x)),x)[0]),development.T[:])))  # get the slope of a linear model for each line
     return np.mean(np.array(list(map(slope_to_angle,slopes)))/90)
 
@@ -336,7 +336,6 @@ def slope_to_angle(m):
 
 class CodonError(Exception):
     pass
-
 
 def translate_codon(codon):
     if codon in dna_codons:
@@ -517,7 +516,7 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
         new_aacid = translate_codon(mutated_codon)
         if prev_aacid == new_aacid:  # Synonymous mutations are plotted as '2'
             muttype = 2
-        elif new_aacid == "_":  # Nonsense mutations are plotted as '0'
+        elif new_aacid == 95:  # Nonsense mutations are plotted as '0'
             muttype = 0
         else:  # Nonsynonymous mutations are plotted as '1'
             muttype = 1
@@ -551,7 +550,8 @@ def point_mutate_codon(codon, pos_to_mutate):
 
 class MutationTypeError(Exception):
     pass
-
+class NegativeIndex(Exception):
+    pass
 
 def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
     rng=np.random.default_rng()
@@ -572,9 +572,9 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
             f"This may result in untractable mutations, consider inspecting the output of codPos()"
         )
     # TODO check this unused thing and remove if uneccesary
-    inactive_links = np.array(
-        list(zip(np.where(curr_grn == 0)[0], np.where(curr_grn == 0)[1]))
-    )
+    #inactive_links = np.array(
+    #    list(zip(np.where(curr_grn == 0)[0], np.where(curr_grn == 0)[1]))
+    #)
     num_genes = curr_genes_on.size
     # Choosing mutations for the thresholds or decays...
     # proportion of total regulatory interactions that are thresholds
@@ -859,16 +859,16 @@ def randsplit(in_pop, out_pop_size):
     return lina, linb
 
 
-def old_randsplit(in_pop, out_pop_size):
+#def old_randsplit(in_pop, out_pop_size):
     # in_pop=cp.deepcopy(in_pop)
-    inpopsize = in_pop.shape[0]
-    idcs_lina = np.random.choice(range(inpopsize), int(inpopsize / 2), replace=False)
-    idcs_linb = np.array(
-        [rand for rand in np.arange(inpopsize) if rand not in idcs_lina]
-    )
-    lina = grow_pop(in_pop[idcs_lina], out_pop_size, "equal")
-    linb = grow_pop(in_pop[idcs_linb], out_pop_size, "equal")
-    return lina, linb
+#    inpopsize = in_pop.shape[0]
+#    idcs_lina = np.random.choice(range(inpopsize), int(inpopsize / 2), replace=False)
+#    idcs_linb = np.array(
+#        [rand for rand in np.arange(inpopsize) if rand not in idcs_lina]
+#    )
+#    lina = grow_pop(in_pop[idcs_lina], out_pop_size, "equal")
+#    linb = grow_pop(in_pop[idcs_linb], out_pop_size, "equal")
+#    return lina, linb
 
 
 def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
@@ -1008,7 +1008,7 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
 #    return results_array
 
 
-def main_parallel():
+def main_experiment():
     founder = founder_miner()
     print("Founder created")
     #results_array = np.ndarray(13, dtype=object)
@@ -1025,13 +1025,14 @@ def main_parallel():
     br_randnums = np.random.randint(0,1e10,len(anc_branches)).astype(str)
     br_prefix=['ancestor1_','ancestor2_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
-    with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol, anc_branches, genslist1,br_ids)
-
-    anc1_tip, anc2_tip = list(result)
+    anc1_tip = branch_evol(anc_branches[0],genslist1[0],br_ids[0])
+    anc2_tip = branch_evol(anc_branches[1],genslist1[1],br_ids[1])
+    #with ProcessPoolExecutor() as pool:
+    #    result = pool.map(branch_evol, anc_branches, genslist1,br_ids)
+    #anc1_tip, anc2_tip = list(result)
+    store((anc1_tip,anc2_tip))
     print(f"Ancestor 1 shape: {anc1_tip.shape}")
     print(f"Ancestor 2 shape: {anc2_tip.shape}")
-
     #results_array[3] = cp.deepcopy(anc1_tip)
     #results_array[4] = cp.deepcopy(anc2_tip)
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
@@ -1050,21 +1051,27 @@ def main_parallel():
     br_randnums = np.random.randint(0,1e10,len(four_leaves)).astype(str)
     br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
-    with ProcessPoolExecutor() as pool:
-        result = pool.map(branch_evol, four_leaves, genslist2, br_ids)
+    leafa_tip = branch_evol(four_leaves[0],genslist2[0],br_ids[0])
+    leafb_tip = branch_evol(four_leaves[1],genslist2[1],br_ids[1])
+    leafc_tip = branch_evol(four_leaves[2],genslist2[2],br_ids[2])
+    leafd_tip = branch_evol(four_leaves[3],genslist2[3],br_ids[3])
+    #with ProcessPoolExecutor() as pool:
+    #    result = pool.map(branch_evol, four_leaves, genslist2, br_ids)
 
-    leafa_tip, leafb_tip, leafc_tip, leafd_tip = list(result)
+    #leafa_tip, leafb_tip, leafc_tip, leafd_tip = list(result)
     #results_array[9], results_array[10], results_array[11], results_array[12] = (
     #    cp.deepcopy(leafa_tip),
     #    cp.deepcopy(leafb_tip),
     #    cp.deepcopy(leafc_tip),
     #    cp.deepcopy(leafd_tip),
     #)
+    
     return(np.array([founder_pop,anc1_tip,anc2_tip,leafa_tip,leafb_tip,leafc_tip,leafd_tip]))
 
 if __name__ == "__main__":
-    result = main_parallel()
+    result = main_experiment()
+    store(result)
     tip_names=["founder","ancAB","ancCD","tip_A","tip_B","tip_C","tip_D"]
     ali_saver(run_prefix,result,tip_names)
     print("Analysis completed", result.shape)
-    #store(result)
+    
