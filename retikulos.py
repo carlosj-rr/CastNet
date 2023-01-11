@@ -217,16 +217,16 @@ def make_genome_and_proteome(
         num_codons = int(seq_length / 3)
     else:
         num_codons = int(seq_length / 3)
-    idx_vect = np.array(range(0, len(dna_codons)))
     genome_arr = np.empty((num_genes, num_codons), dtype=int)
     proteome_arr = np.empty((num_genes, num_codons), dtype=int)
     coding_codons = dna_codons[0:61]
     amino_acids = trans_aas[0:61]
+    idx_vect = np.array(range(0, len(coding_codons)))
     for i in range(0, num_genes):
         rand_codon_idx =  np.random.choice(idx_vect, (num_codons))
         
-        genome_arr[i] = np.array(dna_codons[rand_codon_idx])
-        proteome_arr[i] = np.array(trans_aas[rand_codon_idx])
+        genome_arr[i] = np.array(coding_codons[rand_codon_idx])
+        proteome_arr[i] = np.array(amino_acids[rand_codon_idx])
     return genome_arr, proteome_arr
 
 
