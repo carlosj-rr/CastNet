@@ -217,16 +217,14 @@ def make_genome_and_proteome(
         num_codons = int(seq_length / 3)
     else:
         num_codons = int(seq_length / 3)
-    idx_vect = np.array(range(0, len(dna_codons) - 3))
+    idx_vect = np.array(range(0, len(dna_codons)))
     genome_arr = np.empty((num_genes, num_codons), dtype=int)
     proteome_arr = np.empty((num_genes, num_codons), dtype=int)
+    coding_codons = dna_codons[0:61]
+    amino_acids = trans_aas[0:61]
     for i in range(0, num_genes):
-        rand_codon_idx = np.hstack(
-            (
-                np.random.choice(idx_vect, (num_codons - 1)),
-                np.random.choice((61, 62, 63), 1),
-            )
-        )
+        rand_codon_idx =  np.random.choice(idx_vect, (num_codons))
+        
         genome_arr[i] = np.array(dna_codons[rand_codon_idx])
         proteome_arr[i] = np.array(trans_aas[rand_codon_idx])
     return genome_arr, proteome_arr
@@ -858,19 +856,6 @@ def randsplit(in_pop, out_pop_size):
         )
     return lina, linb
 
-
-#def old_randsplit(in_pop, out_pop_size):
-    # in_pop=cp.deepcopy(in_pop)
-#    inpopsize = in_pop.shape[0]
-#    idcs_lina = np.random.choice(range(inpopsize), int(inpopsize / 2), replace=False)
-#    idcs_linb = np.array(
-#        [rand for rand in np.arange(inpopsize) if rand not in idcs_lina]
-#    )
-#    lina = grow_pop(in_pop[idcs_lina], out_pop_size, "equal")
-#    linb = grow_pop(in_pop[idcs_linb], out_pop_size, "equal")
-#    return lina, linb
-
-
 def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     in_pop = cp.deepcopy(parent_pop)
     #branch=np.ndarray((ngens,),dtype=object)
@@ -958,55 +943,6 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
                 print(seq_name, file=gene_file)
                 print(sequence, file=gene_file)
         print("Gene", str(i), "done")
-
-
-#run2=unpickle(filename)
-
-#def main_serial():
-#    founder = founder_miner(0.3)
-#    results_array = np.ndarray(13, dtype=object)
-#    founder_pop = grow_pop(founder, pf.pop_size, "equal")
-#    results_array[0] = cp.deepcopy(founder_pop)
-#    anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
-#    # stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    #results_array[1] = cp.deepcopy(anc1_stem)
-    #results_array[2] = cp.deepcopy(anc2_stem)
-    # results_array[3]=cp.deepcopy(stem_lin3)
-    # results_array[4]=cp.deepcopy(stem_lin4)
-#    anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
-#    genslist1 = np.array([10, 10])
-
-#    for i in range(len(anc_branches)):
-#        results_array[i + 3] = branch_evol(anc_branches[i], genslist1[i])
-
-    # anc1_tip,anc2_tip=list(result)
-    # results_array[3]=cp.deepcopy(anc1_tip)
-    # results_array[4]=cp.deepcopy(anc2_tip)
-
-    # results_array[7]=cp.deepcopy(tip_lin3)
-    # results_array[8]=cp.deepcopy(tip_lin4)
-#    leafa_stem, leafb_stem = randsplit(results_array[3], pf.pop_size)
-#    results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
-#        leafb_stem
-#    )
-#    leafc_stem, leafd_stem = randsplit(results_array[4], pf.pop_size)
-#    results_array[7], results_array[8] = cp.deepcopy(leafc_stem), cp.deepcopy(
-#        leafd_stem
-#    )
-
-#    four_leaves = np.array(
-#        [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
-#    )
-#    genslist2 = np.array([10, 10, 10, 10])
-
-#    for i in range(len(four_leaves)):
-#        results_array[i + 9] = branch_evol(four_leaves[i], genslist2[i])
-
-    # leafa_tip,leafb_tip,leafc_tip,leafd_tip=list(result)
-    # results_array[9],results_array[10],results_array[11],results_array[12]=cp.deepcopy(leafa_tip),
-    # cp.deepcopy(leafb_tip),cp.deepcopy(leafc_tip),cp.deepcopy(leafd_tip)
-#    return results_array
-
 
 def main_experiment():
     founder = founder_miner()
