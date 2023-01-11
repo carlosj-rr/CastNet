@@ -188,7 +188,8 @@ def founder_miner(min_fitness=0.6):
         # Importing values for the developmental info
         dev_steps = pf.dev_steps
         start_vect = (lambda x: np.array([1] * 1 + [0] * (x - 1)))(n_genes)
-        development = develop(start_vect, grn, decays, thresholds, dev_steps)
+        non_kos = np.array(list(map((lambda x: int(95 not in x)),proteome)))
+        development = develop(start_vect, grn, decays, thresholds, dev_steps, non_kos)
         genes_on = (development.sum(axis=0) != 0).astype(int)
         fitness = calc_fitness(development)
         out_arr = np.array(
@@ -256,7 +257,7 @@ def random_masked_vector(num_vals, prop_zero=0, min_val=0, max_val=1):
     return rpv
 
 
-def develop(start_vect, grn, decays, thresholds, dev_steps):
+def develop(start_vect, grn, decays, thresholds, dev_steps, non_ko_vect):
     #start_vect = cp.deepcopy(start_vect)
     gene_expression_profile = np.ndarray(((pf.dev_steps + 1), pf.num_genes))
     gene_expression_profile[0] = np.array([start_vect])
@@ -274,7 +275,7 @@ def develop(start_vect, grn, decays, thresholds, dev_steps):
         # a vector to rectify the resulting values to their thresholds.
         thresholder = (pre_thresholds > thresholds).astype(int)
         # rectify with the thresholder vect. This step resulted in the deletion of the 'rectify()' function
-        currV = pre_thresholds * thresholder
+        currV = pre_thresholds * thresholder * non_ko_vect
         gene_expression_profile[(i + 1)] = currV
         invect = currV
         counter = counter + 1
@@ -414,7 +415,8 @@ def mutation_wrapper(orgarr, mut_rateseq):
         out_grn, out_thresh, out_decs = regulator_mutator(
             in_grn, in_genes_on, in_decs, in_thresh, mutlocs
         )
-        out_dev = develop(start_vect, out_grn, out_decs, out_thresh, pf.dev_steps)
+        non_ko_genes = np.array(list(map((lambda x: int(95 not in x)),out_proteome)))
+        out_dev = develop(start_vect, out_grn, out_decs, out_thresh, pf.dev_steps, non_ko_genes)
         out_genes_on = (out_dev.sum(axis=0) != 0).astype(int)
         out_fitness = calc_fitness(out_dev)
     else:
