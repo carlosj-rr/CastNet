@@ -157,7 +157,5 @@ Untitled*
 # profiles
 profile*txt
 
-#Folders
-1K_gens
-5K_gens
-clearup
+#clear-up folder
+ignored/
