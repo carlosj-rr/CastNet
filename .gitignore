@@ -147,6 +147,7 @@ EvolRun*
 #Other scripts
 *.R
 .idea
+Untitled*
 
 # Images
 *png
