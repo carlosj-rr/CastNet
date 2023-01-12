@@ -157,5 +157,6 @@ Untitled*
 # profiles
 profile*txt
 
-#clear-up folder
+#clear-up folder and vscode folder
 ignored/
+.vscode/
