@@ -141,6 +141,7 @@ slurm*
 
 # Other gratuitous outputs
 *.csv
+Tips*
 *.xslx
 EvolRun*
 
@@ -151,6 +152,7 @@ Untitled*
 
 # Images
 *png
+*gif
 
 # profiles
 profile*txt
