@@ -22,7 +22,7 @@ new_link_bounds = (-2,2)
 
 # SELECTION PARAMETERS
 min_reproducin = 0.1
-prop_survivors = 0.1
+prop_survivors = 0.6
 #tot_offspring = pop_size
 select_strategy = "totally relaxed" # ""high pressure", "low pressure", and "totally relaxed""
 

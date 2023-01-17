@@ -1006,7 +1006,7 @@ def main_experiment():
     #    cp.deepcopy(leafd_tip),
     #)
     
-    return(np.array([founder_pop,anc1_tip,anc2_tip,leafa_tip,leafb_tip,leafc_tip,leafd_tip]))
+    return(np.array([founder_pop,anc1_tip,anc2_tip,leafa_tip,leafb_tip,leafc_tip,leafd_tip],dtype=object))
 
 if __name__ == "__main__":
     result = main_experiment()
