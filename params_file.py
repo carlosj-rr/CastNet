@@ -27,6 +27,6 @@ prop_survivors = 0.6
 select_strategy = "totally relaxed" # ""high pressure", "low pressure", and "totally relaxed""
 
 # REPRODUCTION PARAMETERS
-reproductive_strategy = "equal" # for the moment, just "none": all surviving organisms produce the same amount of offspring, regardless of their fitness value. To include later: "winner takes all" - the one with the highest fitness value reproduces the most, and the rest just a little, and other strategies. Eventually I may add recombination.
-#recomb_pairing = "panmictic" # for the moment, the only option, and recombination is still not implemented.
+reproductive_strategy = "equal" # for the moment, just "equal": all surviving organisms produce the same amount of offspring, regardless of their fitness value. To include later: "winner takes all" - the one with the highest fitness value reproduces the most, and the rest just a little, and other strategies. Eventually I may add recombination.
+#recomb_pairing = "panmictic" # recombination is still not implemented.
 #recomb_style = "vertical" # Options: "vertical", "horizontal", "minimal", "maximal" - how grn matrices are recombined. still non-functional
