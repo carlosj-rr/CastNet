@@ -152,6 +152,8 @@ trans_aas = np.array(
     dtype=int,
 )
 
+trans_dict = dict(zip(dna_codons,trans_aas))
+
 args=sys.argv
 if len(args) > 1:
     run_prefix=sys.argv[1]+"-"
@@ -336,6 +338,8 @@ class CodonError(Exception):
     pass
 
 def translate_codon(codon):
+    #if codon in trans_dict.keys():
+    #    aminoac = trans_dict[codon]
     if codon in dna_codons:
         idx = np.where(dna_codons == codon)[0][0]
         aminoac = trans_aas[idx]
@@ -404,6 +408,7 @@ def mutation_wrapper(orgarr, mut_rateseq):
     in_dev = orgarrcp[7]
     in_genes_on = (in_dev.sum(axis=0) != 0).astype(int)
     in_fitness = orgarrcp[9]
+    #out_genome, out_proteome, mutlocs = mutator_coordinator(in_genome,mut_rateseq)
     mutations = random_mutations(in_genome.size, mut_rateseq)
     if np.any(mutations):
         #print(f"{mutations.size} mutation(s) in this reproductive event")
@@ -445,6 +450,39 @@ def mutation_wrapper(orgarr, mut_rateseq):
     )
     return out_org
 
+# BELOW: Currently UNUSED function that does everything 'random_mutations()', 'cod_pos()' and 'mutate_genome()' did, in a much cleverer way, but for some reason was orders of magnitude slower.
+#def mutator_coordinator(genome,mut_rateseq):
+    rng=np.random.default_rng()
+    new_gnome = rng.integers(111,444,genome.size).reshape(genome.shape)
+    np.copyto(new_gnome,genome)
+    total_bases = new_gnome.size * 3
+    mutations = np.random.choice((0, 1), total_bases, p=(1 - mut_rateseq, mut_rateseq))
+    m = np.array(np.where(mutations != 0)).flatten()
+    if m.size:
+        num_genes = new_gnome.shape[0]
+        num_codons = new_gnome.shape[1]
+        gene_bps = num_codons * 3
+        genenum_array = np.repeat(range(num_genes), gene_bps)
+        codnum_array=np.tile(np.repeat(range(num_codons),3),num_genes)
+        codpos_array = np.tile([0, 1, 2], num_codons * num_genes)
+        all_coords = np.array(list(zip(genenum_array,codnum_array,codpos_array)))
+        mut_coords = all_coords[m]
+        mut_flavor_list = []
+        for row in mut_coords:
+            coord = tuple(row[0:2])
+            old_codon = new_gnome[coord]
+            old_aa = translate_codon(old_codon)
+            mut_site = row[2]
+            new_codon = point_mutate_codon(old_codon,mut_site)
+            new_aa = translate_codon(new_codon)
+            new_gnome[coord] = new_codon
+            mut_flavor_list.append(((new_aa == old_aa)*2) + (new_aa != old_aa) * (new_aa != 95))
+        mut_flavor_table = np.array(list(zip(mut_coords[:,0],mut_flavor_list)))
+        new_ptome = np.array(list(map(translate_codon,new_gnome.flatten()))).reshape(new_gnome.shape)
+    else:
+        mut_flavor_table = False
+        new_ptome = np.array(list(map(translate_codon,new_gnome.flatten()))).reshape(new_gnome.shape)
+    return new_gnome, new_ptome, mut_flavor_table
 
 def random_mutations(genome_size, mut_rateseq):  # genome_size is in CODONS
     # Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
@@ -456,7 +494,6 @@ def random_mutations(genome_size, mut_rateseq):  # genome_size is in CODONS
     else:
         output = False
     return output
-
 
 def cod_pos(muts, gnome_shape):
     # base1=num+1
@@ -482,10 +519,9 @@ def cod_pos(muts, gnome_shape):
         basenum = muts[i]
         mut_val = np.array(
             [genenum_array[basenum], codnum_array[basenum], codpos_array[basenum]]
-        )
+       )
         out_array[i, :] = mut_val
     return out_array
-
 
 def mutate_genome(old_gnome, old_prome, mut_coords):
     rng=np.random.default_rng()
@@ -509,10 +545,10 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
         selected_codon_from_gene = coordinates[1]
         selected_codpos = coordinates[2]
         selected_codon = gnome[selected_gene, selected_codon_from_gene]
-        prev_aacid = translate_codon(selected_codon)
+        prev_aacid = trans_dict[selected_codon] # translate_codon(selected_codon) previously
         mutated_codon = point_mutate_codon(selected_codon, selected_codpos)
         gnome[selected_gene, selected_codon_from_gene] = mutated_codon
-        new_aacid = translate_codon(mutated_codon)
+        new_aacid = trans_dict[mutated_codon] # translate_codon(mutated_codon) previously
         if prev_aacid == new_aacid:  # Synonymous mutations are plotted as '2'
             muttype = 2
         elif new_aacid == 95:  # Nonsense mutations are plotted as '0'
@@ -524,7 +560,6 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
     out_genome = gnome
     out_proteome = prome
     return out_genome, out_proteome, muttype_vect
-
 
 def point_mutate_codon(codon, pos_to_mutate):
     opts=np.array([[1,2,3],[-1,1,2],[-2,-1,1],[-3,-2,-1]])
@@ -881,7 +916,7 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                 #print(f"Survivor number is {len(survivors)}.")
                 next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
                 if next_pop.size == 0:
-                    print(f"Selection got the better of your branch {branch_num}, and it went extinct. Time to package and save to disk the truncated population")
+                    print(f"Selection got the better of your branch {branch_id}, and it went extinct. Time to package and save to disk the truncated population")
                     filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".npy"
                     np.save(filename,parent_pop)
                     return

@@ -22,9 +22,9 @@ new_link_bounds = (-2,2)
 
 # SELECTION PARAMETERS
 min_reproducin = 0.1
-prop_survivors = 0.6
+prop_survivors = 0.1
 #tot_offspring = pop_size
-select_strategy = "totally relaxed" # ""high pressure", "low pressure", and "totally relaxed""
+select_strategy = "high pressure" # ""high pressure", "low pressure", and "totally relaxed""
 
 # REPRODUCTION PARAMETERS
 reproductive_strategy = "equal" # for the moment, just "equal": all surviving organisms produce the same amount of offspring, regardless of their fitness value. To include later: "winner takes all" - the one with the highest fitness value reproduces the most, and the rest just a little, and other strategies. Eventually I may add recombination.
