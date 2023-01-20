@@ -523,8 +523,8 @@ def cod_pos(muts, gnome_shape):
         out_array[i, :] = mut_val
     return out_array
 
-def mutate_genome(old_gnome, old_prome, mut_coords):
-    rng=np.random.default_rng()
+def mutate_genome(old_gnome, old_prome, mut_coords, seed=None):
+    rng = np.random.default_rng() if seed is None else np.random.default_rng(seed)
     gnome = rng.integers(111,444,old_gnome.size).reshape(old_gnome.shape)
     np.copyto(gnome,old_gnome)
     prome = rng.integers(0,100,old_prome.size).reshape(old_prome.shape)
@@ -555,11 +555,13 @@ def mutate_genome(old_gnome, old_prome, mut_coords):
             muttype = 0
         else:  # Nonsynonymous mutations are plotted as '1'
             muttype = 1
-        prome[selected_gene, selected_codpos] = new_aacid
+        prome[selected_gene, selected_codon_from_gene] = new_aacid # BUG - wrong second argument.
         muttype_vect[i] = (selected_gene, muttype)
     out_genome = gnome
     out_proteome = prome
     return out_genome, out_proteome, muttype_vect
+
+
 
 def point_mutate_codon(codon, pos_to_mutate):
     opts=np.array([[1,2,3],[-1,1,2],[-2,-1,1],[-3,-2,-1]])
