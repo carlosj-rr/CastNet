@@ -1,32 +1,23 @@
 # CONSTRUCTION PARAMETERS
-num_genes = 5
+num_genes = 5 # number of genes.
 seq_length = 3000 # Number of bases per gene. Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
-prop_unlinked = 0.7
-#prop_no_threshold = 0.5
-thresh_boundaries = (0.1,2)
-decay_boundaries = (0,2)
-dev_steps = 15 # For the moment no more than 999 is possible
-pop_size = 100 # For the moment, Multiple of 10
-reporting_freq=100 # How many generations should a snapshot be saved to disk
+new_link_bounds = (-2,2) # values to initialize GRN.
+prop_unlinked = 0.7 # Proportion of sparseness in the GRN.
+thresh_boundaries = (0.1,2) # bounds of the uniform distribution used to initialize θs.
+decay_boundaries = (0,2) # bounds of the uniform distribution used to initialize λs.
+dev_steps = 15 #developmental steps after the t0 input vector
+pop_size = 100 # size of the population in number of individuals
+reporting_freq = 100 # How many generations should a snapshot be saved to disk
 
 # MUTATION PARAMETERS
-#thresh_decay_mut_bounds = (-0.01,0.01)
-#thresh_mutation_rate = 0 # It can also be 0.001, for example
-#prob_thresh_change = 0
-#decay_mutation_rate = 0
 seq_mutation_rate = 5.3333e-06	# Mutation prob per base, per generation.
                                     # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
-#link_mutation_bounds = (-0.01,0.01)
-
-new_link_bounds = (-2,2)
-
+                                    
 # SELECTION PARAMETERS
-min_reproducin = 0.1
-prop_survivors = 0.1
-#tot_offspring = pop_size
-select_strategy = "high pressure" # ""high pressure", "low pressure", and "totally relaxed""
+min_reproducin = 0.1 # minimum amount of the last gene that has to be found on the last developmental step in order for the system to be 'of reproductive age'
+prop_survivors = 0.1 # proportion of the population that survives each generation.
+select_strategy = "high pressure" # ""high pressure", "low pressure", and "totally relaxed"
 
 # REPRODUCTION PARAMETERS
 reproductive_strategy = "equal" # for the moment, just "equal": all surviving organisms produce the same amount of offspring, regardless of their fitness value. To include later: "winner takes all" - the one with the highest fitness value reproduces the most, and the rest just a little, and other strategies. Eventually I may add recombination.
 #recomb_pairing = "panmictic" # recombination is still not implemented.
-#recomb_style = "vertical" # Options: "vertical", "horizontal", "minimal", "maximal" - how grn matrices are recombined. still non-functional
