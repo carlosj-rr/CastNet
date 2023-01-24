@@ -555,7 +555,7 @@ def mutate_genome(old_gnome, old_prome, mut_coords, seed=None):
             muttype = 0
         else:  # Nonsynonymous mutations are plotted as '1'
             muttype = 1
-        prome[selected_gene, selected_codon_from_gene] = new_aacid # BUG - wrong second argument.
+        prome[selected_gene, selected_codon_from_gene] = new_aacid # FIXED ANNOYING BUG
         muttype_vect[i] = (selected_gene, muttype)
     out_genome = gnome
     out_proteome = prome
@@ -627,34 +627,29 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
         out_threshs, out_decs = curr_thr, curr_dec
     if curr_muttype_vect.size > 0:
         refmat = np.repeat(1, curr_grn.size).reshape(curr_grn.shape)
-        refmat[:] = curr_genes_on
-
+        refmat[:] = curr_genes_on # Creates a reference matrix where genes that are not on in the development have '0' in their full column, and otherwise '1'
+        # For each gene that has a mutation...
         for i in curr_muttype_vect:
-            gene = i[0]
-            if gene not in range(num_genes):
+            gene = i[0] # get the gene index
+            if gene not in range(num_genes): # raise error if index out of range - would signal a bug.
                 raise IndexError(
                     f"Gene number {gene} is not within the number of genes in the system "
                     f"(integers between 0 and {num_genes-1})"
                 )
-            mtype = i[1]
-            exprstate = curr_genes_on[gene]
-
-            if mtype in [1, 2]:
-                # Gene OFF, Non-Synonymous mutation (uses active sites)
-                if exprstate == 0 and mtype == 1:
-                    # non-silent sites for non-synonymous mutations
+            mtype = i[1] # synonymous mutation (2), nonsynonymous mutation (1), or Knockout (0)?
+            exprstate = curr_genes_on[gene] # gene on (1) or off (0)?
+            
+            if mtype in [1, 2]: # If mutation is not KO, Do:
+                if exprstate == 0 and mtype == 1: # Gene OFF, Non-Synonymous mutation (uses active sites) - if the gene is OFF, NS mutations happen in the intersection with genes that are ON.
                     active_sites = np.array(
                         list(zip(np.where(refmat == 1)[0], np.where(refmat == 1)[1]))
-                    )
-
-                    # if in the same generation, all genes of the organism have been KO'd...
+                    ) # returns a 2D array with the 2D coordinates of all of the non-synonymous sites - col1 = site col idx, col2 = site row idx.
+                    # if in the same generation, all genes of the organism have been KO'd...impossible unless there's a bug...Do:
                     if active_sites.size == 0:
-
                         mutable_sites = np.array(
                             list(zip(np.repeat(gene, num_genes), range(num_genes)))
                         )
                     else:
-
                         mutable_sites = active_sites[
                             np.where(active_sites[:, 0] == gene)
                         ]
@@ -662,7 +657,6 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
                         mutable_sites[np.random.choice(range(mutable_sites.shape[0]))]
                     )
                     curr_grn[site_to_mutate] = weight_mut(in_grn[site_to_mutate], 0.5)
-
                 # Gene OFF, Synonymous mutation (uses inactive sites)
                 if exprstate == 0 and mtype == 2:
 
@@ -695,7 +689,7 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
 
                     curr_grn[site_to_mutate] = weight_mut(in_grn[site_to_mutate], 0.5)
 
-                # Gene OFF, Synonymous mutation (uses inactive sites)
+                # Gene ON, Synonymous mutation (uses active sites)
                 if exprstate == 1 and mtype == 2:
 
                     # silent sites for synonymous mutations
@@ -704,7 +698,7 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
                     )
 
                     # If all genes are on, the 'gene_row' array will come up empty,
-                    # so it switches to mutating any gene, a tiny little bit.
+                    # so it switches to mutating any gene, a tiny little bit. For the future - it could simply ignore the mutation altogether - think what would reflect biological reality best.
                     if inactive_sites.size == 0:
                         mutable_sites = np.array(
                             list(zip(np.repeat(gene, num_genes), range(num_genes)))
@@ -732,9 +726,10 @@ def regulator_mutator(in_grn, genes_on, in_dec, in_thresh, muttype_vect):
                             in_grn[site_to_mutate], 0.5
                         )
             elif mtype == 0:
-                # If mutation is KO
-                curr_grn[gene, :] = 0
-                curr_grn[:, gene] = 0
+                # If mutation is KO, this will be reflected at the developmental step, so I've commented out where the column and row of the KO'd gene were multiplied by 0.
+                # This means that the KO option can also be removed from threshs_and_decs_mutator(), and from the 'muttype_vect' array.
+                #curr_grn[gene, :] = 0 
+                #curr_grn[:, gene] = 0
                 # TODO This is unused
                 out_grn = curr_grn
                 # Important change so the refmat is updated.
@@ -768,7 +763,7 @@ def threshs_and_decs_mutator(in_thresh, in_dec, mutarr):
         tuple_idx = np.random.choice((0, 1))
         # extract specific gene number that has to be mutated. This maps to the thresh and dec arrays.
         gene_num = genes[i]
-        isit_ko = mutarr[i, 1] == 0
+        isit_ko = mutarr[i, 1] == 0 # consider removing this part - KO mutations are already implemented in the develop() function. But this would also imply removing the KO mutations from the muttypes_vect.
         if isit_ko:
             new_value = 0
         else:
