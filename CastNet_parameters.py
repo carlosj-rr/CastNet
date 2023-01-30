@@ -6,17 +6,12 @@ prop_unlinked = 0.7
 thresh_boundaries = (0.1,2) # range to initialize θs.
 decay_boundaries = (0,2) # range to initialize λs.
 dev_steps = 15
-pop_size = 100 # For the moment, Multiple of 10
+pop_size = 100 # How many individuals per population
 reporting_freq=100 # How many generations should a snapshot be saved to disk
 
-# MUTATION PARAMETERS
-#thresh_decay_mut_bounds = (-0.01,0.01)
-#thresh_mutation_rate = 0 # It can also be 0.001, for example
-#prob_thresh_change = 0
-#decay_mutation_rate = 0
+# SEQUENCE MUTATION PARAMETERS
 seq_mutation_rate = 5.3333e-06	# Mutation prob per base, per generation.
                                     # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
-#link_mutation_bounds = (-0.01,0.01)
 
 new_link_bounds = (-2,2) # values to initialize GRN.
 
@@ -24,9 +19,7 @@ new_link_bounds = (-2,2) # values to initialize GRN.
 min_reproducin = 0.1
 prop_survivors = 0.1
 #tot_offspring = pop_size
-select_strategy = "totally relaxed" # ""high pressure", "low pressure", and "totally relaxed"
+select_strategy = "high pressure" # ""high pressure", "low pressure", and "totally relaxed"
 
 # REPRODUCTION PARAMETERS
 reproductive_strategy = "equal" # for the moment, just "equal": all surviving organisms produce the same amount of offspring, regardless of their fitness value. To include later: "winner takes all" - the one with the highest fitness value reproduces the most, and the rest just a little, and other strategies. Eventually I may add recombination.
-#recomb_pairing = "panmictic" # recombination is still not implemented.
-#recomb_style = "vertical" # Options: "vertical", "horizontal", "minimal", "maximal" - how grn matrices are recombined. still non-functional
