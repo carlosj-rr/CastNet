@@ -1,5 +1,6 @@
 # CastNet
 In order to use CastNet, you need to have python 3.9+ installed, as well as the following packages:
+
 NumPy 1.20.3
 
 Matplotlib 3.5.2
@@ -12,7 +13,12 @@ gif 22.5.0
 
 networkx 2.8.4
 
-Once all dependencies are installed, a ```git clone [URL]``` should get the three main files: 1. CastNet.py, 2. CastNet_out_funcs.py, 3. CastNet_parameters.py. Use a standard text editor to modify the parameters on the ```CastNet_parameters.py``` file to suit your needs. Also, notice that the function that runs: main_experiment() is tailor-made for the topology associated with the experimental run in the paper presenting the algorithm. Those three files and the information contained therein are the only input CastNet needs to run.
+Once all dependencies are installed, a ```git clone [URL]``` should get the three main files: 
+* CastNet.py,
+* CastNet_out_funcs.py, 
+* CastNet_parameters.py.
+ 
+Use a standard text editor to modify the parameters on the ```CastNet_parameters.py``` file to suit your needs. Also, notice on the main file ```CastNet.py```, the function main_experiment() is tailor-made for the topology used in the experimental runs in the paper presenting the algorithm. Those three files and the information contained therein are the only input CastNet needs to run. The parameter values on ```CastNet_parameters.py``` are also the ones used for the paper, specifically for the run with stringent selection.
 
 Running:
 
@@ -20,7 +26,7 @@ Running:
 
 ## Algorithm concept and implementation
 
-CastNet is a sequence evolution simulator that is 'coevolution aware'. The algorithm was initially designed to simulate developmental evolution following the models of Wagner [1994](https://www.pnas.org/doi/abs/10.1073/pnas.91.10.4387) and [1996](https://academic.oup.com/evolut/article/50/3/1008/6870974), as well as elements from Espinosa-Soto's work from [2018](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006172). Briefly, a collection of 'organisms' is produced, each of which is a ragged numpy array of 9 arrays. The elements of the array, per index of the organism array is as follows:
+CastNet is a sequence evolution simulator that is 'coevolution aware'. The algorithm was initially designed to simulate developmental evolution following the models of Wagner [1994](https://www.pnas.org/doi/abs/10.1073/pnas.91.10.4387) and [1996](https://academic.oup.com/evolut/article/50/3/1008/6870974), as well as elements from Espinosa-Soto's work from [2018](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006172). Briefly, a collection of 'organisms' is produced, each of which is a ragged numpy array of 10 arrays. The elements of the array, per index of the organism array is as follows:
 ## Organism array elements:
   [0] Generation number
   
@@ -51,7 +57,7 @@ This value is initialized at 0 with the founder, and will count onwards from the
 For a user-defined number of genes _n_, and a sequence length of _s_ (which CastNet corrects to the closest number that is a multiple of 3), this is a matrix of _n_ rows (each gene) by _s/3_ columns, each containing a codon. For more efficient computing, codons and, by extension, sequences are not coded as strings, but as integers. The equivalences are as follows: ```A: 1, C: 2, T: 3, G: 4```. In order to see the sequences as a string of characters, use the ```translate_int_seq()``` function in the file ```CastNet_out_funcs.py```. Once a regular run is finished, CastNet automatically produces an alignment for each gene, in FASTA character format, using the prefix given at runtime to identify each gene. The 'ali_saver()' function in the output functions file will produce these for an abitrary number of populations, and will randomly choose one member of the population for a sequence.
 
 ### [2] Proteome
-This array has the exact same dimensions as the genome, but instead of codons, it has the unicode equivalent of the single-letter code for each amino acid. Stop codons are marked with the underscore, "\_", which is unicode value 95. The translation table used is based on the Standard Genetic code (i.e. vertebrate nuclear). Other codes can be added, although it is unlikely they will affect the broader results.
+This array has the exact same dimensions as the genome, but instead of codons, it has the unicode equivalent of the single-letter code for each amino acid. Stop codons are marked with the underscore, "\_", which is unicode value 95. The translation table used is based on the Standard Genetic code (i.e. vertebrate nuclear). Other codes can be added, although it is unlikely they will affect the broader results. The unicode values for any unicode character can be obtained in python with the ord("char") command.
 
 ### [3] Gene regulatory matrix: __R__
 This is an _n x n_ matrix which contains all the gene-gene interactions that can occur. Each column contains the value by which a gene's arbitrary quantity will affect another gene's arbitrary quantity. Note that this matrix is non-reversible: values above and under the diagonal are different, and mean different things. For example, the regulatory effect of Gene A (column) on Gene C (row) is __not__ the same as the regulatory effect of Gene C (column) on Gene A (row). This is akin to a gene regulatory network (GRN) as stipulated by Wagner and Espinosa-Soto (see references above). The diagonal contains the values reflecting gene self-regulation.
@@ -68,4 +74,8 @@ This is also a vector of size _n_ which is used to initialize development across
 ### [7] Development: __E__
 This array contains the progression of gene quantities throughout development for an organism. As can be inferred from the array element above, the first row has 1 for the first gene, and 0 for all others, the following values are all extracted from the operation described in the paper presenting this software, which takes into account all the regulatory parameters (__R__, __*θ*__, and __*λ*__), and applies them to the residual amount of each gene over the user-defined _m_ number of discrete developmental steps.
 
+### [8] Active genes vector
+A vector of size _n_ which is the result of looking at each gene's expression progression on the matrix __E__, and seeing whether or not the gene was turned on (1 if on, 0 if off).
 
+### [9] Fitness value
+This is a floating-point number in between 0 and 1, which indicates the fitness of the organism. Fitness is defined by using four main operations, and they are detailed in the Supplementary Data of the paper presenting CastNet (but see below in Wiki).
