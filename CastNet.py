@@ -11,8 +11,8 @@ from tqdm import tqdm
 import sys
 import gif
 
-import params_file as pf
-from output_funcs import *
+import CastNet_parameters as pf
+from CastNet_out_funcs import *
 
 # A = 1, C = 2, T = 3, G = 4
 #
