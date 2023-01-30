@@ -980,15 +980,11 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
 def main_experiment():
     founder = founder_miner()
     print("Founder created")
-    #results_array = np.ndarray(13, dtype=object)
     founder_pop = grow_pop(founder, pf.pop_size, "equal")
     print("Founder pop created")
-    #results_array[0] = cp.deepcopy(founder_pop)
     anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
     print("Founding split created")
-    #stem_lin3,stem_lin4=randsplit(founder_pop,pf.pop_size)
-    #results_array[1] = cp.deepcopy(anc1_stem)
-    #results_array[2] = cp.deepcopy(anc2_stem)
+
     anc_branches = np.array([anc1_stem, anc2_stem], dtype=object)
     genslist1 = np.array([10000, 10000])
     br_randnums = np.random.randint(0,1e10,len(anc_branches)).astype(str)
@@ -996,24 +992,14 @@ def main_experiment():
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
     anc1_tip = branch_evol(anc_branches[0],genslist1[0],br_ids[0])
     anc2_tip = branch_evol(anc_branches[1],genslist1[1],br_ids[1])
-    #with ProcessPoolExecutor() as pool:
-    #    result = pool.map(branch_evol, anc_branches, genslist1,br_ids)
-    #anc1_tip, anc2_tip = list(result)
+
     store((anc1_tip,anc2_tip))
     print(f"Ancestor 1 shape: {anc1_tip.shape}")
     print(f"Ancestor 2 shape: {anc2_tip.shape}")
-    #results_array[3] = cp.deepcopy(anc1_tip)
-    #results_array[4] = cp.deepcopy(anc2_tip)
+
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
-    #results_array[5], results_array[6] = cp.deepcopy(leafa_stem), cp.deepcopy(
-        #leafb_stem
-    #)
+
     leafc_stem, leafd_stem = randsplit(anc2_tip, pf.pop_size)
-    #results_array[7], results_array[8] = cp.deepcopy(leafc_stem), cp.deepcopy(
-    #    leafd_stem
-    #)
-
-
 
     four_leaves = np.array(
         [leafa_stem, leafb_stem, leafc_stem, leafd_stem], dtype=object
@@ -1026,16 +1012,6 @@ def main_experiment():
     leafb_tip = branch_evol(four_leaves[1],genslist2[1],br_ids[1])
     leafc_tip = branch_evol(four_leaves[2],genslist2[2],br_ids[2])
     leafd_tip = branch_evol(four_leaves[3],genslist2[3],br_ids[3])
-    #with ProcessPoolExecutor() as pool:
-    #    result = pool.map(branch_evol, four_leaves, genslist2, br_ids)
-
-    #leafa_tip, leafb_tip, leafc_tip, leafd_tip = list(result)
-    #results_array[9], results_array[10], results_array[11], results_array[12] = (
-    #    cp.deepcopy(leafa_tip),
-    #    cp.deepcopy(leafb_tip),
-    #    cp.deepcopy(leafc_tip),
-    #    cp.deepcopy(leafd_tip),
-    #)
     
     return(np.array([founder_pop,anc1_tip,anc2_tip,leafa_tip,leafb_tip,leafc_tip,leafd_tip],dtype=object))
 
