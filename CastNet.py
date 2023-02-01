@@ -786,10 +786,11 @@ def weight_mut(value, scaler=0.01):
     return newVal
 
 
-def store(thing):
+def store(thing, filename = None):
     now = datetime.now()
     moment = now.strftime("%m-%d-%Y_%H-%M-%S")
-    filename = "./EvolRun_" + moment + ".pkl"
+    if not filename:
+        filename = "./EvolRun_" + moment + ".pkl"
     with open(filename, "wb") as fh:
         pickle.dump(thing, fh)
     print(f"Your session results were saved in {filename}.")
@@ -896,7 +897,6 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     print(f"Size of parental population: {len(in_pop)}")
     mean_grn=np.mean([x[3].flatten() for x in in_pop[:]],axis=0)
     flat_grns_arr=np.insert(mean_grn,0,-1,axis=0)
-    print(f"original flat grns array shape is {flat_grns_arr.shape}, make sure it matches with indiv numbers {in_pop.shape[0]}, and the number of genes ({pf.num_genes}) squared: {pf.num_genes**2} plus 1.")
     out_grns=[]
     out_devs=[]
     mean_fitnesses=[np.mean([x[9] for x in in_pop[:]])]
@@ -907,16 +907,16 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                 survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
                 if type(survivors) == bool:
                     print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen} generation(s)")
-                    filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".npy"
-                    np.save(filename,parent_pop) # NORMAL EXIT
+                    filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".pkl"
+                    store(filename,parent_pop) # NORMAL EXIT
                     return
                 #print(f"Survivor number is {len(survivors)}.")
                 next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
                 if next_pop.size == 0:
                     print(f"Selection got the better of your branch {branch_id}, and it went extinct. Time to package and save to disk the truncated population")
-                    filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".npy"
+                    filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".pkl"
                     np.save(filename,parent_pop)
-                    return
+                    return # EXTINCTION EXIT
                 parent_pop=next_pop
                 #print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
@@ -938,7 +938,7 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                     #gif.save(grn_fig,grn_file,duration=1000)
                     #gif.save(dev_fig,devs_file,duration=1000)
                     #print(f"####### Saving population {gen+1} to {filename}")
-                    animator(out_grns,out_devs,"Branch_"+str(branch_id))
+                    animator(out_devs,"Branch_"+str(branch_id))
                     np.savetxt(filename+"_meanGRNs.csv",flat_grns_arr,delimiter=",")
                     np.savetxt(filename+"_fitnessProg.csv",mean_fitnesses,delimiter=",")
                     return(next_pop)
@@ -950,8 +950,7 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
         print(f"Input population {parent_pop} has no individuals. Stopping simulation.")
         return
 
-def animator(grns,devs,file_prefix):
-    gif.save(grns,file_prefix+"_avgGRN.gif")
+def animator(devs,file_prefix):
     gif.save(devs,file_prefix+"_avgDev.gif")
     return
 
