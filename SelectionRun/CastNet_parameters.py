@@ -20,7 +20,7 @@ new_link_bounds = (-2,2) # lower and upper limit of uniform distribution from wh
 # SELECTION PARAMETERS
 min_reproducin = 0.1 # minumum level of expression that the 'system maturity indicator' gene must have by the end of development.
 prop_survivors = 0.1 # what proportion of the population passes on to the next generation.
-select_strategy = "totally relaxed" # ""high pressure", "low pressure", and "totally relaxed"
+select_strategy = "high pressure" # ""high pressure", "low pressure", and "totally relaxed"
 
 # REPRODUCTION PARAMETERS
 reproductive_strategy = "equal" # for the moment, just "equal" implemented: all surviving organisms produce the same amount of offspring, regardless of their fitness value. To include later here: "fitness bound" - organisms reproduce with a success proportional to their fitness, and "winner takes all" - the one with the highest fitness value reproduces the most, and the rest just a little, and other strategies.
