@@ -1,6 +1,6 @@
 from wsgiref import headers
 import numpy as np
-import networkx as nx
+#import networkx as nx
 import matplotlib.pylab as plt
 import gif
 import pickle
