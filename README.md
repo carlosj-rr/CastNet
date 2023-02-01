@@ -1,19 +1,13 @@
 # CastNet
 In order to use CastNet, you need to have python 3.9+ installed, as well as the following packages:
 
-NumPy 1.20.3
-
-Matplotlib 3.5.2
-
-tqdm 4.64.1
-
-scipy 1.9.0
-
+```NumPy 1.20.3  
+Matplotlib 3.5.2  
+tqdm 4.64.1  
+scipy 1.9.0  
 gif 22.5.0
-
-networkx 2.8.4
-
-Once all dependencies are installed, running ```git clone https://github.com/carlosj-rr/CastNet.git``` should get the three main files: 
+```
+Once all dependencies are installed, running `git clone https://github.com/carlosj-rr/CastNet.git` should get the three main files: 
 * CastNet.py
 * CastNet_out_funcs.py
 * CastNet_parameters.py
