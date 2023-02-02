@@ -1,7 +1,8 @@
 # CastNet
 In order to use CastNet, you need to have python 3.9+ installed, as well as the following packages:
 
-```NumPy 1.20.3  
+```
+NumPy 1.20.3  
 Matplotlib 3.5.2  
 tqdm 4.64.1  
 scipy 1.9.0  
