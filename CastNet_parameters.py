@@ -1,3 +1,6 @@
+# Authors: Carlos Javier Rivera Rivera and Đorđe Grbić
+# License: GNU GPLv3
+
 # CONSTRUCTION PARAMETERS
 num_genes = 5 # How many genes in the system?
 seq_length = 3000 # How long each gene's sequence is, in nucleotides? Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
