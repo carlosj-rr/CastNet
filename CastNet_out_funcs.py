@@ -1,3 +1,6 @@
+# Authors: Carlos Javier Rivera Rivera and Đorđe Grbić
+# License: GNU GPLv3
+
 from wsgiref import headers
 import numpy as np
 #import networkx as nx

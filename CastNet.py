@@ -1,3 +1,6 @@
+# CastNet - Authors: Carlos Javier Rivera Rivera and Đorđe Grbić
+# License: GNU GPLv3
+
 import copy as cp
 import pickle
 #from concurrent.futures import ProcessPoolExecutor
