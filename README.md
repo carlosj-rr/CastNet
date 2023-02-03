@@ -1,4 +1,7 @@
 # CastNet
+
+CastNet is platform-independent, as long as you can run python.
+
 In order to use CastNet, you need to have python 3.9+ installed, as well as the following packages:
 
 ```
