@@ -162,3 +162,10 @@ profile*txt
 #clear-up folder and vscode folder
 ignored/
 .vscode/
+
+#benchmark folders
+1_gene_1_pop/
+1-20_GeneNum_Bmarks/
+10-1K_PopSize_Bmarks/
+1e-8_1e-1_MutRate_Bmarks/
+Single_Gene_Sandbox/
