@@ -898,28 +898,33 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     #branch=np.ndarray((ngens,),dtype=object)
     #branch_key=str(np.random.randint(0,1e10))
     print(f"Size of parental population: {len(in_pop)}")
-    mean_grn=np.mean([x[3].flatten() for x in in_pop[:]],axis=0)
-    flat_grns_arr=np.insert(mean_grn,0,-1,axis=0)
-    out_grns=[]
+    if len(in_pop.shape) > 1:
+        mean_grn=np.mean([x[3].flatten() for x in in_pop[:]],axis=0)
+        flat_grns_arr=np.insert(mean_grn,0,-1,axis=0)
+        mean_fitnesses=[np.mean([x[9] for x in in_pop[:]])]
+    else:
+        mean_grn=in_pop[3].flatten()
+        flat_grns_arr=np.insert(mean_grn,0,-1,axis=0)
+        mean_fitnesses=[in_pop[9]]
+    #out_grns=[]
     out_devs=[]
-    mean_fitnesses=[np.mean([x[9] for x in in_pop[:]])]
     if parent_pop.size > 0:
         for gen in tqdm(range(ngens),desc=f"{branch_id} branch evolution progress:", ascii=False,ncols=100):
             if parent_pop.size > 0:
                 #print(f"producing generation {gen+1}")
                 survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
                 if type(survivors) == bool:
-                    print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen} generation(s)")
-                    filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".pkl"
-                    store(filename,parent_pop) # NORMAL EXIT
+                    filename="Extinction1_branch"+str(branch_id)+"_generation_"+str(gen)+".pkl"
+                    print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen} generation(s) into {filename}.")
+                    store(parent_pop,filename) # BRANCH SELECTED INTO EXTINCTION EXIT
                     return
                 #print(f"Survivor number is {len(survivors)}.")
                 next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
                 if next_pop.size == 0:
-                    print(f"Selection got the better of your branch {branch_id}, and it went extinct. Time to package and save to disk the truncated population")
-                    filename="Extinct_branch"+str(branch_id)+"_generation_"+str(gen)+".pkl"
+                    filename="Extinction2_branch"+str(branch_id)+"_generation_"+str(gen)+".pkl"
+                    print(f"The population from branch {branch_id} had no viable offspring and went extinct. Packaging and saving a truncated branch at {gen} generation(s) into {filename}.")
                     np.save(filename,parent_pop)
-                    return # EXTINCTION EXIT
+                    return # POPULATION UNVIABLE EXIT
                 parent_pop=next_pop
                 #print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
