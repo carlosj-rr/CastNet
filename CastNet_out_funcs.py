@@ -55,7 +55,7 @@ def ali_saver(dset_prefix,pop_arr,tip_names,asints=True,num_seqs=None):
                         f.write(sequences_list[i])   
     return
 
-def alimaker(pickled_file,num):
+#def alimaker(pickled_file,num):
     source_pops=unpickle(pickled_file)
     lowest_count=min([ x.shape[0] for x in source_pops ])
     rand_indivs=np.random.choice(range(lowest_count),10)
