@@ -3,7 +3,7 @@
 
 import copy as cp
 import pickle
-#from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 
 import numpy as np
@@ -353,21 +353,25 @@ def translate_codon(codon):
     return aminoac
 
 
-# Assumes input is a population (i.e. an array of organism arrays), it should crash if it doesn't find 2 dimensions.
+# Assumes input is a population (i.e. an array of organism arrays).
 def grow_pop(in_orgs, out_pop_size, strategy="equal"):
     #in_orgs = cp.deepcopy(in_orgs)
     #num_in_orgs = in_orgs.shape[0]
+    seed_start=datetime.now().microsecond
     if len(in_orgs.shape) == 1:
         num_in_orgs=1
     else:
         num_in_orgs=len(in_orgs)
     orgs_per_org = np.round(out_pop_size / num_in_orgs).astype(int)
+    #print(f"each of the {num_in_orgs} parental organism(s) will be replicated {orgs_per_org} times")
     curr_pop_size = orgs_per_org * num_in_orgs
+    seed_list=list(range(seed_start,seed_start+out_pop_size))
+    #print(f"seed list is: {seed_list}")
     if strategy == "equal":
         #print("equal reproduction strategy selected...")
         orgs_per_org = np.repeat(orgs_per_org, num_in_orgs)
     elif strategy == "fitness_linked":
-        print("Reproduction is fitness bound.")
+        #print("Reproduction is fitness bound.")
         raise NotImplementedError(
             "Fitness linked reproductive strategy is not yet implemented. Sorry!"
         )
@@ -387,7 +391,9 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
             else:
                 out_pop[counter] = np.array([x for x in in_orgs[i]],dtype=object)
             counter += 1
-    out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop))))) # ProcessPoolExecutor was used here to parallelize, but resulted in really inconsistent output.
+    with ProcessPoolExecutor() as pool:
+        out_pop=np.array(list(pool.map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)),seed_list)))
+    #out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)),seed_list))) # ProcessPoolExecutor was used here to parallelize, but resulted in really inconsistent output.
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
     #print(f"{out_pop.shape[0]} organisms survived")
     return out_pop
@@ -398,8 +404,9 @@ class IncorrectIndex(Exception):
 
 
 # and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
-def mutation_wrapper(orgarr, mut_rateseq):
+def mutation_wrapper(orgarr, mut_rateseq,seed=None):
     #orgarrcp = cp.deepcopy(orgarr)
+    #print(f"mutating organism using seed {seed}.") # DEBUG STATEMENT - TO REMOVE
     orgarrcp = orgarr
     in_gen_num = orgarrcp[0]
     in_genome = orgarrcp[1]
@@ -412,7 +419,7 @@ def mutation_wrapper(orgarr, mut_rateseq):
     in_genes_on = (in_dev.sum(axis=0) != 0).astype(int)
     in_fitness = orgarrcp[9]
     #out_genome, out_proteome, mutlocs = mutator_coordinator(in_genome,mut_rateseq)
-    mutations = random_mutations(in_genome.size, mut_rateseq)
+    mutations = random_mutations(in_genome.size, mut_rateseq, seed)
     if np.any(mutations):
         #print(f"{mutations.size} mutation(s) in this reproductive event")
         mut_coords = cod_pos(mutations, in_genome.shape)
@@ -487,10 +494,11 @@ def mutation_wrapper(orgarr, mut_rateseq):
         new_ptome = np.array(list(map(translate_codon,new_gnome.flatten()))).reshape(new_gnome.shape)
     return new_gnome, new_ptome, mut_flavor_table
 
-def random_mutations(genome_size, mut_rateseq):  # genome_size is in CODONS
+def random_mutations(genome_size, mut_rateseq, seed=None):  # genome_size is in CODONS
     # Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
+    rng = np.random.default_rng() if seed is None else np.random.default_rng(seed)
     total_bases = genome_size * 3
-    mutations = np.random.choice((0, 1), total_bases, p=(1 - mut_rateseq, mut_rateseq))
+    mutations = rng.choice((0, 1), total_bases, p=(1 - mut_rateseq, mut_rateseq))
     m = np.array(np.where(mutations != 0)).flatten()
     if m.size:
         output = m
@@ -893,7 +901,8 @@ def randsplit(in_pop, out_pop_size):
         )
     return lina, linb
 
-def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
+def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq,seed=None):
+    rng = np.random.default_rng() if seed is None else np.random.default_rng(seed)
     in_pop = cp.deepcopy(parent_pop)
     #branch=np.ndarray((ngens,),dtype=object)
     #branch_key=str(np.random.randint(0,1e10))
