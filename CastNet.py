@@ -391,9 +391,9 @@ def grow_pop(in_orgs, out_pop_size, strategy="equal"):
             else:
                 out_pop[counter] = np.array([x for x in in_orgs[i]],dtype=object)
             counter += 1
-    with ProcessPoolExecutor() as pool:
-        out_pop=np.array(list(pool.map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)),seed_list)))
-    #out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)),seed_list))) # ProcessPoolExecutor was used here to parallelize, but resulted in really inconsistent output.
+    #with ProcessPoolExecutor() as pool:
+    #    out_pop=np.array(list(pool.map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)),seed_list)))
+    out_pop=np.array(list(map(mutation_wrapper,out_pop,np.repeat(pf.seq_mutation_rate,len(out_pop)),seed_list))) # ProcessPoolExecutor was used here to parallelize, but resulted in really inconsistent output.
     out_pop = cleanup_deads(out_pop)  # removing any dead organisms.
     #print(f"{out_pop.shape[0]} organisms survived")
     return out_pop
@@ -901,8 +901,8 @@ def randsplit(in_pop, out_pop_size):
         )
     return lina, linb
 
-def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq,seed=None):
-    rng = np.random.default_rng() if seed is None else np.random.default_rng(seed)
+def branch_evol(parent_pop, ngens,seed=None,branch_id=0,reporting_freq=pf.reporting_freq):
+    #rng = np.random.default_rng() if seed is None else np.random.default_rng(seed)
     in_pop = cp.deepcopy(parent_pop)
     #branch=np.ndarray((ngens,),dtype=object)
     #branch_key=str(np.random.randint(0,1e10))
@@ -992,6 +992,43 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
                 print(seq_name, file=gene_file)
                 print(sequence, file=gene_file)
         print("Gene", str(i), "done")
+        
+def main_parallel():
+    print("Running parallel flavor")
+    founder = founder_miner()
+    print("Founder created")
+    founder_pop = grow_pop(founder, pf.pop_size, "equal")
+    print("Founder pop created")
+    anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
+    print("Founding split created")
+    seed_start=datetime.now().microsecond
+    seed_list=list(range(seed_start,seed_start+2))
+    br_randnums = np.random.randint(0,1e10,2).astype(str)
+    br_prefix=['ancestor1_','ancestor2_']
+    br_lengths=np.repeat(10000,2)
+    br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
+    with ProcessPoolExecutor() as pool:
+        anc1_tip,anc2_tip=list(pool.map(branch_evol,[anc1_stem,anc2_stem],br_lengths,seed_list,br_prefix))
+    #anc1_tip = branch_evol(anc1_stem,10000,br_ids[0])
+    #anc2_tip = branch_evol(anc2_stem,10000,br_ids[1])
+    # Ancestor simulation completed here.
+    br_randnums = np.random.randint(0,1e10,4).astype(str)
+    br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
+    br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
+    br_lengths=np.repeat(10000,4)
+    seed_start=datetime.now().microsecond
+    seed_list=list(range(seed_start,seed_start+4))
+    leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
+    leafc_stem, leafd_stem = randsplit(anc2_tip, pf.pop_size)
+    with ProcessPoolExecutor() as pool:
+        leafa_tip,leafb_tip,leafc_tip,leafd_tip = list(pool.map(branch_evol,[leafa_stem,leafb_stem,leafc_stem,leafd_stem],br_lengths,seed_list,br_prefix))
+    #leafa_tip = branch_evol(leafa_stem,10000,br_ids[0])
+    #leafb_tip = branch_evol(leafb_stem,10000,br_ids[1])
+    
+    #leafc_tip = branch_evol(leafc_stem,10000,br_ids[2])
+    #leafd_tip = branch_evol(leafd_stem,10000,br_ids[3])
+    
+    return(np.array([founder_pop,anc1_tip,anc2_tip,leafa_tip,leafb_tip,leafc_tip,leafd_tip],dtype=object))
 
 def main_experiment():
     founder = founder_miner()
@@ -1019,9 +1056,11 @@ def main_experiment():
     return(np.array([founder_pop,anc1_tip,anc2_tip,leafa_tip,leafb_tip,leafc_tip,leafd_tip],dtype=object))
 
 if __name__ == "__main__":
-    result = main_experiment()
+    if pf.parallel:
+        result = main_parallel()
+    else:
+        result = main_experiment()
     store(result)
     tip_names=["founder","ancAB","ancCD","tip_A","tip_B","tip_C","tip_D"]
     ali_saver(run_prefix,result,tip_names)
     print("Analysis completed", result.shape)
-    
