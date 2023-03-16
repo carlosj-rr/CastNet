@@ -1,5 +1,6 @@
 #mkdir 1-30_GeneNum_Bmarks
 cd ~/Programs/CastNet/1-30_GeneNum_Bmarks
+echo "num_genes,start,stop" > genenum_parallel_bmark_2.csv
 cp ../CastNet.py ../CastNet_parameters.py ../CastNet_out_funcs.py .
 for rep in {1..30}
 do
@@ -14,7 +15,7 @@ do
   beginning=$(date +%H:%M:%S)
   python CastNet_${rep}.py ${rep}_genesRun
   end=$(date +%H:%M:%S)
-  echo $rep,$beginning,$end >> muts_parallel_bmark_2.csv
+  echo $rep,$beginning,$end >> genenum_parallel_bmark_2.csv
 done
 
 echo "Finished first bit successfully."
