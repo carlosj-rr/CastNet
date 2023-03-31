@@ -17,72 +17,72 @@ import gif
 import CastNet_parameters as pf
 from CastNet_out_funcs import *
 
-# A = 1, C = 2, T = 3, G = 4
+# A = 0, C = 1, T = 2, G = 3
 #
 dna_codons = np.array(
-[[3,1,0]
-[3,1,1]
-[3,1,2]
-[3,1,3]
-[2,3,1]
-[2,3,2]
-[3,0,1]
-[3,0,2]
-[3,0,0]
-[3,0,3]
-[2,2,1]
-[2,2,2]
-[3,3,0]
-[3,3,1]
-[3,3,2]
-[3,3,3]
-[1,0,1]
-[1,0,2]
-[0,2,0]
-[0,2,1]
-[0,2,2]
-[0,0,0]
-[0,0,3]
-[1,2,0]
-[1,2,1]
-[1,2,2]
-[1,2,3]
-[2,2,0]
-[2,2,3]
-[0,2,3]
-[0,0,1]
-[0,0,2]
-[1,1,0]
-[1,1,1]
-[1,1,2]
-[1,1,3]
-[1,0,0]
-[1,0,3]
-[0,3,0]
-[0,3,3]
-[1,3,0]
-[1,3,1]
-[1,3,2]
-[1,3,3]
-[0,3,1]
-[0,3,2]
-[2,1,0]
-[2,1,1]
-[2,1,2]
-[2,1,3]
-[0,1,0]
-[0,1,1]
-[0,1,2]
-[0,1,3]
-[3,2,0]
-[3,2,1]
-[3,2,2]
-[3,2,3]
-[2,3,3]
-[2,0,1]
-[2,0,2]
-[2,0,0]
-[2,0,3]
+[[3,1,0],
+[3,1,1],
+[3,1,2],
+[3,1,3],
+[2,3,1],
+[2,3,2],
+[3,0,1],
+[3,0,2],
+[3,0,0],
+[3,0,3],
+[2,2,1],
+[2,2,2],
+[3,3,0],
+[3,3,1],
+[3,3,2],
+[3,3,3],
+[1,0,1],
+[1,0,2],
+[0,2,0],
+[0,2,1],
+[0,2,2],
+[0,0,0],
+[0,0,3],
+[1,2,0],
+[1,2,1],
+[1,2,2],
+[1,2,3],
+[2,2,0],
+[2,2,3],
+[0,2,3],
+[0,0,1],
+[0,0,2],
+[1,1,0],
+[1,1,1],
+[1,1,2],
+[1,1,3],
+[1,0,0],
+[1,0,3],
+[0,3,0],
+[0,3,3],
+[1,3,0],
+[1,3,1],
+[1,3,2],
+[1,3,3],
+[0,3,1],
+[0,3,2],
+[2,1,0],
+[2,1,1],
+[2,1,2],
+[2,1,3],
+[0,1,0],
+[0,1,1],
+[0,1,2],
+[0,1,3],
+[3,2,0],
+[3,2,1],
+[3,2,2],
+[3,2,3],
+[2,3,3],
+[2,0,1],
+[2,0,2],
+[2,0,0],
+[2,0,3],
 [2,3,0]],
     dtype=int,
 )
@@ -155,7 +155,7 @@ trans_aas = np.array(
     dtype=int,
 )
 
-trans_dict = dict(zip(dna_codons,trans_aas))
+#trans_dict = dict(zip(dna_codons,trans_aas)) #dictionary doesn't work with the triplet np.arrays
 
 args=sys.argv
 if len(args) > 1:
@@ -556,10 +556,12 @@ def mutate_genome(old_gnome, old_prome, mut_coords, seed=None):
         selected_codon_from_gene = coordinates[1]
         selected_codpos = coordinates[2]
         selected_codon = gnome[selected_gene, selected_codon_from_gene]
-        prev_aacid = trans_dict[selected_codon] # translate_codon(selected_codon) previously
+        #prev_aacid = trans_dict[selected_codon] # MODIFY
+        prev_aacid = trans_aas[np.where([(x == selected_codon) for x in dna_codons])[0]]
         mutated_codon = point_mutate_codon(selected_codon, selected_codpos)
         gnome[selected_gene, selected_codon_from_gene] = mutated_codon
-        new_aacid = trans_dict[mutated_codon] # translate_codon(mutated_codon) previously
+        #new_aacid = trans_dict[mutated_codon] # MODIFY
+        new_aacid = trans_aas[np.where([(x == mutated_codon) for x in dna_codons])[0]]
         if prev_aacid == new_aacid:  # Synonymous mutations are plotted as '2'
             muttype = 2
         elif new_aacid == 95:  # Nonsense mutations are plotted as '0'
