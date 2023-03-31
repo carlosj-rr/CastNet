@@ -497,7 +497,7 @@ def mutation_wrapper(orgarr, mut_rateseq,seed=None):
 def random_mutations(genome_size, mut_rateseq, seed=None):  # genome_size is in CODONS
     # Each value in the genome is a codon, so the whole length (in nucleotides) is the codons times 3.
     rng = np.random.default_rng() if seed is None else np.random.default_rng(seed)
-    total_bases = genome_size * 3
+    total_bases = genome_size
     mutations = rng.choice((0, 1), total_bases, p=(1 - mut_rateseq, mut_rateseq))
     m = np.array(np.where(mutations != 0)).flatten()
     if m.size:
@@ -515,7 +515,7 @@ def cod_pos(muts, gnome_shape):
             f"There are negative index values in your mutation indices:\n{muts}.\n"
             f"This will result in untractable mutations.\nConsder double-checking the result of randomMutations()"
         )
-    out_array = np.ndarray((muts.size, 3), dtype=object)
+    out_array = np.ndarray((muts.size, 3), dtype=int)
     gene_bps = num_codons * 3
     #genenum_array = np.ndarray((num_genes, gene_bps), dtype=object)
     #for i in range(num_genes):
@@ -549,7 +549,7 @@ def mutate_genome(old_gnome, old_prome, mut_coords, seed=None):
             f"Some indices in the mutation coordinates are negative:\n{mut_coords}\n"
             f"This may result in untractable mutations.\nConsider examining the output of codPos()."
         )
-    # DEBUG: CHANGE TO A MAP() APPLIED FUNCTION IF POSSIBLE.
+
     for i in range(mut_num):
         coordinates = mut_coords[i, :]
         selected_gene = coordinates[0]
@@ -557,11 +557,11 @@ def mutate_genome(old_gnome, old_prome, mut_coords, seed=None):
         selected_codpos = coordinates[2]
         selected_codon = gnome[selected_gene, selected_codon_from_gene]
         #prev_aacid = trans_dict[selected_codon] # MODIFY
-        prev_aacid = trans_aas[np.where([(x == selected_codon) for x in dna_codons])[0]]
-        mutated_codon = point_mutate_codon(selected_codon, selected_codpos, model)
+        prev_aacid = trans_aas[np.where([(x == selected_codon).all() for x in dna_codons])[0]]
+        mutated_codon = point_mutate_codon(selected_codon, selected_codpos, pf.model)
         gnome[selected_gene, selected_codon_from_gene] = mutated_codon
         #new_aacid = trans_dict[mutated_codon] # MODIFY
-        new_aacid = trans_aas[np.where([(x == mutated_codon) for x in dna_codons])[0]]
+        new_aacid = trans_aas[np.where([(x == mutated_codon).all() for x in dna_codons])[0]]
         if prev_aacid == new_aacid:  # Synonymous mutations are plotted as '2'
             muttype = 2
         elif new_aacid == 95:  # Nonsense mutations are plotted as '0'
