@@ -15,12 +15,13 @@ def unpickle(filename):
 
 # translate an arbitrary sequence of 'integrified bases' into ACTG. Notice the input is an integer, not a string of integers.
 def translate_int_seq(int_seq):
-    if type(int_seq) == int:
-        strint_seq=''.join(list(str(int_seq)))
-    elif type(int_seq) == np.ndarray:
-        strint_seq=''.join(list(int_seq.astype(str)))
-    trans_dict={'1':'A','2':'C','3':'T','4':'G'}
-    return(''.join(list(map((lambda x: trans_dict.get(x)),list(strint_seq)))))
+    # Commented this out ftm because I'm not sure why this if block was here...
+    #if type(int_seq) == int:
+    #    strint_seq=''.join(list(str(int_seq)))
+    #elif type(int_seq) == np.ndarray:
+    #    strint_seq=''.join(list(int_seq.astype(str)))
+    trans_dict={0:'A',1:'C',2:'T',3:'G'}
+    return(''.join(list(map((lambda x: trans_dict.get(int(x))),list(np.nditer(int_seq))))))
 
 def ali_saver(dset_prefix,pop_arr,tip_names,asints=True,num_seqs=None):
     if not num_seqs:
