@@ -19,6 +19,20 @@ reporting_freq=100 # Every __ generations, store a a snapshot of the population.
 # SEQUENCE MUTATION PARAMETERS
 seq_mutation_rate = 5.3333e-06	# Mutation prob per base, per generation.
                                     # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
+model = "JC" # Model for base mutation, "JC", "K80", and "GTR" implemented. If using K80 or GTR, the relevant parameters below have to be uncommented and filled in.
+# K80 model parameters
+# k80_alpha = alpha # if using K80, uncomment and add here the probability of transitional mutations (i.e. purine-purine or pyrimidine-pyrimidine)
+# k80_beta = beta # if using K80, uncommend and add here the probability of transversional mutations (i.e. purine-pyrimidine and vice versa) # IMPORTANT: k80_alpha + k80_beta MUST add up to 1
+
+# GTR model parameters
+# gtr_t2c = val # probability of T's mutating into C's, and vice versa
+# gtr_t2a = val # probability of T's mutating into A's, and vice versa
+# gtr_t2g = val # probability of T's mutating into G's, and vice versa
+# gtr_c2a = val # probability of C's mutating into A's, and vice versa
+# gtr_c2g = val # probability of C's mutating into G's, and vice versa
+# gtr_a2g = val # probability of A's mutating into G's, and vice versa
+
+# IMPORTANT: THE SUM OF ALL GTR MUTATION PROBABILITIES MUST ADD UP TO 1
 
 new_link_bounds = (-2,2) # lower and upper limit of uniform distribution from which the initial regulatory values of the GRN will be drawn.
 

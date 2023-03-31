@@ -558,7 +558,7 @@ def mutate_genome(old_gnome, old_prome, mut_coords, seed=None):
         selected_codon = gnome[selected_gene, selected_codon_from_gene]
         #prev_aacid = trans_dict[selected_codon] # MODIFY
         prev_aacid = trans_aas[np.where([(x == selected_codon) for x in dna_codons])[0]]
-        mutated_codon = point_mutate_codon(selected_codon, selected_codpos)
+        mutated_codon = point_mutate_codon(selected_codon, selected_codpos, model)
         gnome[selected_gene, selected_codon_from_gene] = mutated_codon
         #new_aacid = trans_dict[mutated_codon] # MODIFY
         new_aacid = trans_aas[np.where([(x == mutated_codon) for x in dna_codons])[0]]
@@ -574,9 +574,23 @@ def mutate_genome(old_gnome, old_prome, mut_coords, seed=None):
     out_proteome = prome
     return out_genome, out_proteome, muttype_vect
 
+def point_mutate_codon(codon,pos_to_mutate,model):
+    if model == "JC":
+        probs_mat = np.array([[0,1/3,1/3,1/3],[1/3,0,1/3,1/3],[1/3,1/3,0,1/3],[1/3,1/3,1/3,0]])
+    #else if model == "K80"
+    # Test for the presence and validity (e.g. they add up to 1) of the alpha and beta values (transitions, transversions, resp.)
+    # declare the probs_mat with the user-defined transition and transversion ratios
+    #else if model == "GTR":
+    # Test that all the reversible transition probabilities are present, and that they add up to 1
+    # declare the probs_mat with the user-defined mutation probs
+    else:
+        ValueError(f"model {model} is not among the recognized mutation models: JC, K80, GTR")
+    new_codon=list(codon)
+    mut_val=np.random.choice((0,1,2,3),p=probs_mat[:,codon[pos_to_mutate]])
+    new_codon[pos_to_mutate]=mut_val
+    return(np.array(new_codon))
 
-
-def point_mutate_codon(codon, pos_to_mutate):
+#def point_mutate_codon(codon, pos_to_mutate):
     opts=np.array([[1,2,3],[-1,1,2],[-2,-1,1],[-3,-2,-1]])
     if pos_to_mutate == 0:
         factor=100
