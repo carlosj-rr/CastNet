@@ -32,7 +32,7 @@ model = "JC" # Model for base mutation, "JC", "K80", and "GTR" implemented. If u
 # gtr_c2g = val # probability of C's mutating into G's, and vice versa
 # gtr_a2g = val # probability of A's mutating into G's, and vice versa
 
-# IMPORTANT: THE SUM OF ALL GTR MUTATION PROBABILITIES MUST ADD UP TO 1
+# IMPORTANT: GTR PROBABILITIES OF A SINGLE BASE MUST ALL ADD UP TO 1, (e.g. gtr_t2c + gtr_t2a + gtr_t2g = gtr_t2c + gtr_c2a + gtr_c2g = gtr_t2g + gtr_c2g + gtr_a2g = 1)
 
 new_link_bounds = (-2,2) # lower and upper limit of uniform distribution from which the initial regulatory values of the GRN will be drawn.
 
