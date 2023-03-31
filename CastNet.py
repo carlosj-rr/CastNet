@@ -222,7 +222,7 @@ def make_genome_and_proteome(
         num_codons = int(seq_length / 3)
     else:
         num_codons = int(seq_length / 3)
-    genome_arr = np.empty((num_genes, num_codons), dtype=int)
+    genome_arr = np.empty((num_genes, num_codons, 3), dtype=int)
     proteome_arr = np.empty((num_genes, num_codons), dtype=int)
     coding_codons = dna_codons[0:61]
     amino_acids = trans_aas[0:61]
