@@ -1,5 +1,7 @@
 # CastNet
 
+![CastNet logo: a cast net with a phylogeny embedded in the net](https://github.com/carlosj-rr/CastNet/blob/canonical/figs/CastNet_logo.png)
+
 CastNet is platform-independent, as long as you can run python.
 
 In order to use CastNet, you need to have python 3.9+ installed, as well as the following packages:
