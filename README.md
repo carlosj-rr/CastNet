@@ -1,6 +1,6 @@
 # CastNet
 
-![CastNet logo: a cast net with a phylogeny embedded in the net](https://github.com/carlosj-rr/CastNet/blob/canonical/figs/CastNet_logo.png)
+![CastNet logo: a cast net with a phylogeny embedded in the net](https://github.com/carlosj-rr/CastNet/blob/canonical/figs/CastNet_logo_smol.png)
 
 CastNet is platform-independent, as long as you can run python.
 
