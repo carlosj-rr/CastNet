@@ -1036,7 +1036,7 @@ def main_parallel():
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
     leafc_stem, leafd_stem = randsplit(anc2_tip, pf.pop_size)
     with ProcessPoolExecutor() as pool:
-        leafa_tip,leafb_tip,leafc_tip,leafd_tip = list(pool.map(branch_evol,[leafa_stem,leafb_stem,leafc_stem,leafd_stem],br_lengths,seed_list,br_prefix))
+        leafa_tip,leafb_tip,leafc_tip,leafd_tip = list(pool.map(branch_evol,[leafa_stem,leafb_stem,leafc_stem,leafd_stem],br_lengths,seed_list,br_ids))
     #leafa_tip = branch_evol(leafa_stem,10000,br_ids[0])
     #leafb_tip = branch_evol(leafb_stem,10000,br_ids[1])
     
