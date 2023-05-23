@@ -159,12 +159,12 @@ trans_aas = np.array(
 
 args=sys.argv
 if len(args) > 1:
-    run_prefix=sys.argv[1]+"-"
+    run_prefix=sys.argv[1]
     print(f"Run prefix provided: {run_prefix}")
     name_given=True
 else:
     print("A run prefix was not provided, using default \'RUN-\'")
-    run_prefix="RUN-"
+    run_prefix="RUN"
     name_given=False
 
 def founder_miner(min_fitness=0.6):
@@ -267,7 +267,7 @@ def develop(start_vect, grn, decays, thresholds, dev_steps, non_ko_vect):
     gene_expression_profile[0] = np.array([start_vect])
     # Running the organism's development, and outputting the results
     # in an array called gene_expression_profile
-    invect = start_vect
+    invect = start_vect*non_ko_vect
     counter = 1
     for i in range(dev_steps):
         # apply decay to all gene qties. previously: exponentialDecay(invect,decays)
@@ -278,7 +278,7 @@ def develop(start_vect, grn, decays, thresholds, dev_steps, non_ko_vect):
         pre_thresholds = exp_change + decayed_invect
         # a vector to rectify the resulting values to their thresholds.
         thresholder = (pre_thresholds > thresholds).astype(int)
-        # rectify with the thresholder vect. This step resulted in the deletion of the 'rectify()' function
+        # rectify with the thresholder and non_ko_vect vectors.
         currV = pre_thresholds * thresholder * non_ko_vect
         gene_expression_profile[(i + 1)] = currV
         invect = currV
@@ -406,7 +406,6 @@ class IncorrectIndex(Exception):
 # and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
 def mutation_wrapper(orgarr, mut_rateseq,seed=None):
     #orgarrcp = cp.deepcopy(orgarr)
-    #print(f"mutating organism using seed {seed}.") # DEBUG STATEMENT - TO REMOVE
     orgarrcp = orgarr
     in_gen_num = orgarrcp[0]
     in_genome = orgarrcp[1]
@@ -547,7 +546,7 @@ def mutate_genome(old_gnome, old_prome, mut_coords, seed=None):
     if np.any(mut_coords < 0):
         raise IncorrectIndex(
             f"Some indices in the mutation coordinates are negative:\n{mut_coords}\n"
-            f"This may result in untractable mutations.\nConsider examining the output of codPos()."
+            f"This may result in untractable mutations.\nConsider examining the output of cod_pos()."
         )
 
     for i in range(mut_num):
@@ -954,7 +953,7 @@ def branch_evol(parent_pop, ngens,seed=None,branch_id=0,reporting_freq=pf.report
                 #print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
                 if (gen) % reporting_freq == 0:
-                    prefix="Generation_"+str(gen)+"_branch_"+str(branch_id)
+                    #prefix="Generation_"+str(gen)+"_branch_"+str(branch_id)
                     #grn_fig=draw_avg_grns(next_pop,gen)
                     #out_grns.append(grn_fig)
                     dev_fig=plot_avg_developments(next_pop,gen)
@@ -1021,17 +1020,17 @@ def main_parallel():
     seed_list=list(range(seed_start,seed_start+2))
     br_randnums = np.random.randint(0,1e10,2).astype(str)
     br_prefix=['ancestor1_','ancestor2_']
-    br_lengths=np.repeat(10000,2)
+    br_lengths=np.repeat(100,2)
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
     with ProcessPoolExecutor() as pool:
-        anc1_tip,anc2_tip=list(pool.map(branch_evol,[anc1_stem,anc2_stem],br_lengths,seed_list,br_prefix))
+        anc1_tip,anc2_tip=list(pool.map(branch_evol,[anc1_stem,anc2_stem],br_lengths,seed_list,br_ids))
     #anc1_tip = branch_evol(anc1_stem,10000,br_ids[0])
     #anc2_tip = branch_evol(anc2_stem,10000,br_ids[1])
     # Ancestor simulation completed here.
     br_randnums = np.random.randint(0,1e10,4).astype(str)
     br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
-    br_lengths=np.repeat(10000,4)
+    br_lengths=np.repeat(100,4)
     seed_start=datetime.now().microsecond
     seed_list=list(range(seed_start,seed_start+4))
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)

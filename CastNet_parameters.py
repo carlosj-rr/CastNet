@@ -4,11 +4,11 @@
 parallel = True # True if the run is meant to be parallelized. Note that this implies that the user has properly designed the 'main_parallel()' function
 
 # CONSTRUCTION PARAMETERS
-num_genes = 5 # How many genes in the system?
+num_genes = 10 # How many genes in the system?
 seq_length = 3000 # How long each gene's sequence is, in nucleotides? Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
-prop_unlinked = 0.7 # GRN mask of sparseness - the proportion of GRN regulatory values that will be masked to 0
+prop_unlinked = 0.7 # GRN mask of sparseness - the proportion of GRN regulatory values that will be masked to 0 upon initialisation.
 thresh_boundaries = (0.1,2) # range to initialize θs (the threshold under which each gene needs to be activated in order to be switched on).
-decay_boundaries = (0,2) # range to initialize λs ().
+decay_boundaries = (0,2) # range to initialize λs.
 dev_steps = 15 # How many developmental steps?
 pop_size = 100 # How many individuals per population?
 reporting_freq=100 # Every __ generations, store a a snapshot of the population. Each snapshot will store:
@@ -22,7 +22,7 @@ seq_mutation_rate = 5.3333e-06	# Mutation prob per base, per generation.
 model = "JC" # Model for base mutation, "JC", "K80", and "GTR" implemented. If using K80 or GTR, the relevant parameters below have to be uncommented and filled in.
 # K80 model parameters
 # k80_alpha = alpha # if using K80, uncomment and add here the probability of transitional mutations (i.e. purine-purine or pyrimidine-pyrimidine)
-# k80_beta = beta # if using K80, uncommend and add here the probability of transversional mutations (i.e. purine-pyrimidine and vice versa) # IMPORTANT: k80_alpha + k80_beta MUST add up to 1
+# k80_beta = beta # if using K80, uncomment and add here the probability of transversional mutations (i.e. purine-pyrimidine and vice versa) # IMPORTANT: k80_alpha + k80_beta MUST add up to 1
 
 # GTR model parameters
 # gtr_t2c = val # probability of T's mutating into C's, and vice versa
