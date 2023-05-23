@@ -343,12 +343,12 @@ class CodonError(Exception):
 def translate_codon(codon):
     #if codon in trans_dict.keys():
     #    aminoac = trans_dict[codon]
-    if codon in dna_codons:
-        idx = np.where(dna_codons == codon)[0][0]
+    idx = [i for i in range(len(dna_codons)) if np.all(dna_codons[i] == codon)]
+    if len(idx):
         aminoac = trans_aas[idx]
     else:
         raise CodonError(
-            f"<{codon}> is NOT a valid codon sequence. Please make sure it is one of the following:\n{dna_codons}"
+            f"<{codon}> is NOT a valid codon sequence."
         )
     return aminoac
 
@@ -916,8 +916,7 @@ def randsplit(in_pop, out_pop_size):
         )
     return lina, linb
 
-def branch_evol(parent_pop, ngens,seed=None,branch_id=0,reporting_freq=pf.reporting_freq):
-    #rng = np.random.default_rng() if seed is None else np.random.default_rng(seed)
+def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     in_pop = cp.deepcopy(parent_pop)
     #branch=np.ndarray((ngens,),dtype=object)
     #branch_key=str(np.random.randint(0,1e10))
@@ -996,8 +995,6 @@ def gene_ali_saver(organism_array, outfile_prefix="outfile"):
     num_orgs = organism_array.size
     rand_seqs = np.random.choice(num_orgs, 10)
     num_genes = organism_array[0][1].shape[0]
-    # TODO this is unused
-    sequences_array = np.array([x[1] for x in organism_array])
     for i in range(num_genes):
         filename = outfile_prefix + "_gene_" + str(i) + ".fas"
         with open(filename, "w") as gene_file:  
@@ -1024,8 +1021,7 @@ def main_parallel():
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
     with ProcessPoolExecutor() as pool:
         anc1_tip,anc2_tip=list(pool.map(branch_evol,[anc1_stem,anc2_stem],br_lengths,seed_list,br_ids))
-    #anc1_tip = branch_evol(anc1_stem,10000,br_ids[0])
-    #anc2_tip = branch_evol(anc2_stem,10000,br_ids[1])
+
     # Ancestor simulation completed here.
     br_randnums = np.random.randint(0,1e10,4).astype(str)
     br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
@@ -1037,15 +1033,10 @@ def main_parallel():
     leafc_stem, leafd_stem = randsplit(anc2_tip, pf.pop_size)
     with ProcessPoolExecutor() as pool:
         leafa_tip,leafb_tip,leafc_tip,leafd_tip = list(pool.map(branch_evol,[leafa_stem,leafb_stem,leafc_stem,leafd_stem],br_lengths,seed_list,br_ids))
-    #leafa_tip = branch_evol(leafa_stem,10000,br_ids[0])
-    #leafb_tip = branch_evol(leafb_stem,10000,br_ids[1])
-    
-    #leafc_tip = branch_evol(leafc_stem,10000,br_ids[2])
-    #leafd_tip = branch_evol(leafd_stem,10000,br_ids[3])
-    
+    # Tips simulation completed here.
     return(np.array([founder_pop,anc1_tip,anc2_tip,leafa_tip,leafb_tip,leafc_tip,leafd_tip],dtype=object))
 
-def main_experiment():
+def main_serial():
     founder = founder_miner()
     print("Founder created")
     founder_pop = grow_pop(founder, pf.pop_size, "equal")
@@ -1074,7 +1065,7 @@ if __name__ == "__main__":
     if pf.parallel:
         result = main_parallel()
     else:
-        result = main_experiment()
+        result = main_serial()
     store(result)
     tip_names=["founder","ancAB","ancCD","tip_A","tip_B","tip_C","tip_D"]
     ali_saver(run_prefix,result,tip_names)
