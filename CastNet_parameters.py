@@ -10,14 +10,14 @@ prop_unlinked = 0.7 # GRN mask of sparseness - the proportion of GRN regulatory 
 thresh_boundaries = (0.1,2) # range to initialize θs (the threshold under which each gene needs to be activated in order to be switched on).
 decay_boundaries = (0,2) # range to initialize λs.
 dev_steps = 15 # How many developmental steps?
-pop_size = 10 # How many individuals per population?
-reporting_freq=100 # Every __ generations, store a a snapshot of the population. Each snapshot will store:
+pop_size = 1 # How many individuals per population?
+reporting_freq=10 # Every __ generations, store a a snapshot of the population. Each snapshot will store:
                     # 1. the mean GRN values of the population,
                     # 2. the mean fitness, 
                     # 3. a plot showing the mean phenotype of the population, to be placed in an animated gif.
 
 # SEQUENCE MUTATION PARAMETERS
-seq_mutation_rate = 5.3333e-06	# Mutation prob per base, per generation.
+seq_mutation_rate = 0 #5.3333e-06	# Mutation prob per base, per generation.
                                     # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
 model = "JC" # Model for base mutation, "JC", "K80", and "GTR" implemented. If using K80 or GTR, the relevant parameters below have to be uncommented and filled in.
 # K80 model parameters

@@ -348,7 +348,7 @@ def translate_codon(codon):
         aminoac = trans_aas[idx]
     else:
         raise CodonError(
-            f"<{codon}> is NOT a valid codon sequence."
+            f"<{codon}> is NOT a valid codon sequence. Recall that A=0, C=1, T=2, G=3"
         )
     return aminoac
 
@@ -406,7 +406,8 @@ class IncorrectIndex(Exception):
 # and the mutation rate of the nucleotide sequence (i.e. mutation probability per base).
 def mutation_wrapper(orgarr, mut_rateseq,seed=None):
     #orgarrcp = cp.deepcopy(orgarr)
-    orgarrcp = orgarr
+    is_singleton = orgarr.shape[0] == 1
+    orgarrcp = orgarr[0] if is_singleton else orgarr
     in_gen_num = orgarrcp[0]
     in_genome = orgarrcp[1]
     in_proteome = orgarrcp[2]
@@ -833,7 +834,7 @@ def cleanup_deads(in_pop):
         out_pop = in_pop[live_ones]
     elif live_ones.size == 0:
         print(f"Your population went extinct. Sorry for your loss.")
-        out_pop = np.array([])
+        out_pop = False
     return out_pop
 
 
@@ -843,14 +844,14 @@ class UnknownSelectiveStrategy(Exception):
 
 def select(in_pop, p=0.1, strategy="high pressure"):
     #print(in_pop)
-    if (lambda x: len(x.shape) == 1)(in_pop): #if it is a single organism
-        print("You have passed a single organism for selection. Confirming it is alive...")
-        print(in_pop)
-        if in_pop[9] > 0:
-            print("It is alive, congratulations, this will be your survivor")
-            return in_pop
+    if in_pop.shape[0] == 1: #if it is a single organism
+        print("You have passed a single organism for selection. Confirming an offspring would be alive")
+        out_pop=grow_pop(in_pop[0],1)
+        if type(out_pop) != bool and out_pop[0][9] > 0:
+            print("It is alive, congratulations, there will be one survivor")
+            return out_pop
         else:
-            print("Ah well. your only survivor was dead. This lineage is now extinct.")
+            print("Your only survivor was dead. This lineage is now extinct.")
             return False
     pop_size = in_pop.shape[0]
     num_survivors = int(pop_size * p)
@@ -884,7 +885,6 @@ def select(in_pop, p=0.1, strategy="high pressure"):
         out_pop = out_pop[0]
     return out_pop
 
-# Add a storing to disk command here
 def randsplit(in_pop, out_pop_size):
     # in_pop=cp.deepcopy(in_pop)
     if len(in_pop.shape) == 1:
@@ -932,10 +932,11 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     #out_grns=[]
     out_devs=[]
     if parent_pop.size > 0:
-        for gen in tqdm(range(ngens),desc=f"{branch_id} branch evolution progress:", ascii=False,ncols=100):
+        for gen in tqdm(range(ngens),desc=f"{branch_id} branch evol progress", ascii=False,ncols=100):
             if parent_pop.size > 0:
                 #print(f"producing generation {gen+1}")
                 survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
+                print(f"Survivors type is: {type(survivors)}")
                 if type(survivors) == bool:
                     filename="Extinction1_branch"+str(branch_id)+"_generation_"+str(gen)+".pkl"
                     print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen} generation(s) into {filename}.")
@@ -951,6 +952,7 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                 parent_pop=next_pop
                 #print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
+                print(f"GEN=",gen,"(GEN)=",(gen))
                 if (gen) % reporting_freq == 0:
                     #prefix="Generation_"+str(gen)+"_branch_"+str(branch_id)
                     #grn_fig=draw_avg_grns(next_pop,gen)
@@ -1013,26 +1015,25 @@ def main_parallel():
     print("Founder pop created")
     anc1_stem, anc2_stem = randsplit(founder_pop, pf.pop_size)
     print("Founding split created")
-    seed_start=datetime.now().microsecond
-    seed_list=list(range(seed_start,seed_start+2))
+    #seed_start=datetime.now().microsecond
+    #seed_list=list(range(seed_start,seed_start+2))
     br_randnums = np.random.randint(0,1e10,2).astype(str)
     br_prefix=['ancestor1_','ancestor2_']
-    br_lengths=np.repeat(100,2)
+    br_lengths=np.repeat(1000,2)
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
     with ProcessPoolExecutor() as pool:
-        anc1_tip,anc2_tip=list(pool.map(branch_evol,[anc1_stem,anc2_stem],br_lengths,seed_list,br_ids))
-
-    # Ancestor simulation completed here.
+        anc1_tip,anc2_tip=list(pool.map(branch_evol,[anc1_stem,anc2_stem],br_lengths,br_ids))
+    # Ancestor simulation completed here. Add a check for extinct branches - continue simulation with live ones only.
     br_randnums = np.random.randint(0,1e10,4).astype(str)
     br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
-    br_lengths=np.repeat(100,4)
-    seed_start=datetime.now().microsecond
-    seed_list=list(range(seed_start,seed_start+4))
+    br_lengths=np.repeat(1000,4)
+    #seed_start=datetime.now().microsecond
+    #seed_list=list(range(seed_start,seed_start+4))
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
     leafc_stem, leafd_stem = randsplit(anc2_tip, pf.pop_size)
     with ProcessPoolExecutor() as pool:
-        leafa_tip,leafb_tip,leafc_tip,leafd_tip = list(pool.map(branch_evol,[leafa_stem,leafb_stem,leafc_stem,leafd_stem],br_lengths,seed_list,br_ids))
+        leafa_tip,leafb_tip,leafc_tip,leafd_tip = list(pool.map(branch_evol,[leafa_stem,leafb_stem,leafc_stem,leafd_stem],br_lengths,br_ids))
     # Tips simulation completed here.
     return(np.array([founder_pop,anc1_tip,anc2_tip,leafa_tip,leafb_tip,leafc_tip,leafd_tip],dtype=object))
 
