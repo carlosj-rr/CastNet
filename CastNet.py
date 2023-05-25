@@ -1027,7 +1027,7 @@ def main_parallel():
     #seed_list=list(range(seed_start,seed_start+2))
     br_randnums = np.random.randint(0,1e10,2).astype(str)
     br_prefix=['ancestor1_','ancestor2_']
-    br_lengths=np.repeat(1000,2)
+    br_lengths=np.repeat(10000,2)
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
     with ProcessPoolExecutor() as pool:
         anc1_tip,anc2_tip=list(pool.map(branch_evol,[anc1_stem,anc2_stem],br_lengths,br_ids))
@@ -1035,7 +1035,7 @@ def main_parallel():
     br_randnums = np.random.randint(0,1e10,4).astype(str)
     br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
-    br_lengths=np.repeat(1000,4)
+    br_lengths=np.repeat(10000,4)
     #seed_start=datetime.now().microsecond
     #seed_list=list(range(seed_start,seed_start+4))
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)

@@ -4,20 +4,20 @@
 parallel = True # True if the run is meant to be parallelized. Note that this implies that the user has properly designed the 'main_parallel()' function
 
 # CONSTRUCTION PARAMETERS
-num_genes = 1 # How many genes in the system?
+num_genes = 10 # How many genes in the system?
 seq_length = 10000 # How long each gene's sequence is, in nucleotides? Will be automatically adjusted to the closest number that's a multiple of 3, to have complete codons.
 prop_unlinked = 0.7 # GRN mask of sparseness - the proportion of GRN regulatory values that will be masked to 0 upon initialisation.
 thresh_boundaries = (0.1,2) # range to initialize θs (the threshold under which each gene needs to be activated in order to be switched on).
 decay_boundaries = (0,2) # range to initialize λs.
 dev_steps = 15 # How many developmental steps?
-pop_size = 1 # How many individuals per population?
+pop_size = 100 # How many individuals per population?
 reporting_freq=10 # Every __ generations, store a a snapshot of the population. Each snapshot will store:
                     # 1. the mean GRN values of the population,
                     # 2. the mean fitness, 
                     # 3. a plot showing the mean phenotype of the population, to be placed in an animated gif.
 
 # SEQUENCE MUTATION PARAMETERS
-seq_mutation_rate = 0 #5.3333e-06	# Mutation prob per base, per generation.
+seq_mutation_rate = 5.3333e-06	# Mutation prob per base, per generation.
                                     # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
 model = "JC" # Model for base mutation, "JC", "K80", and "GTR" implemented. If using K80 or GTR, the relevant parameters below have to be uncommented and filled in.
 # K80 model parameters
