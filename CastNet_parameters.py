@@ -21,25 +21,23 @@ seq_mutation_rate = 5.3333e-06	# Mutation prob per base, per generation.
                                     # Empirically 1.06666E-5 was a good rate for 20K gens, 10 genes, 3Kbp each.
 model = "JC" # Model for base mutation, "JC", "K80", and "GTR" implemented. If using K80 or GTR, the relevant parameters below have to be uncommented and filled in.
 # K80 model parameters
-# k80_alpha = alpha # if using K80, uncomment and add here the probability of transitional mutations (i.e. purine-purine or pyrimidine-pyrimidine)
-# k80_beta = beta # if using K80, uncomment and add here the probability of transversional mutations (i.e. purine-pyrimidine and vice versa) # IMPORTANT: k80_alpha + k80_beta MUST add up to 1
+k80_alpha = 0.7 # if using K80, uncomment and add here the probability of transitional mutations (i.e. purine-purine or pyrimidine-pyrimidine)
+k80_beta = 0.2 # if using K80, uncomment and add here the probability of transversional mutations (i.e. purine-pyrimidine and vice versa) # IMPORTANT: k80_alpha + (2*k80_beta) MUST add up to 1
 
-# GTR model parameters
-# gtr_t2c = val # probability of T's mutating into C's, and vice versa
-# gtr_t2a = val # probability of T's mutating into A's, and vice versa
-# gtr_t2g = val # probability of T's mutating into G's, and vice versa
-# gtr_c2a = val # probability of C's mutating into A's, and vice versa
-# gtr_c2g = val # probability of C's mutating into G's, and vice versa
-# gtr_a2g = val # probability of A's mutating into G's, and vice versa
-
-# IMPORTANT: GTR PROBABILITIES OF A SINGLE BASE MUST ALL ADD UP TO 1, (e.g. gtr_t2c + gtr_t2a + gtr_t2g = gtr_t2c + gtr_c2a + gtr_c2g = gtr_t2g + gtr_c2g + gtr_a2g = 1)
+# GTR model parameters - IMPORTANT: GTR PROBABILITIES OF A SINGLE BASE MUST ALL ADD UP TO 1, (e.g. gtr_t2c + gtr_t2a + gtr_t2g = gtr_t2c + gtr_c2a + gtr_c2g = gtr_t2g + gtr_c2g + gtr_a2g = 1)
+gtr_t2c = 0.6 # probability of T's mutating into C's, and vice versa
+gtr_t2a = 0.2 # probability of T's mutating into A's, and vice versa
+gtr_t2g = 0.2 # probability of T's mutating into G's, and vice versa
+gtr_c2a = 0.2 # probability of C's mutating into A's, and vice versa
+gtr_c2g = 0.2 # probability of C's mutating into G's, and vice versa
+gtr_a2g = 0.6 # probability of A's mutating into G's, and vice versa
 
 new_link_bounds = (-2,2) # lower and upper limit of uniform distribution from which the initial regulatory values of the GRN will be drawn.
 
 # SELECTION PARAMETERS
 min_reproducin = 0.1 # minumum level of expression that the 'system maturity indicator' gene must have by the end of development.
 prop_survivors = 0.1 # what proportion of the population passes on to the next generation.
-select_strategy = "low pressure" # ""high pressure", "low pressure", and "totally relaxed"
+select_strategy = "high pressure" # ""high pressure", "low pressure", and "totally relaxed"
 
 # REPRODUCTION PARAMETERS
 reproductive_strategy = "equal" # for the moment, just "equal" implemented: all surviving organisms produce the same amount of offspring, regardless of their fitness value. To include later here: "fitness bound" - organisms reproduce with a success proportional to their fitness, and "winner takes all" - the one with the highest fitness value reproduces the most, and the rest just a little, and other strategies.

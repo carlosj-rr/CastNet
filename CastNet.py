@@ -577,14 +577,28 @@ def mutate_genome(old_gnome, old_prome, mut_coords, seed=None):
 def point_mutate_codon(codon,pos_to_mutate,model):
     if model == "JC":
         probs_mat = np.array([[0,1/3,1/3,1/3],[1/3,0,1/3,1/3],[1/3,1/3,0,1/3],[1/3,1/3,1/3,0]])
-    #else if model == "K80"
-    # Test for the presence and validity (e.g. they add up to 1) of the alpha and beta values (transitions, transversions, resp.)
-    # declare the probs_mat with the user-defined transition and transversion ratios
-    #else if model == "GTR":
-    # Test that all the reversible transition probabilities are present, and that they add up to 1
-    # declare the probs_mat with the user-defined mutation probs
+    elif model == "K80":
+        # Test for the presence and validity (e.g. they add up to 1) of the alpha and beta values (transitions, transversions, resp.)
+        if pf.k80_alpha+(2*pf.k80_beta) == 1:
+            # declare the probs_mat with the user-defined transition and transversion ratios
+            beta=pf.k80_beta
+            alpha = pf.k80_alpha
+            probs_mat = np.array([[0,beta,beta,alpha],[beta,0,alpha,beta],[beta,alpha,0,beta],[alpha,beta,beta,0]])
+        else:
+            print(f"You chose the K80 model, but the transition+2*transversion probabilities do not add up to one - {pf.k80_alpha+(2*pf.k80_beta)}\nplease correct the k80_alpha (transitions) and k80_beta (transversions) parameters in the parameters file.")
+            exit()
+    elif model == "GTR":
+        # Test that all the reversible transition probabilities are present, and that they add up to 1
+        if pf.gtr_t2c + pf.gtr_t2a + pf.gtr_t2g == 1 and pf.gtr_t2c + pf.gtr_c2a + pf.gtr_c2g == 1 and pf.gtr_t2g + pf.gtr_c2g + pf.gtr_a2g == 1:
+            # declare the probs_mat with the user-defined mutation probs
+            probs_mat = np.array([[0,pf.gtr_c2a,pf.gtr_t2a,pf.gtr_a2g],[pf.gtr_c2a,0,pf.gtr_t2c,pf.gtr_c2g],[pf.gtr_t2a,pf.gtr_t2c,0,pf.gtr_t2g],[pf.gtr_a2g,pf.gtr_c2g,pf.gtr_t2g,0]])
+        else:
+            print(f"You chose the GTR model, but the substitution rates do not add up to 1 per column - please correct the corresponding parameters...\nA<->N: {pf.gtr_c2a+pf.gtr_t2a+pf.gtr_a2g}\nC<->N: {pf.gtr_c2a+pf.gtr_c2g+pf.gtr_t2c}\nT<->N: {pf.gtr_t2a+pf.gtr_t2c+pf.gtr_t2g}, and\nG<->N: {pf.gtr_a2g+pf.gtr_c2g+pf.gtr_t2g}.")
+            exit()
     else:
-        ValueError(f"model {model} is not among the recognized mutation models: JC, K80, GTR")
+        print(f"model {model} is not among the recognized mutation models: JC, K80, GTR")
+        exit()
+    
     new_codon=list(codon)
     mut_val=np.random.choice((0,1,2,3),p=probs_mat[:,codon[pos_to_mutate]])
     new_codon[pos_to_mutate]=mut_val
@@ -960,7 +974,7 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                 parent_pop=next_pop
                 #print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
-                print(f"GEN=",gen,"(GEN)=",(gen))
+                #print(f"GEN=",gen,"(GEN)=",(gen))
                 if (gen) % reporting_freq == 0:
                     #prefix="Generation_"+str(gen)+"_branch_"+str(branch_id)
                     #grn_fig=draw_avg_grns(next_pop,gen)
@@ -1027,7 +1041,7 @@ def main_parallel():
     #seed_list=list(range(seed_start,seed_start+2))
     br_randnums = np.random.randint(0,1e10,2).astype(str)
     br_prefix=['ancestor1_','ancestor2_']
-    br_lengths=np.repeat(10000,2)
+    br_lengths=np.repeat(100,2)
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
     with ProcessPoolExecutor() as pool:
         anc1_tip,anc2_tip=list(pool.map(branch_evol,[anc1_stem,anc2_stem],br_lengths,br_ids))
@@ -1035,7 +1049,7 @@ def main_parallel():
     br_randnums = np.random.randint(0,1e10,4).astype(str)
     br_prefix = [br_ids[0]+'-leafA_',br_ids[0]+'-leafB_',br_ids[1]+'-leafC_',br_ids[1]+'-leafD_']
     br_ids = [x+y for x,y in zip(br_prefix,br_randnums)]
-    br_lengths=np.repeat(10000,4)
+    br_lengths=np.repeat(100,4)
     #seed_start=datetime.now().microsecond
     #seed_list=list(range(seed_start,seed_start+4))
     leafa_stem, leafb_stem = randsplit(anc1_tip, pf.pop_size)
