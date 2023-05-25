@@ -887,6 +887,11 @@ def select(in_pop, p=0.1, strategy="high pressure"):
 
 def randsplit(in_pop, out_pop_size):
     # in_pop=cp.deepcopy(in_pop)
+    if type(in_pop) == bool:
+        print("You're trying to split an extinct population - failing to do so...")
+        lina = False
+        linb = False
+        return lina, linb
     if len(in_pop.shape) == 1:
         inpopsize=1
     else:
@@ -918,6 +923,9 @@ def randsplit(in_pop, out_pop_size):
 
 def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
     in_pop = cp.deepcopy(parent_pop)
+    if type(in_pop) == bool:
+        print("You've passed an extinct population - cannot revive it.")
+        return False
     #branch=np.ndarray((ngens,),dtype=object)
     #branch_key=str(np.random.randint(0,1e10))
     print(f"Size of parental population: {len(in_pop)}")
@@ -936,19 +944,19 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
             if parent_pop.size > 0:
                 #print(f"producing generation {gen+1}")
                 survivors = select(parent_pop, pf.prop_survivors, pf.select_strategy)
-                print(f"Survivors type is: {type(survivors)}")
+                #print(f"Survivors type is: {type(survivors)}")
                 if type(survivors) == bool:
                     filename="Extinction1_branch"+str(branch_id)+"_generation_"+str(gen)+".pkl"
                     print(f"Branch has gone extinct, packaging and outputting a truncated branch of {gen} generation(s) into {filename}.")
                     store(parent_pop,filename) # BRANCH SELECTED INTO EXTINCTION EXIT
-                    return
+                    return False
                 #print(f"Survivor number is {len(survivors)}.")
                 next_pop = grow_pop(survivors, pf.pop_size, pf.reproductive_strategy)
-                if next_pop.size == 0:
+                if type(next_pop) == bool:
                     filename="Extinction2_branch"+str(branch_id)+"_generation_"+str(gen)+".pkl"
                     print(f"The population from branch {branch_id} had no viable offspring and went extinct. Packaging and saving a truncated branch at {gen} generation(s) into {filename}.")
                     np.save(filename,parent_pop)
-                    return # POPULATION UNVIABLE EXIT
+                    return False # POPULATION UNVIABLE EXIT
                 parent_pop=next_pop
                 #print(f"Generation {gen+1} of {ngens} completed.")
                 parent_pop = next_pop
@@ -977,11 +985,11 @@ def branch_evol(parent_pop, ngens,branch_id=0,reporting_freq=pf.reporting_freq):
                     return(next_pop)
             else:
                 print("Your population was extinguished.")
-                return
+                return False
         return(next_pop)
     else:
         print(f"Input population {parent_pop} has no individuals. Stopping simulation.")
-        return
+        return False
 
 def animator(devs,file_prefix):
     gif.save(devs,file_prefix+"_avgDev.gif")
@@ -1068,6 +1076,14 @@ if __name__ == "__main__":
     else:
         result = main_serial()
     store(result)
+    is_bool = list(map((lambda x: type(x) == bool),result))
+    print(f"'bool_arrs' = {is_bool}")
     tip_names=["founder","ancAB","ancCD","tip_A","tip_B","tip_C","tip_D"]
-    ali_saver(run_prefix,result,tip_names)
+    if not np.any(is_bool):
+        ali_saver(run_prefix,result,tip_names)
+    else:
+        who_died=np.where(is_bool)[0]
+        dead_lins = list(map((lambda x: tip_names[x]),who_died))
+        print(f"blip = {who_died}")
+        print(f"Sequence saving failed because {dead_lins} went extinct.")
     print("Analysis completed", result.shape)
