@@ -25,4 +25,4 @@ Running:
 ```python CastNet.py [your_run_prefix]```
 If you use CastNet for your work, please cite the original [paper](https://link.springer.com/article/10.1186/s12859-023-05366-1) as:
 
-Rivera-Rivera and Grbic (2023). CastNet: a systems-level sequence evolution simulator. _BMC Bioinformatics_.247.
+Rivera-Rivera and Grbic (2023). CastNet: a systems-level sequence evolution simulator. _BMC Bioinformatics_. 247.
